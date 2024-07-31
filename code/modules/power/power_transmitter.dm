@@ -60,7 +60,6 @@
 		ranging_level = position.z
 
 	component_parts = list()
-	component_parts += new	/obj/item/weapon/circuitboard/power_transmitter(src)
 	component_parts += new	/obj/item/weapon/stock_parts/subspace/ansible(src)
 	component_parts += new	/obj/item/weapon/smes_coil/super_io(src)
 	component_parts += new	/obj/item/weapon/stock_parts/capacitor(src, 5)

@@ -11,7 +11,7 @@
 	unacidable = TRUE
 	use_power = USE_POWER_OFF
 	var/capacity = 5 MEGAWATTS		//Maximum amount of power it can hold
-	var/charge = 1 MEGAWATTS		//Current amount of power it holds
+	var/charge = 0 WATTS		//Current amount of power it holds, 0'd out to prevent rebuild energy cheese.
 
 	var/input_attempt = TRUE // TRUE = attempting to charge, FALSE = not attempting to charge
 	// SMESINPUTTINGOFF = off, SMESINPUTTINGCHARGE = inputting, not full, SMESINPUTTINGFULL = full
@@ -38,8 +38,7 @@
 	var/last_chrg
 	var/last_onln
 
-	var/damage = 0
-	var/maxdamage = SMESHEALTHPOOL // Relatively resilient, given how expensive it is, but once destroyed produces small explosion.
+	var/integrity = SMESHEALTHPOOL // Relatively resilient, given how expensive it is, but once destroyed produces small explosion.
 
 	var/input_cut = FALSE
 	var/input_pulsed = FALSE
@@ -84,6 +83,16 @@
 			. += span_notice("Terminal 2 is connected.")
 		if(connected == terminal3)
 			. += span_notice("Terminal 3 is connected.")
+	var/integrity_percentage = round((integrity / initial(integrity)) * 100)
+	switch(integrity_percentage)
+		if(0 to 30)
+			. += span_danger("It is close to overloading from damage!")
+		if(31 to 65)
+			. += span_danger("The casing is badly charred and warped.")
+		if(66 to 76)
+			. += span_danger("The casing is charred and warped.")
+		if(77 to 99)
+			. += span_warning("It is slightly damaged.")
 
 /obj/machinery/power/smes/Initialize(mapload)
 	. = ..()
@@ -103,7 +112,6 @@
 
 	component_parts = list()
 	component_parts += new /obj/item/stack/cable_coil(src,30)
-	component_parts += new /obj/item/weapon/circuitboard/smes(src)
 
 	// Allows for mapped-in SMESs with larger capacity/IO
 	for(var/i = 1, i <= cur_coils, i++)
@@ -183,6 +191,11 @@
 /obj/machinery/power/smes/update_icon()
 	cut_overlays()
 	icon_state = "[initial(icon_state)]"
+
+	if(panel_open)
+		icon_state = "[initial(icon_state)]-o"
+		return	//It's off, so don't draw any icons same as being off but we update our open/closed panel.
+
 	if(stat & BROKEN)
 		icon_state = "[initial(icon_state)]-off"
 		return
@@ -190,10 +203,6 @@
 	if(failing)
 		add_overlay("[initial(icon_state)]-crit")
 		return
-
-	if(panel_open)
-		icon_state = "[initial(icon_state)]-o"
-		return	//It's off, so don't draw any icons
 
 	add_overlay("[initial(icon_state)]-op[outputting]")
 	add_overlay("[initial(icon_state)]-oc[inputting]")
@@ -337,7 +346,7 @@
 // create a terminal object pointing towards the SMES
 // wires will attach to this
 // We've done our sanity checks in the attackby, and nothing else should call it.
-/obj/machinery/power/smes/proc/make_terminal(mob/user, turf/turf, terminal_cable_layer = cable_layer)
+/obj/machinery/power/smes/proc/make_terminal(mob/user, turf/turf, terminal_cable_layer)
 	to_chat(user, span_notice("You start adding cable to the [src] on [LOWER_TEXT(GLOB.cable_layer_to_name["[terminal_cable_layer]"])]"))
 	switch(terminal_cable_layer)
 		if(CABLE_LAYER_1)
@@ -379,18 +388,16 @@
 		terminalplace = null
 	if(!check_terminals()) //no more terminals? Broken machine, clearly.
 		stat |= BROKEN
-	update_cable_icons_on_turf(get_turf(terminalplace))
 
 /obj/machinery/power/smes/draw_power(var/amount)
 	var/drained = 0
-	if(terminalconnections)
-		for(var/obj/machinery/power/terminal/connected in terminalconnections)
-			if(connected)
-				if(!connected.powernet)
-					continue
-				if((amount - drained) <= 0)
-					return 0
-				drained += connected.draw_power(amount)
+	for(var/obj/machinery/power/terminal/connected in terminalconnections)
+		if(connected)
+			if(!connected.powernet)
+				continue
+			if((amount - drained) <= 0)
+				return 0
+			drained += connected.draw_power(amount)
 	return drained
 
 /obj/machinery/power/smes/should_have_node()
@@ -398,6 +405,8 @@
 
 ///AI requires the RCON wire to be intact to operate the SMES.
 /obj/machinery/power/smes/attack_ai(mob/user)
+	if(stat && BROKEN)
+		return
 	add_fingerprint(user)
 	if(RCon)
 		tgui_interact(user)
@@ -409,6 +418,8 @@
 		wires.Interact(usr)
 
 /obj/machinery/power/smes/attack_hand(mob/user)
+	if(stat && BROKEN)
+		return
 	add_fingerprint(user)
 	if(panel_open)
 		wires.Interact(usr)
@@ -432,7 +443,7 @@
 		return
 
 	if(W.has_tool_quality(TOOL_MULTITOOL))
-		if (!panel_open)
+		if(!panel_open)
 			to_chat(user, span_warning("You need to open access hatch on [src] first!"))
 			return FALSE
 		var/newtag = tgui_input_text(user, "Enter new RCON tag. Use \"NO_TAG\" to disable RCON or leave empty to cancel.", "SMES RCON system", "", MAX_NAME_LEN)
@@ -478,45 +489,45 @@
 		if(!WT.isOn())
 			to_chat(user, span_notice("Turn on \the [WT] first!"))
 			return FALSE
-		if(!damage)
+		if(integrity == (initial(integrity)))
 			to_chat(user, span_notice("\The [src] is already fully repaired."))
 			return FALSE
-		if(WT.remove_fuel(0,user) && do_after(user, damage, src))
+		if(WT.remove_fuel(0,user) && do_after(user, 10 SECONDS, src))
 			to_chat(user, span_notice("You repair all structural damage to \the [src]"))
-			damage = 0
+			integrity = initial(integrity)
 		return FALSE
 
 	if(W.has_tool_quality(TOOL_CABLE_COIL))
 		var/obj/item/stack/cable_coil/C = W
 		var/dir = get_dir(user,src)
 		if(ISDIAGONALDIR(dir))//we don't want diagonal click
+			to_chat(user, span_warning("\The [src] doesn't have any diagonal connections!"))
 			return
 
 		var/turf/T = get_turf(user)
 		if(isspace(T))
 			to_chat(user, span_warning("You can't secure this item in open space!"))
 
-		if (!T.is_plating()) //is the floor plating removed ?
+		if(!T.is_plating()) //is the floor plating removed ?
 			to_chat(user, span_warning("You must first remove the floor plating!"))
 			return
 
 		if(!panel_open)
-			to_chat(user, span_warning("You must open the maintenance panel first!"))
+			var/choice = tgui_input_list(user, "Select Power Line For Operation", "Select Cable Layer", GLOB.cable_name_to_layer)
+			if(isnull(choice) || QDELETED(src) || QDELETED(user) || QDELETED(W) || !user.Adjacent(src))
+				return FALSE
+
+			cable_layer = GLOB.cable_name_to_layer[choice]
+			to_chat(user, span_notice("\The [src] is now operating on the [choice]"))
 			return
 
-		if(C && C.target_layer)
-			if(get_terminal_slot(C.target_layer))
-				to_chat(user, span_warning("This SMES already has a power terminal on this layer!"))
-				return
+		if(get_terminal_slot(C.target_layer))
+			to_chat(user, span_warning("This SMES already has a power terminal on this layer!"))
+			return
 
 		if(C.get_amount() < 10)
 			to_chat(user, span_warning("You need more wires!"))
 			return
-
-		if(get_terminal_slot(C.target_layer))
-			to_chat(user, span_warning("There is already a terminal plugged into this layer!"))
-			return
-		var/terminal_cable_layer = GLOB.cable_name_to_layer[C.target_layer]
 
 		to_chat(user, span_notice("You start building the power terminal..."))
 		playsound(src.loc, 'sound/items/deconstruct.ogg', 50, 1)
@@ -524,13 +535,13 @@
 		if(!do_after(user, 50))
 			return
 
-		var/obj/structure/cable/N = T.get_cable_node(terminal_cable_layer) //get the connecting node cable, if there's one
+		var/obj/structure/cable/N = T.get_cable_node(C.target_layer) //get the connecting node cable, if there's one
 		if (prob(50))
 			electrocute_mob(usr, N, N, 1, TRUE)
 
 		C.use(10)
 		//build the terminal and link it to the network
-		if(make_terminal(user, T, terminal_cable_layer))
+		if(make_terminal(user, T, C.target_layer))
 			connect_to_network()
 		return FALSE
 
@@ -636,8 +647,8 @@
 
 /obj/machinery/power/smes/take_damage(var/amount)
 	amount = max(0, round(amount))
-	damage += amount
-	if(damage > maxdamage)
+	integrity -= amount
+	if(integrity <= 0)
 		visible_message(span_danger("\The [src] explodes in large shower of sparks and smoke!"))
 		// Depending on stored charge percentage cause damage.
 		switch(Percentage())
@@ -668,7 +679,7 @@
 /obj/machinery/power/smes/ex_act(var/severity)
 	// Two strong explosions will destroy a SMES.
 	// Given the SMES creates another explosion on it's destruction it sounds fairly reasonable.
-	take_damage(250 / severity)
+	take_damage(250 / severity) //250, 125, 83
 
 /obj/machinery/power/smes/can_terminal_dismantle()
 	. = panel_open ? TRUE : FALSE

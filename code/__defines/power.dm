@@ -28,6 +28,13 @@ GLOBAL_LIST_INIT(cable_name_to_layer, list(
 	CABLE_LAYER_4_NAME = CABLE_LAYER_4
 	))
 
+/// List that precludes heavy duty layers
+GLOBAL_LIST_INIT(cable_name_normal_layers, list(
+	CABLE_LAYER_1_NAME = CABLE_LAYER_1,
+	CABLE_LAYER_2_NAME = CABLE_LAYER_2,
+	CABLE_LAYER_3_NAME = CABLE_LAYER_3
+	))
+
 /// Cable layer colors for easier editing later
 /// IF YOU CHANGE THESE YOU NEED TO UPDATE THE RADIAL MENUS FOR RCL AND CABLES TO THOSE COLORS IN icons/hud/radial.dmi
 /// Also update the names at the top of this file!

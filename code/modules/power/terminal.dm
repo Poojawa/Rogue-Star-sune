@@ -16,7 +16,7 @@
 	cable_layer = CABLE_LAYER_2
 	var/wirecolors = CABLELAYERTWOCOLOR
 	var/obj/machinery/power/master = null
-	can_change_cable_layer = TRUE
+	can_change_cable_layer = FALSE	// too much headache with multi-set SMES terminals
 
 /obj/machinery/power/terminal/layer1
 	name = "terminal (L1)"
@@ -25,7 +25,7 @@
 
 /obj/machinery/power/terminal/layer3
 	name = "terminal (L3)"
-	cable_layer = CABLE_LAYER_3
+	cable_layer = CABLE_LAYER_3|CABLE_LAYER_4
 	wirecolors = CABLELAYERTHREECOLOR
 
 
@@ -90,8 +90,8 @@
 		return
 	if(isturf(loc))
 		var/turf/T = loc
-		if(T.is_plating())
-			to_chat(user, "<span class='filter_notice'><span class='warning'>You must remove the floor plating first!</span></span>")
+		if(!T.is_plating())
+			to_chat(user, span_warning("You must remove the floor plating first!"))
 			return FALSE
 
 	if(master && !master.can_terminal_dismantle())
@@ -111,16 +111,13 @@
 			sparks.start()
 			return FALSE
 
-		new /obj/item/stack/cable_coil(get_turf(src), 10)
+		var/obj/item/stack/cable_coil/coilrefund =new /obj/item/stack/cable_coil(get_turf(src), 10)
+		coilrefund.color = wirecolors
 		qdel(src)
-		if(isSMES(master))
-			var/obj/machinery/power/smes/fatbat = master
-			var/terminalslot = fatbat.get_terminal_slot(cable_layer)
-			fatbat.disconnect_terminal(terminalslot)
-		else
-			master.disconnect_terminal()
-		to_chat(user, "<span class='filter_notice'><span class='warning'>You finish removing the terminal.</span></span>")
+		master.disconnect_terminal(cable_layer)
+		to_chat(user, span_warning("You finish removing the terminal."))
+		update_cable_icons_on_turf(get_turf(src))
 		return TRUE
 	else
-		to_chat(user, "<span class='filter_notice'><span class='warning'>You need to use a wirecutting tool!</span></span>")
+		to_chat(user, span_warning("You need to use a wirecutting tool!"))
 		return FALSE

@@ -550,7 +550,7 @@
 		else
 			opened = 1
 			update_icon()
-	else if	(istype(W, /obj/item/weapon/cell) && opened)	// trying to put a cell inside
+	else if(isPowerCell(W) && opened)	// trying to put a cell inside
 		if(cell)
 			to_chat(user, "The [name] already has a power cell installed.")
 			return
@@ -644,16 +644,14 @@
 		playsound(src, 'sound/items/Deconstruct.ogg', 50, 1)
 		if(do_after(user, 50 * W.toolspeed))
 			if(terminal && opened && has_electronics != APC_HAS_ELECTRONICS_SECURED)
-				if(prob(50) && electrocute_mob(usr, terminal.powernet, terminal))
+				if(prob(50) && electrocute_mob(user, terminal.powernet, terminal))
 					var/datum/effect/effect/system/spark_spread/s = new /datum/effect/effect/system/spark_spread
 					s.set_up(5, 1, src)
 					s.start()
-					if(usr.stunned)
+					if(user.stunned)
 						return
-				new /obj/item/stack/cable_coil(loc,10)
-				to_chat(user, "<span class='notice'>You cut the cables and dismantle the power terminal.</span>")
-				disconnect_terminal(terminal)
-				qdel(terminal)
+				terminal.dismantle(user, W, cable_layer)
+
 	else if(istype(W, /obj/item/weapon/module/power_control) && opened && has_electronics == APC_HAS_ELECTRONICS_NONE && !((stat & BROKEN)))
 		user.visible_message("<span class='warning'>[user.name] inserts the power control board into [src].</span>", \
 							"You start to insert the power control board into the frame...")
@@ -1299,8 +1297,9 @@
 
 /obj/machinery/power/apc/disconnect_terminal(var/obj/machinery/power/terminal/term)
 	if(terminal)
-		terminal.master = null
-		terminal = null
+		term.master = null
+		term = null
+		qdel(term)
 	update_cable_icons_on_turf(get_turf(src))
 
 /obj/machinery/power/apc/proc/set_broken()
