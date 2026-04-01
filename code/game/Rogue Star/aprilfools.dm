@@ -61,7 +61,7 @@
 			continue
 		if(L.transforming)
 			continue
-		L.doglinize(FALSE)
+		L.doglinize(reversable)
 
 /mob/living/proc/doglinize(var/reversable = TRUE)
 	make_jittery(999999)
