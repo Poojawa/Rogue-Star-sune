@@ -93,15 +93,18 @@
 		RestrainedClickOn(A)
 		return 1
 
-	if(click_flags & CLICK_THROW && (isturf(A) || isturf(A.loc)) && throw_item(A))	//RS EDIT
-		trigger_aiming(TARGET_CAN_CLICK)
-		throw_mode_off()
-		return TRUE
+	//RS EDIT START
+	if(click_flags)
+		if(click_flags & CLICK_THROW && (isturf(A) || isturf(A.loc)) && throw_item(A))
+			trigger_aiming(TARGET_CAN_CLICK)
+			throw_mode_off()
+			return TRUE
 
-	if(click_flags & CLICK_SEARCH)//RS ADD START
-		A.search()
-		search_off()
-		return TRUE	//RS ADD END
+		if(click_flags & CLICK_SEARCH)
+			A.search()
+			search_off()
+			return TRUE
+	//RS EDIT END
 
 	var/obj/item/W = get_active_hand()
 
