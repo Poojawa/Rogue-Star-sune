@@ -41,6 +41,34 @@
 		if (!asset_cache_job)
 			return
 
+	// RS Add Start: Browser-based instrument audio (Lira, March 2026)
+	if(href_list["instrument_audio_ready"])
+		instrument_audio?.browser_status(TRUE, text2num(href_list["instrument_audio_capable"]))
+		return
+
+	if(href_list["instrument_audio_song_ready"])
+		var/song_id = url_decode(href_list["instrument_audio_song_ready"])
+		var/timeline_key = href_list["instrument_audio_timeline_key"] ? url_decode(href_list["instrument_audio_timeline_key"]) : null
+		var/duration_seconds = href_list["instrument_audio_duration"] ? text2num(url_decode(href_list["instrument_audio_duration"])) : null
+		instrument_audio?.browser_song_ready(song_id, timeline_key, duration_seconds)
+		return
+
+	if(href_list["instrument_audio_midi_channels"])
+		var/song_id = url_decode(href_list["instrument_audio_midi_channels"])
+		var/midi_serial = href_list["instrument_audio_midi_serial"] ? text2num(url_decode(href_list["instrument_audio_midi_serial"])) : 0
+		var/metadata_json = href_list["instrument_audio_midi_data"] ? url_decode(href_list["instrument_audio_midi_data"]) : null
+		var/successful = href_list["instrument_audio_midi_ok"] ? !!text2num(url_decode(href_list["instrument_audio_midi_ok"])) : FALSE
+		instrument_audio?.browser_song_midi_channels(song_id, midi_serial, metadata_json, successful)
+		return
+
+	if(href_list["instrument_audio_request_samples"])
+		var/requested_song_id = url_decode(href_list["instrument_audio_request_samples"])
+		var/raw_aliases = href_list["instrument_audio_aliases"] ? url_decode(href_list["instrument_audio_aliases"]) : null
+		var/datum/song/S = locate(requested_song_id)
+		instrument_audio?.request_song_samples(S, raw_aliases ? splittext(raw_aliases, ",") : list())
+		return
+	// RS Add End
+
 	//search the href for script injection
 	if( findtext(href,"<script",1,0) )
 		to_world_log("Attempted use of scripts within a topic call, by [src]")
@@ -245,6 +273,8 @@
 
 	send_resources()
 
+	instrument_audio = new(src) // RS Add: Browser-based instrument audio (Lira, March 2026)
+
 	if(!void)
 		void = new()
 	screen += void
@@ -278,6 +308,7 @@
 	//DISCONNECT//
 	//////////////
 /client/Del()
+	cleanup_instrument_audio() // RS Add: Browser-based instrument audio (Lira, March 2026)
 	if(holder)
 		holder.owner = null
 		GLOB.admins -= src
@@ -291,6 +322,7 @@
 	return ..()
 
 /client/Destroy()
+	cleanup_instrument_audio() // RS Add: Browser-based instrument audio (Lira, March 2026)
 	..()
 	return QDEL_HINT_HARDDEL_NOW
 

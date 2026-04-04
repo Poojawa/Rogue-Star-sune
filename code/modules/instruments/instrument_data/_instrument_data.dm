@@ -8,6 +8,19 @@
 		if(!I.admin_only)
 			. += I.id
 
+// RS Add: Get all non-admin synthesized instruments for advanced synth (Lira, March 2026)
+/proc/get_layerable_synth_instrument_ids()
+	. = list()
+	for(var/id in SSinstruments.instrument_data)
+		var/datum/instrument/I = SSinstruments.instrument_data[id]
+		if(I.admin_only)
+			continue
+		if(I.instrument_flags & INSTRUMENT_LEGACY)
+			continue
+		if(!I.supports_browser_audio())
+			continue
+		. += I.id
+
 /**
  * # Instrument Datums
  *
@@ -45,6 +58,8 @@
 	var/admin_only = FALSE
 	/// Volume multiplier. Synthesized instruments are quite loud and I don't like to cut off potential detail via editing. (someone correct me if this isn't a thing)
 	var/volume_multiplier = 0.33
+	/// RS Add: Browser-backed playback support flag (Lira, March 2026)
+	var/browser_audio_supported = TRUE
 
 /datum/instrument/New()
 	if(isnull(id))
@@ -68,10 +83,19 @@
 		return length(samples)
 	return (length(samples) >= 128)
 
+// RS Add: Browser-based instrument audio (Lira, March 2026)
+/datum/instrument/proc/supports_browser_audio()
+	if(!browser_audio_supported)
+		return FALSE
+	if(instrument_flags & INSTRUMENT_LEGACY)
+		return lowertext(legacy_instrument_ext || "") == "ogg"
+	return TRUE
+
 /datum/instrument/Destroy()
 	SSinstruments.instrument_data -= id
-	for(var/datum/song/S as anything in songs_using)
-		S.set_instrument(null)
+	// RS Edit: Advanced synth (Lira, March 2026)
+	for(var/datum/song/S as anything in songs_using?.Copy())
+		S.handle_destroyed_instrument(src)
 	real_samples = null
 	samples = null
 	songs_using = null

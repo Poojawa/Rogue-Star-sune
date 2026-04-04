@@ -6,14 +6,81 @@
 //Updated by Lira for Rogue Star August 2025 to support forming synchronized bands//
 ////////////////////////////////////////////////////////////////////////////////////
 
-/datum/song/proc/instrument_status_ui()
+// RS Edit: Advanced synth (Lira, March 2026)
+/datum/song/proc/get_current_instrument_label()
+	return using_instrument?.name || "unconfigured"
+
+// RS Edit: Advanced synth (Lira, March 2026)
+/datum/song/proc/prompt_allowed_instrument_choice(mob/user, category_title = "Instrument Category", instrument_title = "Instrument Selection")
+	if(!length(allowed_instrument_ids))
+		return null
+	if(length(allowed_instrument_ids) == 1)
+		return allowed_instrument_ids[1]
+	var/list/categories = list()
+	for(var/i in allowed_instrument_ids)
+		var/datum/instrument/I = SSinstruments.get_instrument(i)
+		if(I)
+			LAZYSET(categories[I.category || "ERROR CATEGORY"], I.name, I.id)
+	var/cat = tgui_input_list(user, "Select Category", category_title, categories)
+	if(!cat)
+		return null
+	var/list/instruments = categories[cat]
+	var/choice = tgui_input_list(user, "Select Instrument", instrument_title, instruments)
+	if(!choice)
+		return null
+	return instruments[choice]
+
+// RS Edit: Midi support (Lira, March 2026)
+/datum/song/proc/instrument_status_ui(mob/user)
 	. = list()
 	. += "<div class='statusDisplay'>"
 	. += "<b><a href='?src=[REF(src)];switchinstrument=1'>Current instrument</a>:</b> "
 	if(!using_instrument)
 		. += "<span class='danger'>No instrument loaded!</span><br>"
 	else
-		. += "[using_instrument.name]<br>"
+		. += "[get_current_instrument_label()]<br>" // RS Edit: Advanced synth (Lira, March 2026)
+	var/can_manage_midi_upload = can_manage_uploaded_midi(user)
+	var/can_select_uploaded_midi = can_manage_midi_upload && has_uploaded_midi()
+	var/midi_toggle_text = can_select_uploaded_midi ? "<a href='?src=[REF(src)];source=midi'>Use Uploaded MIDI</a>" : "Uploaded MIDI"
+	var/source_name = selected_uploaded_midi_source() ? "Uploaded MIDI" : "Song Notes"
+	. += "<b>Playback Source</b>: [source_name] ("
+	if(selected_uploaded_midi_source())
+		. += "<a href='?src=[REF(src)];source=notes'>Use Notes</a> | <span class='linkOn'>Uploaded MIDI</span>"
+	else
+		. += "<span class='linkOn'>Notes</span> | [midi_toggle_text]"
+	. += ")<br>"
+	. += "<b>Uploaded MIDI</b>: "
+	if(has_uploaded_midi())
+		. += "[uploaded_midi_name]"
+		var/upload_duration = get_uploaded_midi_duration_seconds()
+		if(upload_duration)
+			. += " ([upload_duration]s)"
+	else
+		. += "None loaded"
+	if(can_manage_midi_upload)
+		. += " (<a href='?src=[REF(src)];uploadmidi=1'>Upload</a>"
+		if(has_uploaded_midi())
+			. += " | <a href='?src=[REF(src)];clearmidiupload=1'>Clear</a>"
+		. += ")"
+	else
+		. += " (Browser audio, instrument audio enabled, and a browser-playable synth instrument are required.)"
+	. += "<br>"
+	if(has_uploaded_midi())
+		var/midi_channel_status = "Unknown"
+		if(uploaded_midi_channel_scan_in_progress)
+			midi_channel_status = "Analyzing on your client..."
+		else if(uploaded_midi_channel_scan_failed)
+			midi_channel_status = "<span class='warning'>Scan failed</span>"
+		else if(uploaded_midi_channel_data_ready())
+			midi_channel_status = format_uploaded_midi_channel_metadata()
+		. += "<b>MIDI Channels</b>: [midi_channel_status]"
+		if(can_manage_midi_upload)
+			. += " (<a href='?src=[REF(src)];scanmidichannels=1'>Refresh</a>)"
+		. += "<br>"
+		. += "<b>MIDI Playback Channels</b>: [get_midi_playback_channel_filter_summary()]"
+		if(can_manage_midi_upload)
+			. += " (<a href='?src=[REF(src)];setmidichannels=1'>Set</a> | <a href='?src=[REF(src)];clearmidichannels=1'>Play All</a>)"
+		. += "<br>"
 	. += "Playback Settings:<br>"
 	if(can_noteshift)
 		. += "<a href='?src=[REF(src)];setnoteshift=1'>Note Shift/Note Transpose</a>: [note_shift] keys / [round(note_shift / 12, 0.01)] octaves<br>"
@@ -44,38 +111,45 @@
 		. += "<br><b>Band (Leader)</b>: <a href='?src=[REF(src)];inviteband=1'>Invite Nearby</a> | <a href='?src=[REF(src)];dissolveband=1'>Dissolve</a><br>"
 		if(length(band_followers))
 			. += "Members:<br>"
-			var/turf/lt = get_turf(parent)
 			for(var/datum/song/S as anything in band_followers)
 				var/member_name = (S.parent && S.parent.name) ? S.parent.name : "instrument"
-				var/configured_name = (S.using_instrument && S.using_instrument.name) ? S.using_instrument.name : "unconfigured"
-				var/status
-				var/mob/holder = S.get_holder()
-				if(!holder)
-					status = "Not ready (unheld)"
-				else
-					var/turf/ft = get_turf(S.parent)
-					if(!ft || !lt || (get_dist(lt, ft) > band_range))
-						status = "Not ready (out of range)"
-					else
-						status = "Ready"
-				. += "- [S.get_holder_name()] ([member_name]: [configured_name]) - [status] <a href='?src=[REF(src)];kick=[REF(S)]'>Kick</a> | <a href='?src=[REF(src)];promote=[REF(S)]'>Make Leader</a><br>"
+				var/configured_name = S.get_current_instrument_label()
+				var/status = S.get_band_readiness_status(src)
+				. += "- [S.get_holder_name()] ([member_name]: [configured_name]) - [status]"
+				if(has_uploaded_midi())
+					. += " | MIDI Channels: [S.get_midi_playback_channel_filter_summary()]"
+					if(can_manage_midi_upload)
+						. += " (<a href='?src=[REF(src)];setmembermidichannels=[REF(S)]'>Set</a> | <a href='?src=[REF(src)];clearmembermidichannels=[REF(S)]'>All</a>)"
+				. += " <a href='?src=[REF(src)];kick=[REF(S)]'>Kick</a> | <a href='?src=[REF(src)];promote=[REF(S)]'>Make Leader</a><br>"
 		else
 			. += "No members yet.<br>"
 	else if(band_leader)
 		var/leader_name = (band_leader.parent && band_leader.parent.name) ? band_leader.parent.name : "instrument"
-		var/leader_configured = (band_leader.using_instrument && band_leader.using_instrument.name) ? band_leader.using_instrument.name : "unconfigured"
+		var/leader_configured = band_leader.get_current_instrument_label()
 		. += "<br><b>Band (Member)</b>: Leader is [band_leader.get_holder_name()] ([leader_name]: [leader_configured]) | <a href='?src=[REF(src)];leaveband=1'>Leave</a><br>"
 	else
 		. += "<br><b>Band</b>: <a href='?src=[REF(src)];createband=1'>Create Sync</a><br>"
 	//RS Add End
 	. += "</div>"
 
+// RS Edit: Midi support (Lira, March 2026)
 /datum/song/proc/interact(mob/user)
 	var/list/dat = list()
+	if(user && has_uploaded_midi() && can_manage_uploaded_midi(user))
+		request_uploaded_midi_channel_scan(user)
 
-	dat += instrument_status_ui()
+	dat += instrument_status_ui(user)
 
-	if(lines.len > 0)
+	if(selected_uploaded_browser_source() || (band_is_follower() && band_leader?.playing && band_leader.using_uploaded_midi_playback()))
+		dat += "<H3>Playback</H3>"
+		if(selected_uploaded_browser_source() && !has_uploaded_midi())
+			dat += "<span class='warning'>No uploaded MIDI is loaded.</span><br><br>"
+		else
+			if(!playing)
+				dat += "<A href='?src=[REF(src)];play=1'>Play</A> <SPAN CLASS='linkOn'>Stop</SPAN><BR><BR>"
+			else
+				dat += "<SPAN CLASS='linkOn'>Play</SPAN> <A href='?src=[REF(src)];stop=1'>Stop</A><BR>"
+	else if(lines.len > 0)
 		dat += "<H3>Playback</H3>"
 		if(!playing)
 			dat += "<A href='?src=[REF(src)];play=1'>Play</A> <SPAN CLASS='linkOn'>Stop</SPAN><BR><BR>"
@@ -86,7 +160,7 @@
 			dat += "<BR>"
 		else
 			dat += "<SPAN CLASS='linkOn'>Play</SPAN> <A href='?src=[REF(src)];stop=1'>Stop</A><BR>"
-			dat += "Repeats left: <B>[repeat]</B><BR>"
+			dat += "Repeats left: <B>[get_repeats_left()]</B><BR>" // RS Edit: Browser-based instrument audio (Lira, March 2026)
 	if(!editing)
 		dat += "<BR><B><A href='?src=[REF(src)];edit=2'>Show Editor</A></B><BR>"
 	else
@@ -135,6 +209,7 @@
  */
 /datum/song/proc/ParseSong(text)
 	set waitfor = FALSE
+	var/was_playing = playing // RS Add: Browser-based instrument audio (Lira, March 2026)
 	//split into lines
 	lines = splittext(text, "\n")
 	if(lines.len)
@@ -155,6 +230,8 @@
 				lines.Remove(l)
 			else
 				linenum++
+		compile_chords() // RS Add: Browser-based instrument audio (Lira, March 2026)
+		refresh_browser_playback(TRUE, was_playing) // RS Add: Browser-based instrument audio (Lira, March 2026)
 		updateDialog(usr) // make sure updates when complete
 
 /datum/song/Topic(href, href_list)
@@ -169,6 +246,7 @@
 		lines = new()
 		tempo = sanitize_tempo(5) // default 120 BPM
 		name = ""
+		refresh_browser_playback(TRUE) // RS Add: Browser-based instrument audio (Lira, March 2026)
 
 	else if(href_list["import"])
 		var/t = ""
@@ -190,7 +268,51 @@
 	else if(href_list["edit"])
 		editing = text2num(href_list["edit"]) - 1
 
+	// RS Add: Midi support (Lira, March 2026)
+	if(href_list["source"])
+		var/requested_source = href_list["source"]
+		if(requested_source == "midi" && !can_manage_uploaded_midi(usr))
+			to_chat(usr, "<span class='warning'>Uploaded MIDI playback requires browser audio, instrument audio enabled, and a browser-playable synth instrument.</span>")
+		else if(requested_source == "midi" && !has_uploaded_midi())
+			to_chat(usr, "<span class='warning'>Upload a MIDI file before selecting Uploaded MIDI playback.</span>")
+		else
+			if(requested_source == "midi")
+				set_playback_source(INSTRUMENT_PLAYBACK_SOURCE_UPLOADED_MIDI)
+			else
+				set_playback_source(INSTRUMENT_PLAYBACK_SOURCE_NOTES)
+
+	// RS Add: Midi support (Lira, March 2026)
+	else if(href_list["uploadmidi"])
+		if(!can_manage_uploaded_midi(usr))
+			to_chat(usr, "<span class='warning'>Uploaded MIDI playback requires browser audio, instrument audio enabled, and a browser-playable synth instrument.</span>")
+		else
+			var/uploaded_midi = input(usr, "Choose a MIDI file to upload for browser playback.", "Upload MIDI") as null|file
+			if(!in_range(parent, usr))
+				return
+			if(uploaded_midi)
+				upload_midi(uploaded_midi, usr)
+
+	// RS Add: Midi support (Lira, March 2026)
+	else if(href_list["clearmidiupload"])
+		clear_uploaded_midi(usr)
+
+	// RS Add: Midi support (Lira, April 2026)
+	else if(href_list["scanmidichannels"])
+		if(!request_uploaded_midi_channel_scan(usr, TRUE))
+			to_chat(usr, "<span class='warning'>Uploaded MIDI channel scanning is unavailable right now.</span>")
+
+	// RS Add: Midi support (Lira, April 2026)
+	else if(href_list["setmidichannels"])
+		prompt_midi_playback_channel_filter(usr)
+
+	// RS Add: Midi support (Lira, April 2026)
+	else if(href_list["clearmidichannels"])
+		clear_midi_playback_channel_filter()
+
 	if(href_list["repeat"]) //Changing this from a toggle to a number of repeats to avoid infinite loops.
+		// RS Add: Midi support (Lira, March 2026)
+		if(selected_uploaded_browser_source())
+			return
 		if(playing)
 			return //So that people cant keep adding to repeat. If the do it intentionally, it could result in the server crashing.
 		repeat += round(text2num(href_list["repeat"]))
@@ -201,6 +323,7 @@
 
 	else if(href_list["tempo"])
 		tempo = sanitize_tempo(tempo + text2num(href_list["tempo"]))
+		refresh_browser_playback(TRUE) // RS Add: Browser-based instrument audio (Lira, March 2026)
 
 	else if(href_list["play"])
 		band_paused_manually = FALSE //RS Add: Clear manual pause when the user explicitly plays again (Lira, August 2025)
@@ -256,24 +379,7 @@
 			set_dropoff_volume(round(amount, 0.01))
 
 	else if(href_list["switchinstrument"])
-		if(!length(allowed_instrument_ids))
-			return
-		else if(length(allowed_instrument_ids) == 1)
-			set_instrument(allowed_instrument_ids[1])
-			return
-		var/list/categories = list()
-		for(var/i in allowed_instrument_ids)
-			var/datum/instrument/I = SSinstruments.get_instrument(i)
-			if(I)
-				LAZYSET(categories[I.category || "ERROR CATEGORY"], I.name, I.id)
-		var/cat = tgui_input_list(usr, "Select Category", "Instrument Category", categories)
-		if(!cat)
-			return
-		var/list/instruments = categories[cat]
-		var/choice = tgui_input_list(usr, "Select Instrument", "Instrument Selection", instruments)
-		if(!choice)
-			return
-		choice = instruments[choice] //get id
+		var/choice = prompt_allowed_instrument_choice(usr) // RS Edit: Advanced synth (Lira, March 2026)
 		if(choice)
 			set_instrument(choice)
 
@@ -281,6 +387,7 @@
 		var/amount = tgui_input_number(usr, "Set note shift", "Note Shift")
 		if(!isnull(amount))
 			note_shift = clamp(amount, note_shift_min, note_shift_max)
+			refresh_browser_playback(TRUE) // RS Add: Browser-based instrument audio (Lira, March 2026)
 
 	else if(href_list["setsustainmode"])
 		var/choice = tgui_input_list(usr, "Choose a sustain mode", "Sustain Mode", list("Linear", "Exponential"))
@@ -289,9 +396,11 @@
 				sustain_mode = SUSTAIN_LINEAR
 			if("Exponential")
 				sustain_mode = SUSTAIN_EXPONENTIAL
+		refresh_browser_playback(TRUE) // RS Add: Browser-based instrument audio (Lira, March 2026)
 
 	else if(href_list["togglesustainhold"])
 		full_sustain_held_note = !full_sustain_held_note
+		refresh_browser_playback(TRUE) // RS Add: Browser-based instrument audio (Lira, March 2026)
 
 	//RS Add Start: Define band sync hrefs (Lira, August 2025)
 
@@ -299,9 +408,12 @@
 		var/seconds = tgui_input_number(usr, "Set band sync delay (seconds)", "Band Sync Delay", band_delay_ds / 10)
 		if(!isnull(seconds))
 			band_delay_ds = clamp(round(seconds * 10, get_instrument_time_step()), 0, 5 SECONDS) // RS Edit: Remove FPS dependency (Lira, November 2025)
+			refresh_browser_playback(TRUE) // RS Add: Browser-based instrument audio (Lira, March 2026)
 
 	else if(href_list["toggleautoplay"])
 		band_autoplay = !band_autoplay
+		if(band_autoplay)
+			clear_band_autoplay_start_failure()
 
 	else if(href_list["setnotefilter"])
 		var/low = tgui_input_number(usr, "Lowest note key (0-127)", "Note Range Low", note_filter_min)
@@ -362,6 +474,20 @@
 	else if(href_list["leaveband"])
 		if(band_leader)
 			band_leave()
+
+	else if(href_list["setmembermidichannels"])
+		var/member_ref = href_list["setmembermidichannels"]
+		var/datum/song/member_song = locate(member_ref)
+		if(band_is_leader() && istype(member_song) && (member_song in band_followers))
+			member_song.prompt_midi_playback_channel_filter(usr, src, FALSE)
+			updateDialog(usr)
+
+	else if(href_list["clearmembermidichannels"])
+		var/member_clear_ref = href_list["clearmembermidichannels"]
+		var/datum/song/member_clear_song = locate(member_clear_ref)
+		if(band_is_leader() && istype(member_clear_song) && (member_clear_song in band_followers))
+			member_clear_song.clear_midi_playback_channel_filter(FALSE)
+			updateDialog(usr)
 
 	else if(href_list["kick"])
 		var/ref = href_list["kick"]
