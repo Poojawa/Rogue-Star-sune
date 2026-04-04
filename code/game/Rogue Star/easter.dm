@@ -20,11 +20,25 @@
 		return
 	if(!isnum(choice))
 		return
+	if(choice > 1000)
+		choice = 1000
+		to_chat(user,SPAN_WARNING("Reduced the spawn number to 1000 to prevent server lag. If you want to spawn more than 1000, please use \the [src] again."))
+	var/attempts = 0
+	var/spawned = 0
+	var/howmany = choice
 	while(choice > 0)
 		if(spawn_egg())
 			choice --
+			spawned ++
+			attempts = 0
+		else
+			attempts ++
+			if(attempts > 100)
+				to_chat(user,SPAN_WARNING("Spawning interrupted early due to excessive failed spawning attempts. [choice] eggs failed to spawn."))
+				choice = 0
 
-	to_chat(user, SPAN_NOTICE("Eggs were spawned."))
+	to_chat(user, SPAN_NOTICE("Finished spawning eggs."))
+	log_and_message_admins("attempted to spawn [howmany] eggs, [spawned] were spawned on Z [z]")
 
 /obj/easter_egg_spawner/proc/spawn_egg()
 	var/turf/T = locate(rand(1,world.maxx),rand(1,world.maxy),z)
