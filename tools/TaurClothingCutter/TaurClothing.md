@@ -9,19 +9,23 @@ Useful for cutting up species sprites from full body ones. Or whatever else.
 
 -- Hijacked by Poojawa to facilitate easier sprite porting -> tauric sprites. 
 
-Wolf taur suits have been divided into three different categories: Coats, Dresses, and fullsuits.
+Taur suits have been divided into three different categories: Coats, Dresses, and fullsuits. These are found in suitstocovert folder. Please adhere to the general sorting that's been done already when adding new clothing.
 
-In the same spirit, there's taur templates of each class too. Most of them have a large purple mask applied for special exceptions (Imperium Monk robe, Wedding gown, etc). Copy and paste all needed suit sprites into SpritesToSnip.dmi. 
+Currently the only body types the sprites are really designed for are ones based off of the Canine, Feline, and to some extent lizard bodies. The fat versions of sprites have a special sock overlay and don't need to be custom edited unless the legs themselves are changed. All other sprites theoretically can be used, but will take significant work to bueautify them. See more with the unsuitable note below
 
-Take a species of taur from the templates and paste into Taur_cutter.dmi. Ideally you'll want to match the correct types together.
+There's taur templates of each type too found in the Taur Templates folder, Most of them have a large purple mask applied for special exceptions of suits that 'spill over' the human sprite (Imperium Monk robe, Wedding gown, etc), Everything inside of this mask and the sprite itself will be used to 'snip out' the needed pixels, so keep that in mind! Copy and paste each species template sprites into their respective <type>Cutter.dmi. Only one at a time! Each of CoatCutter, DressCutter, SuitCutter should have the one species inside of it, so Wolf, Wolf, Wolf. Etc. 
 
-Optimally you'll want to have used the suit_templates.dmi in the icon/inventory/suit folder to get a basic wolf taur outline done up. 
+In Dreammaker -> Build -> Compile and Run -> Cut <Type>. The default for Cut Suits is taursuit_.dmi so you can save your species in as taursuit_[species] and go. Cut Dresses and Cut Coats will save into their own files.
 
-If the species is in taursuits_unsuitable.dmi then they won't get the benefits of these suits. That'll take changing in their sprite_accessories_taur.dm listing. It's an all-or-nothing type overhaul, so you'll need every listed suit in that species' suit file. Yes I'm aware of how daunting it is. 
+Once all three are done, please ensure to combine them all into your species specific dmi, Preferrably Suits + Coats + Dresses for consistency in sorting. Remember to close the client when you're done! You won't be able to recompile the cutter in dream maker otherwise. That's the solution to 'x.dmi cannot be found' errors.
 
-In Dreammaker -> Build -> Compile and Run -> Begin the decimation. Save as whatever. The default is taursuit_.dmi so you can just slap your species in and go. Do Note! doing the same name for each operation WILL OVERRIDE your current conversions, so do taursuits_species then taursuits_speciescoats etc. Update the relevant subtype with your wolftaur varient suit to make future organizing of the sprites easier when you've finished.
+If the species is in taursuits_unsuitable.dmi then they won't get the benefits of these suit cutters. That'll take changing in their sprite_accessories_taur.dm listing. It's an all-or-nothing type overhaul, so you'll need every listed suit in that species' suit file. Yes I'm aware of how daunting it is. Fortunately the "sock" template for them can be used to get a reasonable head start, but you'll still be suffering from a lot of work to fix each non standard body. Each Taur body is a little over 400 seperate suit icons, with 4 states each totalling around 1,600 suit icons each, multiplied by however many animation frames in the icon as well (The nasa suit is 16 total, the comic coat is 48 !!). Of course, a fourth of those are just flipped East/West facing, so you're *only* having do deal with ~1,200 of 'em!
 
-if you're just doing a limited run of one suit icon, you can throw all the relevant species into Taur_cutter, the resulting file will contain all tauric versions of your clothing item after cutout.
+In addition to this, tails are given socks as well, so you don't need to model them, just make sure it's added!  
+
+Cut Taurs is if you're just doing a limited run of one suit type icon, you can throw all the relevant species into the relevant cutter, the resulting file will contain all tauric versions of your clothing item after cutout. Avoid doing this with the major ones. You will never be able to sort them out with any sanity! 
 
 If You're porting a new taur entirely:
 Be sure to add pixel padding, the assembled human sprite has some. The purple outline is the padding. This accounts for stuff like armor vests or heavier coats/suits. You'll want enough clothing pixels to work with to follow up and edit!
+
+It would be helpful if you 'build' a four directional template sprite for use as an overlay for alignment as well, just export a template as a png! Some taur bodies have weird spine positions, or legs that stick out a bit too much, etc. It is what it is. 
