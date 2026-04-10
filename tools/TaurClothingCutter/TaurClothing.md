@@ -17,11 +17,11 @@ There's taur templates of each type too found in the Taur Templates folder, Most
 
 In Dreammaker -> Build -> Compile and Run -> Cut <Type>. The default for Cut Suits is taursuit_.dmi so you can save your species in as taursuit_[species] and go. Cut Dresses and Cut Coats will save into their own files.
 
-Once all three are done, please ensure to combine them all into your species specific dmi, Preferrably Suits + Coats + Dresses for consistency in sorting. Remember to close the client when you're done! You won't be able to recompile the cutter in dream maker otherwise. That's the solution to 'x.dmi cannot be found' errors.
+Once all three are done, please ensure to combine them all into your species specific dmi, Preferrably Suits + Coats + Dresses for consistency in sorting. Remember to close the client when you're done! You won't be able to recompile the cutter in dream maker otherwise. That's the solution to 'x.dmi cannot be found' errors. Bedsheet.dmi is seperate because it's so goofy oversized that it works as a one-size fits all, so just copy that in after you paste the dresses in. 
 
 If the species is in taursuits_unsuitable.dmi then they won't get the benefits of these suit cutters. That'll take changing in their sprite_accessories_taur.dm listing. It's an all-or-nothing type overhaul, so you'll need every listed suit in that species' suit file. Yes I'm aware of how daunting it is. Fortunately the "sock" template for them can be used to get a reasonable head start, but you'll still be suffering from a lot of work to fix each non standard body. Each Taur body is a little over 400 seperate suit icons, with 4 states each totalling around 1,600 suit icons each, multiplied by however many animation frames in the icon as well (The nasa suit is 16 total, the comic coat is 48 !!). Of course, a fourth of those are just flipped East/West facing, so you're *only* having do deal with ~1,200 of 'em!
 
-In addition to this, tails are given socks as well, so you don't need to model them, just make sure it's added!  
+In addition to this, tails are given socks as well, so you don't need to model them, just make sure the tail's added! It will overlay over the suit icon if applicable, for space suits and the like. 
 
 Cut Taurs is if you're just doing a limited run of one suit type icon, you can throw all the relevant species into the relevant cutter, the resulting file will contain all tauric versions of your clothing item after cutout. Avoid doing this with the major ones. You will never be able to sort them out with any sanity! 
 
