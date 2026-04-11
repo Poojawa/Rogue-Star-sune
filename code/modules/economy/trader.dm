@@ -142,8 +142,8 @@
 	. = ..()
 	switch(accepts)
 		if("coin")
-			if(istype(O, /obj/item/weapon/aliencoin))
-				var/obj/item/weapon/aliencoin/a = O
+			if(istype(O, /obj/item/triangle))
+				var/obj/item/triangle/a = O
 				coinbalance += a.value
 				visible_message("<span class='notice'>\The [src] accepts \the [user]'s [O].</span>")
 				qdel(a)
@@ -220,17 +220,17 @@
 			if(coinbalance)
 				u_get_refund = TRUE
 			while(coinbalance > 0)
-				if(coinbalance >= 20)
-					new /obj/item/weapon/aliencoin/phoron(get_turf(loc))
-					coinbalance -= 20
+				if(coinbalance >= 25)
+					new /obj/item/triangle/u25(get_turf(loc))
+					coinbalance -= 25
 				else if(coinbalance >= 10)
-					new /obj/item/weapon/aliencoin/gold(get_turf(loc))
+					new /obj/item/triangle/u10(get_turf(loc))
 					coinbalance -= 10
 				else if(coinbalance >= 5)
-					new /obj/item/weapon/aliencoin/silver(get_turf(loc))
+					new /obj/item/triangle/u5(get_turf(loc))
 					coinbalance -= 5
 				else
-					new /obj/item/weapon/aliencoin/basic(get_turf(loc))
+					new /obj/item/triangle/u1(get_turf(loc))
 					coinbalance --
 		if("money")
 			for(var/obj/c in bank)

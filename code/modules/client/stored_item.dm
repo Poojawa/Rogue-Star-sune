@@ -277,20 +277,29 @@
 	E.needs_saving = TRUE
 	visible_message("<span class='notice'>\The [src] rattles as it dispenses coins!</span>")
 	var/turf/here = get_turf(src)
-	var/obj/item/weapon/aliencoin/A
+	var/obj/item/triangle/A
+	if(withdrawal_amount == 7)
+		A = new /obj/item/triangle/u7(here)
+		withdrawal_amount -= A.value
+	if(withdrawal_amount == 13)
+		A = new /obj/item/triangle/u13(here)
+		withdrawal_amount -= A.value
+
 	while(withdrawal_amount > 0)
 		if(withdrawal_amount >= 1000)
-			A = new /obj/item/weapon/aliencoin/exotic(here)
+			A = new /obj/item/triangle/u1000(here)
 		else if(withdrawal_amount >= 100)
-			A = new /obj/item/weapon/aliencoin/diamond(here)
-		else if(withdrawal_amount >= 20)
-			A = new /obj/item/weapon/aliencoin/phoron(here)
+			A = new /obj/item/triangle/u100(here)
+		else if(withdrawal_amount >= 25)
+			A = new /obj/item/triangle/u25(here)
 		else if(withdrawal_amount >= 10)
-			A = new /obj/item/weapon/aliencoin/gold(here)
+			A = new /obj/item/triangle/u10(here)
 		else if(withdrawal_amount >= 5)
-			A = new /obj/item/weapon/aliencoin/silver(here)
+			A = new /obj/item/triangle/u5(here)
+		else if(withdrawal_amount >= 1)
+			A = new /obj/item/triangle/u1(here)
 		else
-			A = new /obj/item/weapon/aliencoin/basic(here)
+			A = new /obj/item/triangle/u02(here)
 		withdrawal_amount -= A.value
 	busy_bank = FALSE
 	return TRUE
@@ -405,9 +414,9 @@
 		return FALSE
 
 	busy_bank = TRUE
-	if(istype(held, /obj/item/weapon/aliencoin))
+	if(istype(held, /obj/item/triangle))
 		if(user.etching)
-			var/obj/item/weapon/aliencoin/coin = held
+			var/obj/item/triangle/coin = held
 			user.update_etching("triangles", coin.value)
 			user.drop_item()
 			to_chat(user, "<span class='warning'>\The [src] SCHLORPS up \the [held]!!!</span>")
@@ -469,9 +478,9 @@
 		return
 	busy_bank = TRUE
 	//RS EDIT BEGIN
-	if(istype(O, /obj/item/weapon/aliencoin))
+	if(istype(O, /obj/item/triangle))
 		if(user.etching)
-			var/obj/item/weapon/aliencoin/coin = O
+			var/obj/item/triangle/coin = O
 			user.update_etching("triangles", coin.value)
 			user.drop_item()
 			to_chat(user, "<span class='warning'>\The [src] SCHLORPS up \the [O]!!!</span>")
