@@ -219,19 +219,7 @@
 		if("coin")
 			if(coinbalance)
 				u_get_refund = TRUE
-			while(coinbalance > 0)
-				if(coinbalance >= 25)
-					new /obj/item/triangle/u25(get_turf(loc))
-					coinbalance -= 25
-				else if(coinbalance >= 10)
-					new /obj/item/triangle/u10(get_turf(loc))
-					coinbalance -= 10
-				else if(coinbalance >= 5)
-					new /obj/item/triangle/u5(get_turf(loc))
-					coinbalance -= 5
-				else
-					new /obj/item/triangle/u1(get_turf(loc))
-					coinbalance --
+				dispense_triangle_coins(coinbalance,get_turf(src))	//RS EDIT
 		if("money")
 			for(var/obj/c in bank)
 				u_get_refund = TRUE

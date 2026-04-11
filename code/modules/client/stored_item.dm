@@ -274,33 +274,9 @@
 
 	busy_bank = TRUE
 	E.triangles -= withdrawal_amount
-	E.needs_saving = TRUE
 	visible_message("<span class='notice'>\The [src] rattles as it dispenses coins!</span>")
-	var/turf/here = get_turf(src)
-	var/obj/item/triangle/A
-	if(withdrawal_amount == 7)
-		A = new /obj/item/triangle/u7(here)
-		withdrawal_amount -= A.value
-	if(withdrawal_amount == 13)
-		A = new /obj/item/triangle/u13(here)
-		withdrawal_amount -= A.value
-
-	while(withdrawal_amount > 0)
-		if(withdrawal_amount >= 1000)
-			A = new /obj/item/triangle/u1000(here)
-		else if(withdrawal_amount >= 100)
-			A = new /obj/item/triangle/u100(here)
-		else if(withdrawal_amount >= 25)
-			A = new /obj/item/triangle/u25(here)
-		else if(withdrawal_amount >= 10)
-			A = new /obj/item/triangle/u10(here)
-		else if(withdrawal_amount >= 5)
-			A = new /obj/item/triangle/u5(here)
-		else if(withdrawal_amount >= 1)
-			A = new /obj/item/triangle/u1(here)
-		else
-			A = new /obj/item/triangle/u02(here)
-		withdrawal_amount -= A.value
+	dispense_triangle_coins(withdrawal_amount,get_turf(src))
+	E.needs_saving = TRUE
 	busy_bank = FALSE
 	return TRUE
 
@@ -544,6 +520,38 @@
 	qdel(coin)
 	busy_bank = FALSE
 
+/proc/dispense_triangle_coins(var/value,var/turf/dispense_loc)
+	if(!value || !dispense_loc)
+		return FALSE
+	if(!isturf(dispense_loc))
+		dispense_loc = get_turf(dispense_loc)
+	var/obj/item/triangle/A
+	if(value == 7)
+		A = new /obj/item/triangle/u7(dispense_loc)
+		value -= A.value
+	if(value == 13)
+		A = new /obj/item/triangle/u13(dispense_loc)
+		value -= A.value
+
+	while(value > 0)
+		if(value >= 1000)
+			A = new /obj/item/triangle/u1000(dispense_loc)
+		else if(value >= 100)
+			A = new /obj/item/triangle/u100(dispense_loc)
+		else if(value >= 25)
+			A = new /obj/item/triangle/u25(dispense_loc)
+		else if(value >= 10)
+			A = new /obj/item/triangle/u10(dispense_loc)
+		else if(value >= 5)
+			A = new /obj/item/triangle/u5(dispense_loc)
+		else if(value >= 1)
+			A = new /obj/item/triangle/u1(dispense_loc)
+		else
+			A = new /obj/item/triangle/u02(dispense_loc)
+		value -= A.value
+	return TRUE
+
+//RS ADD END
 /obj
 
 	var/persist_storable = TRUE		//If this is true, this item can be stored in the item bank.

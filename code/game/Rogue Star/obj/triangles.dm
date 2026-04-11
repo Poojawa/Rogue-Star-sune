@@ -22,13 +22,13 @@
 	update_icon()
 
 /obj/item/triangle/get_nametag_desc(mob/user)
-	return "[value]◬"
+	return "◬:[value]"
 
 /obj/item/triangle/examine(mob/user)
 	. = ..()
 	if(Adjacent(user))
 		. += SPAN_NOTICE(close_desc)
-		. += SPAN_OCCULT("It is worth [value]◬.")
+		. += SPAN_OCCULT("It is worth ◬:[value].")
 
 /obj/item/triangle/Moved(atom/old_loc, direction, forced, movetime)
 	. = ..()
@@ -321,7 +321,12 @@
 
 /obj/item/coinstack/examine(mob/user)
 	. = ..()
-	. += SPAN_OCCULT("There are [contents.len] coins in the stack.")
+	var/value = 0
+	for(var/thing in contents)
+		if(istype(thing,/obj/item/triangle))
+			var/obj/item/triangle/coin = thing
+			value += coin.value
+	. += SPAN_OCCULT("There are [contents.len] coins in the stack with a total value of ◬:[value].")
 
 /obj/item/coinstack/attackby(obj/item/weapon/W, mob/user)
 	. = ..()
