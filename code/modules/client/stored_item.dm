@@ -479,14 +479,18 @@
 	busy_bank = TRUE
 	//RS EDIT BEGIN
 	if(istype(O, /obj/item/triangle))
-		if(user.etching)
-			var/obj/item/triangle/coin = O
-			user.update_etching("triangles", coin.value)
-			user.drop_item()
-			to_chat(user, "<span class='warning'>\The [src] SCHLORPS up \the [O]!!!</span>")
-			qdel(O)
-			busy_bank = FALSE
-			return
+		store_coin(O,user)
+		busy_bank = FALSE
+		return
+	if(istype(O,/obj/item/coinstack) || istype(O,/obj/item/coinpouch))
+		var/obj/item/coinpouch/pouch = O
+		for(var/thing in pouch.bank())
+			if(istype(thing,/obj/item/triangle))
+				var/obj/item/triangle/coin = thing
+				store_coin(coin,user)
+		busy_bank = FALSE
+		return
+
 	//RS EDIT END
 	user.etching.store_item(O,src)
 /*	//RS REMOVAL START - //Removed the old way of storing items, as it is no longer needed.
@@ -525,6 +529,20 @@
 /////STORABLE ITEMS AND ALL THAT JAZZ/////
 //I am only really intending this to be used for single items. Mostly stuff you got right now, but can't/don't want to use right now.
 //It is not at all intended to be a thing that just lets you hold on to stuff forever, but just until it's the right time to use it.
+
+//RS ADD - Multiple ways to store coins now so let's just make a proc that all of them can use
+/obj/machinery/item_bank/proc/store_coin(var/obj/item/triangle/coin,var/mob/living/user)
+	if(!coin || !user)
+		return
+	if(!user.etching)
+		return
+	if(!istype(coin,/obj/item/triangle))
+		return
+	user.update_etching("triangles", coin.value)
+	user.drop_from_inventory(coin)
+	to_chat(user, "<span class='warning'>\The [src] SCHLORPS up \the [coin]!!!</span>")
+	qdel(coin)
+	busy_bank = FALSE
 
 /obj
 
