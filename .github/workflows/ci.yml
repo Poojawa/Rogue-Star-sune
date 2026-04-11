@@ -57,6 +57,8 @@ jobs:
           ~/dreamchecker > ${GITHUB_WORKSPACE}/output-annotations.txt 2>&1
 
       - name: Annotate Linter
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         uses: yogstation13/DreamAnnotate@v2
         if: always()
         with:
