@@ -77,21 +77,21 @@ jobs:
       - name: Ensure +x on CI directory
         run: |
           chmod -R +x ./tools/ci
-      - name: Setup Cache
-        uses: actions/cache@v5
-        with:
-          path: $HOME/BYOND
-          key: ${{ runner.os }}-byond
       - name: Install RUST_G Dependencies
         run: |
           sudo dpkg --add-architecture i386
           sudo apt update || true
           sudo apt install zlib1g-dev:i386 libssl-dev:i386 libcurl4-openssl-dev:i386
           ldd librust_g.so
+      - name: Setup BYOND Cache
+        uses: actions/cache@v5
+        with:
+          path: ~/BYOND
+          key: ${{ runner.os }}-byond
+      - name: Install BYOND
+        run: tools/ci/install_byond.sh
       - name: Unit Tests
-        run: |
-          tools/ci/install_byond.sh
-          tools/ci/compile_and_run.sh
+        run: tools/ci/compile_and_run.sh
         env:
           TEST_DEFINE: "UNIT_TEST"
           TEST_FILE: "code/_unit_tests.dm"
@@ -100,9 +100,7 @@ jobs:
           EXTRA_ARGS: "-D${{ matrix.map }}"   #RS EDIT
           RUN: "1"
       - name: Compile POIs
-        run: |
-          tools/ci/install_byond.sh
-          tools/ci/compile_and_run.sh
+        run: tools/ci/compile_and_run.sh
         env:
           TEST_DEFINE: "MAP_TEST"
           TEST_FILE: "code/_map_tests.dm"
@@ -110,9 +108,7 @@ jobs:
           REPLACE: false
           RUN: "0"
       - name: Compile away missions
-        run: |
-          tools/ci/install_byond.sh
-          tools/ci/compile_and_run.sh
+        run: tools/ci/compile_and_run.sh
         env:
           TEST_DEFINE: "AWAY_MISSION_TEST"
           TEST_FILE: "code/_away_mission_tests.dm"
