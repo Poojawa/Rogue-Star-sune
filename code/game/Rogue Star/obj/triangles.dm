@@ -43,7 +43,7 @@
 		icon_state = "[value]s"
 
 /obj/item/triangle/attackby(obj/item/weapon/W, mob/user)
-	if(istype(W,/obj/item/triangle))
+	if(istriangle(W))
 		var/obj/item/coinstack/stack
 		if(istype(src.loc,/obj/item/coinstack))
 			stack = src.loc
@@ -215,7 +215,7 @@
 		add_overlay(contact)
 
 /obj/item/coinpouch/attackby(obj/item/weapon/W, mob/user)
-	if(istype(W,/obj/item/triangle))
+	if(istriangle(W))
 		var/obj/item/triangle/T = W
 		user.drop_from_inventory(T)
 		T.forceMove(src)
@@ -282,7 +282,7 @@
 
 	if(!found)
 		for(var/thing in T.contents)
-			if(istype(thing,/obj/item/triangle))
+			if(istriangle(thing))
 				found = TRUE
 				break
 			if(isliving(thing))
@@ -384,14 +384,14 @@
 	. = ..()
 	var/value = 0
 	for(var/thing in contents)
-		if(istype(thing,/obj/item/triangle))
+		if(istriangle(thing))
 			var/obj/item/triangle/coin = thing
 			value += coin.value
 	. += SPAN_OCCULT("There are [contents.len] coins in the stack with a total value of ◬:[value].")
 
 /obj/item/coinstack/attackby(obj/item/weapon/W, mob/user)
 	. = ..()
-	if(istype(W,/obj/item/triangle))
+	if(istriangle(W))
 		stack(W)
 	else
 		collapse()
