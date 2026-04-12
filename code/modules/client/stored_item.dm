@@ -275,7 +275,7 @@
 	busy_bank = TRUE
 	E.triangles -= withdrawal_amount
 	visible_message("<span class='notice'>\The [src] rattles as it dispenses coins!</span>")
-	dispense_triangle_coins(withdrawal_amount,get_turf(src))
+	dispense_triangle_coins(withdrawal_amount,get_turf(src),user)
 	E.needs_saving = TRUE
 	busy_bank = FALSE
 	return TRUE
@@ -520,7 +520,7 @@
 	qdel(coin)
 	busy_bank = FALSE
 
-/proc/dispense_triangle_coins(var/value,var/turf/dispense_loc)
+/proc/dispense_triangle_coins(var/value,var/turf/dispense_loc,var/mob/living/user)
 	if(!value || !dispense_loc)
 		return FALSE
 	if(!isturf(dispense_loc))
@@ -533,6 +533,8 @@
 		A = new /obj/item/triangle/u13(dispense_loc)
 		value -= A.value
 
+	var/list/dispensed = list()
+	var/obj/item/coinstack/stack
 	while(value > 0)
 		if(value >= 1000)
 			A = new /obj/item/triangle/u1000(dispense_loc)
@@ -549,6 +551,14 @@
 		else
 			A = new /obj/item/triangle/u02(dispense_loc)
 		value -= A.value
+		dispensed += A
+
+	if(dispensed.len > 1)
+		stack = new(dispense_loc)
+		if(isliving(user))
+			user.put_in_hands(stack)
+		for(var/obj/item/triangle/coin in dispensed)
+			stack.stack(coin)
 	return TRUE
 
 //RS ADD END

@@ -13,6 +13,7 @@
 
 	var/value = 0
 	var/close_desc = "You shouldn't see this."
+	var/value_desc = "No value"
 
 /obj/item/triangle/New()
 	if(value <= 0)
@@ -28,7 +29,8 @@
 	. = ..()
 	if(Adjacent(user))
 		. += SPAN_NOTICE(close_desc)
-		. += SPAN_OCCULT("It is worth ◬:[value].")
+		. += SPAN_OCCULT("<br>◬:[value]")
+		. += span_green(value_desc)
 
 /obj/item/triangle/Moved(atom/old_loc, direction, forced, movetime)
 	. = ..()
@@ -71,13 +73,13 @@
 		comment = "tails"
 	else if(result == 2)
 		comment = "heads"
-	if(loc == user)
-		user.visible_message("<span class='notice'>[user] has thrown [src]. It lands on [comment]! </span>", runemessage = "[comment]! ! !")
+	if(loc == user)	//The coin isn't visible so we want the runemessage to be on what's holding it
+		user.visible_message(SPAN_NOTICE("[user] has thrown [src]. It lands on [comment]!"), runemessage = "[comment]! ! !")
 	else
 		if(user)
-			visible_message("<span class='notice'>[user] has thrown [src]. It lands on [comment]! </span>", runemessage = "[comment]! ! !")
+			visible_message(SPAN_NOTICE("[user] has thrown [src]. It lands on [comment]!"), runemessage = "[comment]! ! !")
 		else
-			visible_message("<span class='notice'>\The [src] lands on [comment]! </span>", runemessage = "[comment]! ! !")
+			visible_message(SPAN_NOTICE("\The [src] lands on [comment]!"), runemessage = "[comment]! ! !")
 
 /obj/item/triangle/attack_self(mob/user as mob)
 	flip_coin(user)
@@ -93,14 +95,16 @@
 	desc = "A small oval coin made of a smooth dark metal."
 	icon_state = "02"
 	value = 0.2
-	close_desc = "On the front side features a simple triangular design that is split into five sections. The back side depicts an intricate looking scale set in the center of a square design. It is surrounded in writing you don't understand. The edge of the coin is simple smooth metal. This is a bit, which is worth one fifth of a tick! It is basic change, which is most commonly used when purchasing small quantities of everyday items."
+	close_desc = "On the front side features a simple triangular design that is split into five sections. The back side depicts an intricate looking scale set in the center of a square design. It is surrounded in writing you don't understand. The edge of the coin is simple smooth metal."
+	value_desc = "This is a bit, which is worth one fifth of a tick! It is basic change, which is most commonly used when purchasing small quantities of everyday items."
 
 /obj/item/triangle/u1
 	name = "tick"
 	desc = "A small triangular coin made of a smooth dark metal."
 	icon_state = "1"
 	value = 1
-	close_desc = "On the front side is a single triangular design. There is a divot in the center that is satisfying to rub. The back side depicts a simple image of someone working the land. It has a nostalgic composition. The edge of the coin has a very subtle bumpy texture. It's easy to hold. This is a tick, a basic single, worth about an hour of simple work. This coin is often exchanged for small everyday items, and is a popular choice in games of chance, there is even a game named after it!"
+	close_desc = "On the front side is a single triangular design. There is a divot in the center that is satisfying to rub. The back side depicts a simple image of someone working the land. It has a nostalgic composition. The edge of the coin has a very subtle bumpy texture. It's easy to hold."
+	value_desc = "This is a tick, a basic single, worth about an hour of simple work. This coin is often exchanged for small everyday items, and is a popular choice in games of chance, there is even a game named after it!"
 
 /obj/item/triangle/u5
 	name = "tack"
@@ -108,34 +112,39 @@
 	icon_state = "5"
 	value = 5
 	close_desc = "This coin features a prominent if small circular hole in the center. On the front side are five individual triangles spread evenly across its face around the hole. The back side is an intricate design of a city on a mountain, with the hole at the center seeming to reflect the sun in the sky. It has an impressive composition. There is some writing along the bottom edge that you don't understand. The edge is machined with grooves running between the front and back. This is a tack, it is worth five ticks or half a mark! This coin might cover a prepared meal from a modest eatery."
+	value_desc = "This is a tack, it is worth five ticks or half a mark! This coin might cover a prepared meal from a modest eatery."
 
 /obj/item/triangle/u10
 	name = "mark"
 	desc = "A triangular coin made of a smooth dark metal. It has a oblong hole in the middle lined with a golden colored accent."
 	icon_state = "10"
 	value = 10
-	close_desc = "The hole at the center is oval shaped and seems as if it is exposing a core of golden metal! The gold is very striking against the dark metal. The front of the coin features ten triangle shapes in groups of two, with each pair being angled so as to be inverted from their partner. The groups are spread evenly across the face. The back side depicts a someone mining, their pick striking toward the gold at the center of the coin, the miner is facing away from you. They seem determined. The rest of the back shows a prominent seal surrounded by a pattern that reminds you of a gear. The edge of the coin features ten tiny triangles pressed into the otherwise mirror smooth surface at equal spacing. This is a mark, worth ten ticks, or a little under half a glint. This coin represents a day's wage in a basic trade. "
+	close_desc = "The hole at the center is oval shaped and seems as if it is exposing a core of golden metal! The gold is very striking against the dark metal. The front of the coin features ten triangle shapes in groups of two, with each pair being angled so as to be inverted from their partner. The groups are spread evenly across the face. The back side depicts a someone mining, their pick striking toward the gold at the center of the coin, the miner is facing away from you. They seem determined. The rest of the back shows a prominent seal surrounded by a pattern that reminds you of a gear. The edge of the coin features ten tiny triangles pressed into the otherwise mirror smooth surface at equal spacing."
+	value_desc = "This is a mark, worth ten ticks, or a little under half a glint. This coin represents a day's wage in a basic trade."
 
 /obj/item/triangle/u25
 	name = "glint"
 	desc = "A triangular coin made of a smooth dark metal. It has a triangular hole in the middle lined with a magenta colored accent. It has intricate designs on it."
 	icon_state = "25"
 	value = 25
-	close_desc = "The hole at the center of this coin is triangular in shape, the hole triangle is in inverted orientation to the shape of the coin itself. Lining the center of the hole is a cloudy purple crystalline material polished such that it's difficult to tell where the metal ends and the crystal begins! The front of the coin features five, five pointed stars scattered evenly across its surface, with yet more of the crystal peeking through the metal near each point of the coin's triangular shape. The back side features an image of a starship angled in the direction of a constellation. The constellation looks like some kind of majestic animal... at least that's what you think it looks like... Each star gives a glimpse into the cloudy purple crystal at the center of the coin. The image has an inspiring composition. The edge of the coin has small regular ridges machined into the surface, and on top of that is a message pressed into the metal in a language you do not understand. This is a glint, worth twenty five ticks, or a quarter shine. This coin might cover about a week's rent in a modest home."
+	close_desc = "The hole at the center of this coin is triangular in shape, the hole triangle is in inverted orientation to the shape of the coin itself. Lining the center of the hole is a cloudy purple crystalline material polished such that it's difficult to tell where the metal ends and the crystal begins! The front of the coin features five, five pointed stars scattered evenly across its surface, with yet more of the crystal peeking through the metal near each point of the coin's triangular shape. The back side features an image of a starship angled in the direction of a constellation. The constellation looks like some kind of majestic animal... at least that's what you think it looks like... Each star gives a glimpse into the cloudy purple crystal at the center of the coin. The image has an inspiring composition. The edge of the coin has small regular ridges machined into the surface, and on top of that is a message pressed into the metal in a language you do not understand."
+	value_desc = "This is a glint, worth twenty five ticks, or a quarter shine. This coin might cover about a week's rent in a modest home."
 
 /obj/item/triangle/u100
 	name = "shine"
 	desc = "A triangular coin made of a smooth pearlescent metal. It has a square hole in the center with some kind of crystalline structure running through the center."
 	icon_state = "100"
 	value = 100
-	close_desc = "The large square hole at the center of this coin has a lattice of reflective crystal running through it set in some kind of clear material, like some kind of resin or glass which fills the hole up. The front side of the coin features some very intricate designs of triangles inside of triangles, and what seems like it might be something like a maze or a circuit pattern. The back of the coin features three seals. One resembles a great beast surrounded by a circle and strange symbols. The next resembles a flame surrounded by a simple square. The last one a one is a winged creature flanked in lines of crystal. Each of them look imposing and exact, none taking up more space than the others. It looks very orderly, and each are surrounded by more of those intricate designs. The edge of the coin is smooth, rounded, but with more of the same intricate patterns etched into the surface. This is a shine, worth one hundred ticks, or a tenth of a gleam. This is quite a bit of money! One might be able to buy an expensive object with this, or pay for a month's rent in a modest home."
+	close_desc = "The large square hole at the center of this coin has a lattice of reflective crystal running through it set in some kind of clear material, like some kind of resin or glass which fills the hole up. The front side of the coin features some very intricate designs of triangles inside of triangles, and what seems like it might be something like a maze or a circuit pattern. The back of the coin features three seals. One resembles a great beast surrounded by a circle and strange symbols. The next resembles a flame surrounded by a simple square. The last one a one is a winged creature flanked in lines of crystal. Each of them look imposing and exact, none taking up more space than the others. It looks very orderly, and each are surrounded by more of those intricate designs. The edge of the coin is smooth, rounded, but with more of the same intricate patterns etched into the surface."
+	value_desc = "This is a shine, worth one hundred ticks, or a tenth of a gleam. This is quite a bit of money! One might be able to buy an expensive object with this, or pay for a month's rent in a modest home."
 
 /obj/item/triangle/u1000
 	name = "gleam"
 	desc = "An ominous looking triangular coin made of black metal. It has strangely reflective yellow accents."
 	icon_state = "1000"
 	value = 1000
-	close_desc = "While it appears somewhat simple, it has very precise edges and a deceptively complicated design. It has a small triangular hole in the center with the same orientation as the coin itself. The metal black metal is polished to an almost mirror finish, so while light seems to streak across its surface when tilted, it seems to defy definition. The front of the coin is broken up into ten segments. Each segment is plane and smooth, but at three points it reveals an almost luminous yellow material inside! It doesn't actually produce light, but it is incredibly reflective! The back side is similar to the front, but each corner bears an different symbol pressed into the metal. The edge of the coin is similarly ridged as the front and the back, but is otherwise smooth and extremely precisely machined. Unlike the other coins, this coin seems to be designed to be viewed with the tip of the coin pointing down. This is a gleam, worth one thousand ticks! This is pretty serious money! You could probably live for half a year or more off of the value of a coin like this. This isn't the kind of thing most people would carry around. "
+	close_desc = "While it appears somewhat simple, it has very precise edges and a deceptively complicated design. It has a small triangular hole in the center with the same orientation as the coin itself. The metal black metal is polished to an almost mirror finish, so while light seems to streak across its surface when tilted, it seems to defy definition. The front of the coin is broken up into ten segments. Each segment is plane and smooth, but at three points it reveals an almost luminous yellow material inside! It doesn't actually produce light, but it is incredibly reflective! The back side is similar to the front, but each corner bears an different symbol pressed into the metal. The edge of the coin is similarly ridged as the front and the back, but is otherwise smooth and extremely precisely machined. Unlike the other coins, this coin seems to be designed to be viewed with the tip of the coin pointing down."
+	value_desc = "This is a gleam, worth one thousand ticks! This is pretty serious money! You could probably live for half a year or more off of the value of a coin like this. This isn't the kind of thing most people would carry around."
 
 ///// These are special coins with special iconography on them!
 /obj/item/triangle/u7
@@ -143,14 +152,16 @@
 	desc = "A small circular coin made of a smooth dark metal. It depicts seven stars in reflective golden accents."
 	icon_state = "7"
 	value = 7
-	close_desc = "A simple circular coin, on the front showing seven stars, one large one in the center, and three stars to each side. On the back the same symbol is depicted at the top of the coin, with the curve of the horizon stretching out below it. The composition inspires trepidation. The edge of the coin has seven small, equally spaced indents pressed into it. This coin represents cycles, beginnings and ends, life and death. This is an uncommon coin of certain cultural significance. It is normally found in everyday commerce, but it is valid tender."
+	close_desc = "A simple circular coin, on the front showing seven stars, one large one in the center, and three stars to each side. On the back the same symbol is depicted at the top of the coin, with the curve of the horizon stretching out below it. The composition inspires trepidation. The edge of the coin has seven small, equally spaced indents pressed into it. This coin represents cycles, beginnings and ends, life and death."
+	value_desc = "This is an uncommon coin of certain cultural significance. It is not normally found in everyday commerce, but it is valid tender worth seven ticks."
 
 /obj/item/triangle/u13
 	name = "reservation coin"
 	desc = "A small circular coin made of a smooth dark metal. It shows two opposing triangles in gold and magenta colored accents."
 	icon_state = "13"
 	value = 13
-	close_desc = "A simple circular coin, the front side shows two opposing triangles, each one raised from the surface to form a pair of smooth, shallow pyramids. At the very center, where the points of the triangles meet is a deep divot, where light seems to struggle to get in. On the back side, there are quite a few seals and symbols! It doesn't seem to be writing exactly. The symbols are arranged into a three separate constellations that together seem to form a loose triangular shape. The edge of the coin has thirteen symbols pressed into the smooth metal at equal distance from one another. This coin represents different forms of magic energy and their study. This is an uncommon coin of certain cultural significance. It is normally found in everyday commerce, but it is valid tender."
+	close_desc = "A simple circular coin, the front side shows two opposing triangles, each one raised from the surface to form a pair of smooth, shallow pyramids. At the very center, where the points of the triangles meet is a deep divot, where light seems to struggle to get in. On the back side, there are quite a few seals and symbols! It doesn't seem to be writing exactly. The symbols are arranged into a three separate constellations that together seem to form a loose triangular shape. The edge of the coin has thirteen symbols pressed into the smooth metal at equal distance from one another. This coin represents different forms of magic energy and their study."
+	value_desc = "This is an uncommon coin of certain cultural significance. It is not normally found in everyday commerce, but it is valid tender worth thirteen ticks."
 
 /obj/item/triangle/proc/spawn_random_coin()
 	var/list/coins = list(
@@ -173,7 +184,7 @@
 	icon = 'icons/rogue-star/coins.dmi'
 	icon_state = "pouch"
 	color = "#5f3c69"
-	var/list/stored_coins = list()
+	slot_flags = SLOT_BELT|SLOT_POCKET
 	var/static/list/overlays_cache = list()
 	var/accent_color = "#971504"
 
@@ -208,17 +219,31 @@
 		var/obj/item/triangle/T = W
 		user.drop_from_inventory(T)
 		T.forceMove(src)
-		stored_coins += T
 		to_chat(user,SPAN_NOTICE("You place \the [T] into \the [src]."))
+	if(istype(W,/obj/item/coinstack))
+		user.visible_message(SPAN_WARNING("\The [user] begins scooping \the [W] into \the [src]."),SPAN_NOTICE("You begin scooping \the [W] into \the [src]."),runemessage = "!")
+		if(!do_after(user,0.25 * W.contents.len SECONDS,W,exclusive = TRUE))
+			user.visible_message(SPAN_WARNING("\The [user] was interrupted."),SPAN_WARNING("You were interrupted."),runemessage = "...")
+			return
+		var/obj/item/coinstack/stack = W
+		for(var/obj/item/triangle/coin in stack.bank())
+			coin.forceMove(src)
+	if(ismicro(W))
+		user.drop_from_inventory(W)
+		var/obj/item/weapon/holder/micro/M = W
+		if(M.held_mob.client)
+			M.forceMove(src)
+			to_chat(M.held_mob,SPAN_WARNING("\The [user] shoves you into \the [src]!"))
+			to_chat(user,SPAN_NOTICE("You shove \the [M.held_mob] into \the [src]."))
 
 /obj/item/coinpouch/attack_self(mob/user)
 	if(loc != user)
 		return
-	if(stored_coins.len <= 0)
+	if(contents.len <= 0)
 		return
 	var/obj/item/triangle/T
 	if(user.a_intent == I_HELP)
-		T = tgui_input_list(user,"Which one do you want?","[src]",stored_coins)
+		T = tgui_input_list(user,"Which one do you want?","[src]",contents)
 		if(!T)
 			return
 	else if(user.a_intent == I_HURT)
@@ -242,27 +267,57 @@
 
 /obj/item/coinpouch/proc/collect_coins_from_turf(var/search,var/mob/living/user)
 	var/turf/T
+	var/found = FALSE
+
 	if(isturf(search))
 		T = search
-		var/found = FALSE
+	else
+		T = get_turf(search)
+
+	if(istriangle(search))
+		found = TRUE
+	if(isliving(search))
+		if(spont_pref_check(user,search,MICRO_PICKUP))
+			found = TRUE
+
+	if(!found)
 		for(var/thing in T.contents)
 			if(istype(thing,/obj/item/triangle))
 				found = TRUE
 				break
-		if(!found)
-			return FALSE
-	else if(istype(search,/obj/item/triangle))
-		T = get_turf(search)
+			if(isliving(thing))
+				var/mob/living/L = thing
+				if(spont_pref_check(user,L,MICRO_PICKUP))
+					found = TRUE
+					break
+
+	if(!found)
+		return FALSE
 	if(!T)
 		return FALSE
 
 	user.visible_message(SPAN_WARNING("\The [user] begins scooping the coins into \the [src]..."),SPAN_NOTICE("You begin scooping the coins into \the [src]..."),runemessage = ". . .")
 	if(do_after(user,0.25 * T.contents.len SECONDS,T,exclusive = TRUE))
-		for(var/obj/item/triangle/coin in T.contents)
-			if(istype(coin,/obj/item/triangle))
+		for(var/thing in T.contents)
+			if(istriangle(thing))
+				var/obj/item/triangle/coin = thing
 				coin.forceMove(src)
-				stored_coins += coin
-		user.visible_message(SPAN_WARNING("\The [user] scoops all of the coins into \the [src]!"),SPAN_NOTICE("You scoop all of the coins into \the [src]!"),runemessage = "clink ! ! !")
+			if(isliving(thing))
+				var/mob/living/L = thing
+				if(!L.client)
+					continue
+				if(!spont_pref_check(user,L,MICRO_PICKUP))
+					continue
+				if(L.get_effective_size(TRUE) > 0.35)
+					continue
+				if(!L.holder_type)
+					continue
+				var/obj/item/weapon/holder/H = new L.holder_type(src)
+				L.forceMove(H)
+				to_chat(L,SPAN_DANGER("\The [user] scoops you up into \the [src]!!!"))
+				to_chat(user,SPAN_DANGER("You scoop \the [user] up into \the [src]!!!"))
+
+		user.visible_message(SPAN_WARNING("\The [user] scoops things into \the [src]!"),SPAN_NOTICE("You scoop things into \the [src]!"),runemessage = "clink ! ! !")
 	else
 		user.visible_message(SPAN_WARNING("\The [user] was interrupted!"),SPAN_NOTICE("You were interrupted!"),runemessage = "!")
 
@@ -272,12 +327,12 @@
 	if(!coin || !user)
 		return
 	user.face_atom(src)
-	stored_coins -= coin
 	if(user.put_in_hands(coin))
 		user.visible_message(SPAN_WARNING("\The [user] reaches into \the [src]... and pulls out \the [coin]!"),SPAN_NOTICE("You reach into \the [src] and pull out \the [coin]!"),runemessage = ". . .")
 	else
 		user.visible_message(SPAN_WARNING("\The [user] reaches into \the [src]... and pulls out \the [coin]!"),SPAN_DANGER("You reach into \the [src] and pull out \the [coin]... your hands are full though so it falls on the floor..."),runemessage = ". . .")
-	playsound(get_turf(user),'sound/items/pickup/ring.ogg',100,TRUE)
+	if(istriangle(coin))
+		playsound(get_turf(user),coin.pickup_sound,100,TRUE)
 
 /obj/item/coinpouch/proc/take_random_coin(var/mob/living/user)
 	if(contents.len <= 0)
@@ -287,17 +342,22 @@
 
 /obj/item/coinpouch/proc/empty()
 	var/turf/ourturf = get_turf(src)
-	for(var/obj/item/triangle/coin in stored_coins)
-		coin.forceMove(ourturf)
-		stored_coins -= coin
-		coin.randpixel_xy()
+	for(var/thing in contents)
+		if(istriangle(thing))
+			var/obj/item/triangle/coin = thing
+			coin.forceMove(ourturf)
+			coin.randpixel_xy()
+		if(ismicro(thing))
+			var/obj/item/weapon/holder/micro/M = thing
+			M.dump_mob()
 
 /obj/item/coinpouch/proc/bank()
 	var/turf/ourturf = get_turf(src)
 	var/return_list = list()
-	for(var/obj/item/triangle/coin in stored_coins)
+	for(var/obj/item/triangle/coin in contents)
+		if(!istriangle(coin))
+			continue
 		coin.forceMove(ourturf)
-		stored_coins -= coin
 		return_list += coin
 
 	return return_list
@@ -318,6 +378,7 @@
 	icon_state = null
 	plane = MOB_PLANE
 	layer = MOB_LAYER
+	var/collapsing = FALSE
 
 /obj/item/coinstack/examine(mob/user)
 	. = ..()
@@ -333,23 +394,11 @@
 	if(istype(W,/obj/item/triangle))
 		stack(W)
 	else
-		qdel(src)
+		collapse()
 
 /obj/item/coinstack/Destroy()
-	if(contents.len <= 0)
-		return ..()
-
-	var/turf/ourturf = get_turf(src)
-	if(contents.len > 1)
-		ourturf.visible_message(SPAN_DANGER("\The [src] topples over!"),runemessage = "CLATTER ! ! !")
-		playsound(ourturf,'sound/items/drop/ring.ogg',100,TRUE)
-	for(var/obj/item/triangle/coin in contents)
-		unstack(coin)
-
-	if(istype(loc,/obj/item/weapon/storage))
-		var/obj/item/weapon/storage/S = loc
-		S.remove_from_storage(src)
-		ourturf.visible_message(SPAN_DANGER("Coins spill out of \the [S]!!!"),runemessage = "!")
+	if(!collapsing)
+		collapse()
 
 	return ..()
 
@@ -363,14 +412,14 @@
 		return ..()
 	else
 		user.visible_message(SPAN_DANGER("\The [user] shoves \the [src]!"),runemessage = "! ! !")
-		qdel(src)
+		collapse()
 
 /obj/item/coinstack/proc/stack(var/obj/item/triangle/coin,var/mob/living/user)
 	if(!coin)
 		return
 	if(user)
 		user.face_atom(src)
-		user.visible_message("\The [user] places \the [coin] on top of \the [src]...",runemessage = ". . .")
+		user.visible_message(SPAN_NOTICE("\The [user] places \the [coin] on top of \the [src]..."),SPAN_NOTICE("You place \the [coin] on top of \the [src]..."),runemessage = ". . .")
 	if(isliving(coin.loc))
 		var/mob/living/L = coin.loc
 		L.drop_from_inventory(coin)
@@ -384,7 +433,7 @@
 
 	if(contents.len > 10)
 		if(prob(contents.len - 10))
-			qdel(src)
+			collapse()
 
 /obj/item/coinstack/proc/unstack(var/obj/item/triangle/coin,var/mob/living/user)
 	var/turf/ourturf = get_turf(src)
@@ -397,16 +446,36 @@
 		user.face_atom(src)
 		user.put_in_hands(coin)
 		user.visible_message(SPAN_WARNING("\The [user] removes a [coin] from \the [src]."), runemessage = ". . .")
-		playsound(get_turf(user),'sound/items/pickup/ring.ogg',100,TRUE)
+		if(istriangle(coin))
+			playsound(get_turf(user),coin.pickup_sound,100,TRUE)
+		if(contents.len == 1)
+			collapse()
 
 	else
 		coin.forceMove(ourturf)
 		coin.randpixel_xy()
 
-	if(contents.len == 1)
-		qdel(src)
+/obj/item/coinstack/proc/collapse()
+	if(collapsing)
+		return
+	collapsing = TRUE
+	var/turf/ourturf = get_turf(src)
+	if(contents.len > 1)
+		ourturf.visible_message(SPAN_DANGER("\The [src] topples over!"),runemessage = "CLATTER ! ! !")
+		playsound(ourturf,'sound/items/drop/ring.ogg',100,TRUE)
+
+	for(var/thing in contents)
+		unstack(thing)
+
+	if(istype(loc,/obj/item/weapon/storage))
+		var/obj/item/weapon/storage/S = loc
+		S.remove_from_storage(src)
+		ourturf.visible_message(SPAN_DANGER("Coins spill out of \the [S]!!!"),runemessage = "!")
+
+	qdel(src)
 
 /obj/item/coinstack/proc/bank()
+	collapsing = TRUE
 	var/turf/ourturf = get_turf(src)
 	var/return_list = list()
 	for(var/obj/item/triangle/coin in contents)
@@ -415,5 +484,5 @@
 	if(isliving(src.loc))
 		var/mob/living/L = src.loc
 		L.drop_from_inventory(src)
-		qdel(src)
+	qdel(src)
 	return return_list

@@ -75,7 +75,7 @@
 				to_chat(user, "<span class='notice'>You aren't close enough.</span>")
 				trading = FALSE
 				return
-			return_funds()
+			return_funds(user)	//RS EDIT
 			trading = FALSE
 			return
 		else if(ask != "Yes")
@@ -130,7 +130,7 @@
 				to_chat(user, "<span class='notice'>You aren't close enough.</span>")
 				trading = FALSE
 				return
-			return_funds()
+			return_funds(user)	//RS EDIT
 		else
 			to_chat(user, "<span class='notice'>You decided leave your change banked.</span>")
 		trading = FALSE
@@ -213,13 +213,14 @@
 						qdel(c)
 						v -= accepted_item_worth
 
-/obj/trader/proc/return_funds()
+/obj/trader/proc/return_funds(var/mob/living/user)	//RS EDIT
 	var/u_get_refund = FALSE
 	switch(accepts)
 		if("coin")
 			if(coinbalance)
 				u_get_refund = TRUE
-				dispense_triangle_coins(coinbalance,get_turf(src))	//RS EDIT
+				dispense_triangle_coins(coinbalance,get_turf(src),user)	//RS ADD
+				coinbalance = 0	//RS ADD
 		if("money")
 			for(var/obj/c in bank)
 				u_get_refund = TRUE
