@@ -26,6 +26,10 @@
 	return "◬:[value]"
 
 /obj/item/triangle/examine(mob/user)
+	if(istype(src.loc,/obj/item/coinstack))
+		var/obj/item/coinstack/stack = src.loc
+		. = stack.examine(user)
+		return .
 	. = ..()
 	if(Adjacent(user))
 		. += SPAN_NOTICE(close_desc)
@@ -194,6 +198,25 @@
 
 /obj/item/coinpouch/examine(mob/user)
 	. = ..()
+	if(loc == user)
+		var/count = 0
+		var/value = 0
+		var/list/other = list()
+		for(var/atom/thing in contents)
+			if(istriangle(thing))
+				count ++
+				var/obj/item/triangle/coin = thing
+				value += coin.value
+			if(!other["[thing.name]"])
+				other["[thing.name]"] = 1
+			else
+				other["[thing.name]"] += 1
+		if(count)
+			. += span_green("There are [count] coins inside with a total value of ◬:[value].")
+		if(other.len)
+			. += SPAN_OCCULT("The following is stored inside:")
+			for(var/thing in other)
+				. += SPAN_NOTICE("[thing] x [other[thing]]")
 
 	. += SPAN_OCCULT("If you use this on help intent, you can pick any coin you like. On harm intent, you will empty \the [src]. On any other intent, you will pick a random coin.")
 
@@ -275,7 +298,9 @@
 		T = get_turf(search)
 
 	if(istriangle(search))
-		found = TRUE
+		var/obj/item/triangle/coin = search
+		if(isturf(coin.loc))
+			found = TRUE
 	if(isliving(search))
 		if(spont_pref_check(user,search,MICRO_PICKUP))
 			found = TRUE
@@ -312,7 +337,7 @@
 					continue
 				if(!L.holder_type)
 					continue
-				var/obj/item/weapon/holder/H = new L.holder_type(src)
+				var/obj/item/weapon/holder/H = new L.holder_type(src,L)
 				L.forceMove(H)
 				to_chat(L,SPAN_DANGER("\The [user] scoops you up into \the [src]!!!"))
 				to_chat(user,SPAN_DANGER("You scoop \the [user] up into \the [src]!!!"))
