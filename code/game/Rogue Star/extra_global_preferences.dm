@@ -190,10 +190,10 @@
 		to_chat(src, SPAN_NOTICE("[choice] trust list mode enabled."))
 	vorePanel.unsaved_changes = TRUE
 
-/proc/spont_pref_check(var/mob/living/pred,var/mob/living/prey,var/preftype)
+/proc/spont_pref_check(var/mob/living/pred,var/mob/living/prey,var/preftype,var/allow_self_compare = FALSE)
 	if(!preftype)
 		return FALSE
-	if(pred == prey)
+	if(!allow_self_compare && pred == prey)
 		return FALSE
 
 	if(preftype == MICRO_PICKUP)
