@@ -325,7 +325,7 @@
 	if(!T)
 		return FALSE
 
-	user.visible_message(SPAN_WARNING("\The [user] begins scooping the coins into \the [src]..."),SPAN_NOTICE("You begin scooping the coins into \the [src]..."),runemessage = ". . .")
+	user.visible_message(SPAN_WARNING("\The [user] begins scooping things into \the [src]..."),SPAN_NOTICE("You begin scooping things into \the [src]..."),runemessage = ". . .")
 	if(do_after(user,0.25 * T.contents.len SECONDS,T,exclusive = TRUE))
 		for(var/thing in T.contents)
 			if(istriangle(thing))
@@ -343,7 +343,7 @@
 					continue
 				var/obj/item/weapon/holder/H = new L.holder_type(src,L)
 				L.forceMove(H)
-				to_chat(L,SPAN_DANGER("\The [user] scoops you up into \the [src]!!!"))
+				to_chat(L,span_critical("\The [user] scoops you up into \the [src]!!!"))
 				to_chat(user,SPAN_DANGER("You scoop \the [user] up into \the [src]!!!"))
 
 		user.visible_message(SPAN_WARNING("\The [user] scoops things into \the [src]!"),SPAN_NOTICE("You scoop things into \the [src]!"),runemessage = "clink ! ! !")
@@ -356,6 +356,12 @@
 	if(!coin || !user)
 		return
 	user.face_atom(src)
+
+	if(ismicro(coin))
+		var/obj/item/weapon/holder/H = coin
+		if(H.held_mob.client)
+			to_chat(H.held_mob,span_critical("\The [user] grabs you!!!"))
+
 	if(user.put_in_hands(coin))
 		user.visible_message(SPAN_WARNING("\The [user] reaches into \the [src]... and pulls out \the [coin]!"),SPAN_NOTICE("You reach into \the [src] and pull out \the [coin]!"),runemessage = ". . .")
 	else
@@ -378,6 +384,8 @@
 			coin.randpixel_xy()
 		if(ismicro(thing))
 			var/obj/item/weapon/holder/micro/M = thing
+			if(M.held_mob.client)
+				to_chat(M.held_mob,SPAN_DANGER("You are dumped out of \the [src]!"))
 			M.dump_mob()
 
 /obj/item/coinpouch/proc/bank()
@@ -419,6 +427,35 @@
 /obj/item/coinpouch/leather
 	color = "#4e3221"
 	accent_color = "#ffeaca"
+/obj/item/coinpouch/yellowcyan
+	color = "#ffeea3"
+	accent_color = "#00eeff"
+/obj/item/coinpouch/miala
+	color = "#694c2b"
+	accent_color = "#081c5f"
+/obj/item/coinpouch/fire
+	color = "#ff5100"
+	accent_color = "#ffee00"
+/obj/item/coinpouch/blueorange
+	color = "#251ab6"
+	accent_color = "#ff8800"
+/obj/item/coinpouch/blackred
+	color = "#242424"
+	accent_color = "#ff0000"
+/obj/item/coinpouch/retro
+	color = "#57805a"
+	accent_color = "#223323"
+/obj/item/coinpouch/hip
+	color = "#ff49d1"
+	accent_color = "#ebff3c"
+/obj/item/coinpouch/purple
+	color = "#6200be"
+	accent_color = "#ff00ea"
+/obj/item/coinpouch/itg
+	name = "ITG coinpouch"
+	desc = "A pouch for holding triangle coins. It has the ITG logo on it."
+	color = "#5c4530"
+	accent_color = "#838383"
 
 /obj/item/coinpouch/purse/blackgold
 	color = "#0f0d14"
@@ -438,6 +475,35 @@
 /obj/item/coinpouch/purse/leather
 	color = "#4e3221"
 	accent_color = "#d6b367"
+/obj/item/coinpouch/purse/yellowcyan
+	color = "#ffeea3"
+	accent_color = "#00eeff"
+/obj/item/coinpouch/purse/miala
+	color = "#694c2b"
+	accent_color = "#081c5f"
+/obj/item/coinpouch/purse/fire
+	color = "#ff5100"
+	accent_color = "#ffee00"
+/obj/item/coinpouch/purse/blueorange
+	color = "#251ab6"
+	accent_color = "#ff8800"
+/obj/item/coinpouch/purse/blackred
+	color = "#242424"
+	accent_color = "#ff0000"
+/obj/item/coinpouch/purse/retro
+	color = "#57805a"
+	accent_color = "#223323"
+/obj/item/coinpouch/purse/hip
+	color = "#ff49d1"
+	accent_color = "#ebff3c"
+/obj/item/coinpouch/purse/purple
+	color = "#6200be"
+	accent_color = "#ff00ea"
+/obj/item/coinpouch/purse/itg
+	name = "ITG coin purse"
+	desc = "A cute little purse for holding triangle coins! It has a little snap latch for making sure your coins don't fall out! It has the ITG logo on it."
+	color = "#5c4530"
+	accent_color = "#838383"
 
 ///// Stacked up /////
 
@@ -573,12 +639,30 @@
 		"Pink coinpouch" = /obj/item/coinpouch/pink,
 		"Green and blue coinpouch" = /obj/item/coinpouch/greenblue,
 		"Leather coinpouch" = /obj/item/coinpouch/leather,
+		"Lira Blue coinpouch" = /obj/item/coinpouch/yellowcyan,
+		"Demi-deity coinpouch" = /obj/item/coinpouch/miala,
+		"Fire coinpouch" = /obj/item/coinpouch/fire,
+		"Blue and orange coinpouch" = /obj/item/coinpouch/blueorange,
+		"Black and red coinpouch" = /obj/item/coinpouch/blackred,
+		"Retro coinpouch" = /obj/item/coinpouch/retro,
+		"Hip coinpouch" = /obj/item/coinpouch/hip,
+		"Purple coinpouch" = /obj/item/coinpouch/purple,
+		"ITG coinpouch" = /obj/item/coinpouch/itg,
 		"Purple and gold coinpurse" = /obj/item/coinpouch/purse,
 		"Black and gold coinpurse" = /obj/item/coinpouch/purse/blackgold,
 		"Red and black coinpurse" = /obj/item/coinpouch/purse/redblack,
 		"Blue and white coinpurse" = /obj/item/coinpouch/purse/bluewhite,
 		"Pink coinpurse" = /obj/item/coinpouch/purse/pink,
 		"Green and silver coinpurse" = /obj/item/coinpouch/purse/greensilver,
-		"Leather coinpurse" = /obj/item/coinpouch/purse/leather
+		"Leather coinpurse" = /obj/item/coinpouch/purse/leather,
+		"Lira Blue coinpurse" = /obj/item/coinpouch/purse/yellowcyan,
+		"Demi-deity coinpurse" = /obj/item/coinpouch/purse/miala,
+		"Fire coinpurse" = /obj/item/coinpouch/purse/fire,
+		"Blue and orange coinpurse" = /obj/item/coinpouch/purse/blueorange,
+		"Black and red coinpurse" = /obj/item/coinpouch/purse/blackred,
+		"Retro coinpurse" = /obj/item/coinpouch/purse/retro,
+		"Hip coinpurse" = /obj/item/coinpouch/purse/hip,
+		"Purple coinpurse" = /obj/item/coinpouch/purse/purple,
+		"ITG coinpurse" = /obj/item/coinpouch/purse/itg
 	)
 	gear_tweaks += new/datum/gear_tweak/path(variants)
