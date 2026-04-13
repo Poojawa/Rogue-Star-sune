@@ -275,8 +275,8 @@
 	busy_bank = TRUE
 	E.triangles -= withdrawal_amount
 	visible_message("<span class='notice'>\The [src] rattles as it dispenses coins!</span>")
-	dispense_triangle_coins(withdrawal_amount,get_turf(src),user)
-	E.needs_saving = TRUE
+	dispense_triangle_coins(withdrawal_amount,get_turf(src),user)	//RS EDIT
+	E.needs_saving = TRUE	//RS EDIT
 	busy_bank = FALSE
 	return TRUE
 
@@ -390,9 +390,9 @@
 		return FALSE
 
 	busy_bank = TRUE
-	if(istype(held, /obj/item/triangle))
+	if(istype(held, /obj/item/triangle))	//RS EDIT
 		if(user.etching)
-			var/obj/item/triangle/coin = held
+			var/obj/item/triangle/coin = held	//RS EDIT
 			user.update_etching("triangles", coin.value)
 			user.drop_item()
 			to_chat(user, "<span class='warning'>\The [src] SCHLORPS up \the [held]!!!</span>")
