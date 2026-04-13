@@ -188,7 +188,7 @@
 	icon = 'icons/rogue-star/coins.dmi'
 	icon_state = "pouch"
 	color = "#5f3c69"
-	slot_flags = SLOT_BELT|SLOT_POCKET
+	slot_flags = SLOT_BELT
 	var/static/list/overlays_cache = list()
 	var/accent_color = "#971504"
 
@@ -393,6 +393,7 @@
 	icon_state = "purse"
 	color = "#463b55"
 	accent_color = "#d6b367"
+	slot_flags = SLOT_POCKET
 
 ///// Stacked up /////
 
