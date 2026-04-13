@@ -142,8 +142,8 @@
 	. = ..()
 	switch(accepts)
 		if("coin")
-			if(istype(O, /obj/item/triangle))
-				var/obj/item/triangle/a = O
+			if(istype(O, /obj/item/triangle))	//RS EDIT
+				var/obj/item/triangle/a = O		//RS EDIT
 				coinbalance += a.value
 				visible_message("<span class='notice'>\The [src] accepts \the [user]'s [O].</span>")
 				qdel(a)
