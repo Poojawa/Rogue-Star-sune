@@ -184,7 +184,7 @@
 /////COIN POUCH/////
 /obj/item/coinpouch
 	name = "coin pouch"
-	desc = "A pouch for holding coins."
+	desc = "A pouch for holding triangle coins."
 	icon = 'icons/rogue-star/coins.dmi'
 	icon_state = "pouch"
 	color = "#5f3c69"
@@ -192,7 +192,11 @@
 	var/static/list/overlays_cache = list()
 	var/accent_color = "#971504"
 
-/obj/item/coinpouch/New()
+/obj/item/coinpouch/New(var/basecolor,var/accentcolor)
+	if(basecolor)
+		color = basecolor
+	if(accentcolor)
+		accent_color = accentcolor
 	. = ..()
 	update_icon()
 
@@ -395,6 +399,46 @@
 	accent_color = "#d6b367"
 	slot_flags = SLOT_POCKET
 
+//POUCH VARIANTS
+
+/obj/item/coinpouch/blackgold
+	color = "#0f0d14"
+	accent_color = "#fabf68"
+/obj/item/coinpouch/whitered
+	color = "#fff9e4"
+	accent_color = "#ff0000"
+/obj/item/coinpouch/bluewhite
+	color = "#292f66"
+	accent_color = "#f7f7f7"
+/obj/item/coinpouch/pink
+	color = "#da57b2"
+	accent_color = "#ffc3dc"
+/obj/item/coinpouch/greenblue
+	color = "#294928"
+	accent_color = "#1900ff"
+/obj/item/coinpouch/leather
+	color = "#4e3221"
+	accent_color = "#ffeaca"
+
+/obj/item/coinpouch/purse/blackgold
+	color = "#0f0d14"
+	accent_color = "#fabf68"
+/obj/item/coinpouch/purse/redblack
+	color = "#881717"
+	accent_color = "#27242e"
+/obj/item/coinpouch/purse/bluewhite
+	color = "#292f66"
+	accent_color = "#f7f7f7"
+/obj/item/coinpouch/purse/pink
+	color = "#da57b2"
+	accent_color = "#ffdeec"
+/obj/item/coinpouch/purse/greensilver
+	color = "#294928"
+	accent_color = "#bae2fd"
+/obj/item/coinpouch/purse/leather
+	color = "#4e3221"
+	accent_color = "#d6b367"
+
 ///// Stacked up /////
 
 /obj/item/coinstack
@@ -512,3 +556,29 @@
 		L.drop_from_inventory(src)
 	qdel(src)
 	return return_list
+
+///// LOADOUT /////
+/datum/gear/utility/coinpouch
+	display_name = "coinpouch selection"
+	path = /obj/item/coinpouch
+	cost = 0
+
+/datum/gear/utility/coinpouch/New()
+	..()
+	var/variants = list(
+		"Purple and red coinpouch" = /obj/item/coinpouch,
+		"Black and gold coinpouch" = /obj/item/coinpouch/blackgold,
+		"White and red coinpouch" = /obj/item/coinpouch/whitered,
+		"Blue and white coinpouch" = /obj/item/coinpouch/bluewhite,
+		"Pink coinpouch" = /obj/item/coinpouch/pink,
+		"Green and blue coinpouch" = /obj/item/coinpouch/greenblue,
+		"Leather coinpouch" = /obj/item/coinpouch/leather,
+		"Purple and gold coinpurse" = /obj/item/coinpouch/purse,
+		"Black and gold coinpurse" = /obj/item/coinpouch/purse/blackgold,
+		"Red and black coinpurse" = /obj/item/coinpouch/purse/redblack,
+		"Blue and white coinpurse" = /obj/item/coinpouch/purse/bluewhite,
+		"Pink coinpurse" = /obj/item/coinpouch/purse/pink,
+		"Green and silver coinpurse" = /obj/item/coinpouch/purse/greensilver,
+		"Leather coinpurse" = /obj/item/coinpouch/purse/leather
+	)
+	gear_tweaks += new/datum/gear_tweak/path(variants)
