@@ -254,7 +254,7 @@
 		scorekeeper.seekscore[L.name] = scorekeeper.seekscore[L.name] + 1
 		last_getter = L.real_name
 		last_got_time = world.time
-		L.grant_xp("Seeking", 1)
+		L.grant_xp(SKILL_SEEKING, 1)
 		to_chat(holder, SPAN_DANGER("\The [L] tagged you. You have been caught."))
 		to_chat(L, SPAN_NOTICE("You tagged \the [holder] and gained a point! \The [holder] has been caught."))
 		if(vore_point)
@@ -279,7 +279,7 @@
 /datum/modifier/hide_and_seek/proc/round_end()
 	if(mode == 1)
 		scorekeeper.hidescore[holder.name] = scorekeeper.hidescore[holder.name] + 1
-		holder.grant_xp("Hiding", 1)
+		holder.grant_xp(SKILL_HIDING, 1)
 	mode = 0
 	vore_point = 0
 	mob_overlay_state = null

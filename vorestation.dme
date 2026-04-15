@@ -1676,6 +1676,7 @@
 #include "code\game\Rogue Star\_HELPERS\teleport.dm"
 #include "code\game\Rogue Star\_HELPERS\type_helpers.dm"
 #include "code\game\Rogue Star\abilities\return.dm"
+#include "code\game\Rogue Star\abilities\search.dm"
 #include "code\game\Rogue Star\catborgs\catborgs.dm"
 #include "code\game\Rogue Star\fluff\sari-outfit-fluff.dm"
 #include "code\game\Rogue Star\mob\seething.dm"
