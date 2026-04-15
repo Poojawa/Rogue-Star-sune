@@ -263,7 +263,7 @@
 			scorekeeper.vorescore[mod.holder.name] = scorekeeper.vorescore[mod.holder.name] + 1
 			playsound(get_turf(mod.holder), 'sound/machines/ping.ogg', 50, TRUE)
 			if(mode != TEAM_CAUGHT)
-				team(TEAM_CAUGHT)
+				tagged(holder,B.owner)
 			vore_point = FALSE
 			last_vorer = mod.holder.name
 			last_vore_time = world.time
