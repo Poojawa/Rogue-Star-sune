@@ -9,13 +9,17 @@ Useful for cutting up species sprites from full body ones. Or whatever else.
 
 -- Hijacked by Poojawa to facilitate easier sprite porting -> tauric sprites. 
 
-Taur suits have been divided into three different categories: Coats, Dresses, and fullsuits. These are found in suitstocovert folder. Please adhere to the general sorting that's been done already when adding new clothing.
+Taur suits have been divided into three different categories: Coats, Dresses, and fullsuits. These are found in suitstocovert folders. Please adhere to the general sorting that's been done already when adding new clothing.
+
+Standard folder contains the sprites compatible with Wolf, Fox, Horse, Cow, Deer, Lizard, Skunk, Red Panda (Wah), Sergal, and Feline bodies. For Otie, 'Goia, Noodle, Drake, and Rat bodies, these body types require the 'Long' sprite variants that look absolutely fucking awful if further stretched in the base sprites. 
 
 Currently the only body types the sprites are really designed for are ones based off of the Canine, Feline, and to some extent lizard bodies. The fat versions of sprites have a special sock overlay and don't need to be custom edited unless the legs themselves are changed. All other sprites theoretically can be used, but will take significant work to bueautify them. See more with the unsuitable note below
 
-There's taur templates of each type too found in the Taur Templates folder, Most of them have a large purple mask applied for special exceptions of suits that 'spill over' the human sprite (Imperium Monk robe, Wedding gown, etc), Everything inside of this mask and the sprite itself will be used to 'snip out' the needed pixels, so keep that in mind! Copy and paste each species template sprites into their respective <type>Cutter.dmi. Only one at a time! Each of CoatCutter, DressCutter, SuitCutter should have the one species inside of it, so Wolf, Wolf, Wolf. Etc. 
+There's taur templates of each type too found in the Taur Templates folder, Most of them have a large purple mask applied for special exceptions of suits that 'spill over' the human sprite (Imperium Monk robe, Wedding gown, etc), Everything inside of this mask and the sprite itself will be used to 'snip out' the needed pixels, so keep that in mind! Copy and paste each species template sprites into their respective <type>Cutter.dmi. Only one at a time! Each of CoatCutter, DressCutter, SuitCutter should have the one species inside of it, so Wolf, Wolf, Wolf. Etc.
 
-In Dreammaker -> Build -> Compile and Run -> Cut <Type>. The default for Cut Suits is taursuit_.dmi so you can save your species in as taursuit_[species] and go. Cut Dresses and Cut Coats will save into their own files.
+Also included in this folder are two png templates for your preferred sprite editing software. Save time by seeing exactly where the stray pixels are in each body! This saves SO MUCH TIME.
+
+In Dreammaker -> Build -> Compile and Run -> Cut <Type>. The default for Cut Suits is taursuit_.dmi so you can save your species in as taursuit_[species] and go. Cut Dresses and Cut Coats will save into their own files. Long Cut is the same, it just uses the long subfolder instead of the standard one. 
 
 Once all three are done, please ensure to combine them all into your species specific dmi, Preferrably Suits + Coats + Dresses for consistency in sorting. Remember to close the client when you're done! You won't be able to recompile the cutter in dream maker otherwise. That's the solution to 'x.dmi cannot be found' errors. Bedsheet.dmi is seperate because it's so goofy oversized that it works as a one-size fits all, so just copy that in after you paste the dresses in. 
 
