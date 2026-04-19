@@ -236,6 +236,7 @@
 
 		for(var/name in BP_ALL)
 			var/obj/item/organ/external/O = H.organs_by_name[name]
+			shuffle(O.wounds)
 			for(var/datum/wound/W in O.wounds)
 				if (W.internal)
 					continue
