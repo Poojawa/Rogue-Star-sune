@@ -16409,15 +16409,6 @@
 /obj/structure/disposalpipe/segment,
 /turf/simulated/floor/tiled/white,
 /area/medical/moonbase/traumaward)
-"koT" = (
-/obj/machinery/atmospherics/pipe/manifold/visible{
-	dir = 1
-	},
-/obj/structure/window/reinforced{
-	dir = 4
-	},
-/turf/simulated/floor/airless/moonbaseplating/outdoors,
-/area/rnd/xenobiology/xenoflora)
 "kpA" = (
 /obj/structure/table/marble,
 /obj/machinery/light/floortube{
@@ -42657,7 +42648,7 @@ wVn
 tsc
 lbv
 qiI
-koT
+xJm
 kqd
 xJm
 kqd

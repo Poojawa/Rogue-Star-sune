@@ -35,7 +35,7 @@
 /turf/space/cracked_asteroid/moonbase/outdoors,
 /area/moonbase/surface/east_crater)
 "p" = (
-/turf/simulated/mineral/moonbase/ignore_mapgen,
+/turf/simulated/mineral/moonbase,
 /area/moonbase/surface/east_crater/unexplored)
 "r" = (
 /obj/structure/prop/rock/flat,
@@ -48,7 +48,7 @@
 /turf/simulated/floor/airless/moonbaseplating,
 /area/moonbase/surface/east_crater)
 "E" = (
-/turf/simulated/mineral/moonbase/ignore_mapgen,
+/turf/simulated/mineral/moonbase,
 /area/moonbase/surface/east_crater)
 "G" = (
 /obj/structure/prop/rock/crystal,
@@ -73,7 +73,7 @@
 	how_many_mobs_max = 30;
 	how_many_mobs_min = 10
 	},
-/turf/simulated/mineral/moonbase/ignore_mapgen,
+/turf/simulated/mineral/moonbase,
 /area/moonbase/surface/east_crater/unexplored)
 "T" = (
 /obj/structure/prop/rock/crystal,

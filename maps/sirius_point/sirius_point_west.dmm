@@ -3725,7 +3725,7 @@
 /turf/simulated/floor/tiled/steel_ridged,
 /area/outpost/research/toxins_misc_lab)
 "MA" = (
-/turf/simulated/mineral/moonbase/ignore_mapgen,
+/turf/simulated/mineral/moonbase,
 /area/moonbase/surface/west_crater)
 "MD" = (
 /obj/machinery/atmospherics/pipe/simple/hidden/black,
@@ -4563,7 +4563,7 @@
 /turf/simulated/floor/tiled,
 /area/outpost/research/anomaly_analysis)
 "Xw" = (
-/turf/simulated/mineral/moonbase/ignore_mapgen,
+/turf/simulated/mineral/moonbase,
 /area/moonbase/surface/west_crater/unexplored)
 "XA" = (
 /obj/effect/floor_decal/industrial/warning{
