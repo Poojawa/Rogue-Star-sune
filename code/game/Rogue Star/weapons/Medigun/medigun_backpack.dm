@@ -307,13 +307,7 @@
 		medigun = new medigun(src, src)
 	else
 		medigun = new(src, src)
-	if(ispath(bcell))
-		bcell = new bcell(src)
-		if(!preloaded)
-			bcell.charge = 0
-		else
-			bcell.charge = chargecap
-			bcell.maxcharge = chargecap
+
 	if(ispath(sbin))
 		sbin = new sbin(src)
 	if(ispath(smodule))
@@ -325,6 +319,14 @@
 		scapacitor = new scapacitor(src)
 	if(ispath(slaser))
 		slaser = new slaser(src)
+	if(ispath(bcell))
+		bcell = new bcell(src)
+		if(!preloaded)
+			bcell.charge = 0
+		else
+			bcell.charge = chargecap
+			bcell.maxcharge = chargecap
+			medigun.beam_range = 3+smodule.get_rating()
 	update_icon()
 
 

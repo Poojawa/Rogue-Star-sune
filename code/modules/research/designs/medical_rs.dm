@@ -14,7 +14,7 @@
 	id = "bluespace_medigun"
 	req_tech = list(TECH_MATERIAL = 6, TECH_MAGNET = 4, TECH_POWER = 3, TECH_BIO = 5)
 	materials = list(MAT_STEEL = 8000, MAT_PLASTIC = 8000, MAT_GLASS = 5000, MAT_SILVER = 1000, MAT_GOLD = 1000, MAT_URANIUM = 1000)
-	build_path = /obj/item/device/bork_medigun
+	build_path = /obj/item/device/continuous_medigun
 	sort_string = "KXAAA"
 
 /datum/design/item/medical/bluespacemedigun/upgrade
