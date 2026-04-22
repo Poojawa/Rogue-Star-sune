@@ -439,33 +439,20 @@
 
 	associated_map_datum = /datum/map_z_level/sirius_point/mining
 
-/datum/random_map/automata/cave_system/no_cracks/crater_ore
-    descriptor = "moon crater ore distribution map"
-
-/datum/random_map/automata/cave_system/no_cracks/crater_ore/apply_to_turf(var/x,var/y)
-    var/current_cell = get_map_cell(x,y)
-    if(!current_cell)
-        return 0
-
-    var/turf/simulated/mineral/T = locate((origin_x-1)+x,(origin_y-1)+y,origin_z)
-    if(!istype(T) || !T.density || T.ignore_mapgen || T.ignore_oregen)
-        return T
-
-    if(map[current_cell] == DOOR_CHAR)
-        T.make_ore()
-    else if(map[current_cell] == EMPTY_CHAR)
-        T.make_ore(1)
-    return T
+/datum/map_template/station_map/spw/on_map_loaded(z)
+	seed_submaps(list(Z_LEVEL_MOONBASE_WEST), 210, /area/moonbase/surface/west_crater/unexplored, /datum/map_template/surface/moonbase/west_crater)
+	new /datum/random_map/automata/cave_system/no_cracks/(null, 3, 3, Z_LEVEL_MOONBASE_WEST, world.maxx - 4, world.maxy - 4)
+	new /datum/random_map/noise/ore(null, 1, 1, Z_LEVEL_MOONBASE_WEST, 64, 64)
 
 /datum/map_template/station_map/spe/on_map_loaded(z)
-    seed_submaps(list(Z_LEVEL_MOONBASE_EAST), 210, /area/moonbase/surface/east_crater/unexplored, /datum/map_template/surface/moonbase/east_crater)
-    new /datum/random_map/automata/cave_system/no_cracks/crater_ore(null, 3, 3, Z_LEVEL_MOONBASE_EAST, world.maxx - 4, world.maxy - 4)
-    new /datum/random_map/noise/ore(null, 1, 1, Z_LEVEL_MOONBASE_EAST, 64, 64)
+	seed_submaps(list(Z_LEVEL_MOONBASE_EAST), 210, /area/moonbase/surface/east_crater/unexplored, /datum/map_template/surface/moonbase/east_crater)
+	new /datum/random_map/automata/cave_system/no_cracks/(null, 3, 3, Z_LEVEL_MOONBASE_EAST, world.maxx - 4, world.maxy - 4)
+	new /datum/random_map/noise/ore(null, 1, 1, Z_LEVEL_MOONBASE_EAST, 64, 64)
 
 /datum/map_template/station_map/spm/on_map_loaded(z)
 	. = ..()
-	new /datum/random_map/automata/cave_system/no_cracks(null, 3, 3, Z_LEVEL_MOONBASE_WEST, world.maxx - 4, world.maxy - 4)
-	new /datum/random_map/noise/ore(null, 1, 1, Z_LEVEL_MOONBASE_WEST, 64, 64)
+	new /datum/random_map/automata/cave_system/no_cracks(null, 3, 3, Z_LEVEL_MOONBASE_MINING, world.maxx - 4, world.maxy - 4)
+	new /datum/random_map/noise/ore(null, 1, 1, Z_LEVEL_MOONBASE_MINING, 64, 64)
 
 /datum/map_template/moonbase_lateload/moonbase_centcom
 	name = "Moonbase - Central Command"
