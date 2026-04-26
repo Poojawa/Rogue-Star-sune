@@ -1,6 +1,6 @@
 //MAP CONVERTED BY dmm2tgm.py THIS HEADER COMMENT PREVENTS RECONVERSION, DO NOT REMOVE
 "a" = (
-/turf/simulated/mineral/moonbase/ignore_mapgen/ignore_cavegen,
+/turf/simulated/mineral/moonbase/ignore_cavegen,
 /area/submap/moonbase/poi/west_crater/rocks5)
 "c" = (
 /turf/simulated/mineral/floor/vacuum/moonbase/ignore_cavegen,
