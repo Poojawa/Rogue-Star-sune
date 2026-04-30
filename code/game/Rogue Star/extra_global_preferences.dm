@@ -196,6 +196,14 @@
 	if(!allow_self_compare && pred == prey)
 		return FALSE
 
+	//SSD Vore Fix, 4/30/2026 Sari Bork
+	if(!pred.client)
+		if(!pred.ssd_vore)
+			return FALSE
+	if(!prey.client)
+		if(!prey.ssd_vore)
+			return FALSE
+
 	if(preftype == MICRO_PICKUP)
 		if(!pred.pickup_pref || !pred.pickup_active || !prey.pickup_pref || !prey.pickup_active)
 			return FALSE
