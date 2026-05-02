@@ -197,10 +197,10 @@
 		return FALSE
 
 	//SSD Vore Fix, 4/30/2026 Sari Bork
-	if(!pred.client)
+	if(!pred.client && pred.player_login_key_log)
 		if(!pred.ssd_vore)
 			return FALSE
-	if(!prey.client)
+	if(!prey.client && prey.player_login_key_log)
 		if(!prey.ssd_vore)
 			return FALSE
 
