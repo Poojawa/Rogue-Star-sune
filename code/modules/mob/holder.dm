@@ -32,17 +32,54 @@ var/list/holder_mob_icon_cache = list()
 	held.reset_view(src)
 	START_PROCESSING(SSobj, src)
 
-/obj/item/weapon/holder/Entered(mob/held, atom/OldLoc)
+//RS Edit Start || Ports CHOMPStation PR 5311
+/mob/living/Stat()
+	. = ..()
+	if(. && istype(loc, /obj/item/weapon/holder))
+		var/location = ""
+		var/obj/item/weapon/holder/H = loc
+		if(ishuman(H.loc))
+			var/mob/living/carbon/human/HH = H.loc
+			if(HH.l_hand == H)
+				location = "[HH]'s left hand"
+			else if(HH.r_hand == H)
+				location = "[HH]'s right hand"
+			else if(HH.r_store == H || HH.l_store == H)
+				location = "[HH]'s pocket"
+			else if(HH.head == H)
+				location = "[HH]'s head"
+			else if(HH.shoes == H)
+				location = "[HH]'s feet"
+			else
+				location = "[HH]"
+		else if(ismob(H.loc))
+			var/mob/living/M = H.loc
+			if(M.l_hand == H)
+				location = "[M]'s left hand"
+			else if(M.r_hand == H)
+				location = "[M]'s right hand"
+			else
+				location = "[M]"
+		else if(ismob(H.loc.loc))
+			location = "[H.loc.loc]'s [H.loc]"
+		else
+			location = "[H.loc]"
+		if(statpanel("Status"))
+			stat("Location Held:", location)
+//RS Edit End
+
+/obj/item/weapon/holder/Entered(mob/held, atom/OldLoc, var/do_vis = TRUE)	//RS EDIT
 	if(held_mob)
 		held.forceMove(get_turf(src))
-		held.reset_view(null)
+		held.reset_view_after_container_exit() // RS Edit: Fix micro holder camera bug (Lira, April 2026)
 		return
 	ASSERT(ismob(held))
 	. = ..()
 	held_mob = held
-	original_vis_flags = held.vis_flags
-	held.vis_flags = VIS_INHERIT_ID|VIS_INHERIT_LAYER|VIS_INHERIT_PLANE
-	vis_contents += held
+	if(do_vis)	//RS EDIT START
+		original_vis_flags = held.vis_flags
+		held.vis_flags = VIS_INHERIT_ID|VIS_INHERIT_LAYER|VIS_INHERIT_PLANE
+		vis_contents += held	//RS EDIT END
 	name = held.name
 	original_transform = held.transform
 	held.transform = null
@@ -51,7 +88,8 @@ var/list/holder_mob_icon_cache = list()
 	if(thing == held_mob)
 		held_mob.transform = original_transform
 		held_mob.update_transform() //VOREStation edit
-		held_mob.vis_flags = original_vis_flags
+		if(original_vis_flags)	//RS EDIT
+			held_mob.vis_flags = original_vis_flags	//RS EDIT
 		held_mob = null
 	..()
 
@@ -76,7 +114,7 @@ var/list/holder_mob_icon_cache = list()
 		held_mob.update_transform() //VOREStation edit
 		held_mob.vis_flags = original_vis_flags
 		held_mob.forceMove(get_turf(src))
-		held_mob.reset_view(null)
+		held_mob.reset_view_after_container_exit() // RS Edit: Fix micro holder camera bug (Lira, April 2026)
 		held_mob = null
 	invisibility = INVISIBILITY_ABSTRACT //VOREStation edit
 

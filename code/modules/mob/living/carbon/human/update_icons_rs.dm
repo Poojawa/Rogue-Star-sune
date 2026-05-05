@@ -4,6 +4,10 @@
 
 	remove_layer(VORE_BELLY_LAYER)
 
+	// RS Add: Respect vore layer disable flag to avoid rebuilding overlays (Lira, September 2025)
+	if(disable_vore_layers)
+		return
+
 	var/image/vore_belly_image = get_vore_belly_image()
 
 	if(vore_belly_image)
@@ -14,7 +18,7 @@
 
 /mob/living/carbon/human/proc/get_vore_belly_image()
 	for(var/obj/item/clothing/C in list(wear_suit, w_uniform))
-		if(istype(C) && (C.body_parts_covered & UPPER_TORSO))
+		if(istype(C) && (C.item_flags & THICKMATERIAL))
 			return null
 
 	if(!(wear_suit && wear_suit.flags_inv & HIDETAIL))
@@ -22,6 +26,8 @@
 		var/icon/vorebelly_s = new/icon(icon = 'icons/mob/vore/Bellies.dmi', icon_state = "[species.vore_belly_default_variant]Belly[vs_fullness][struggle_anim_stomach ? "" : " idle"]")
 		vorebelly_s.Blend(vore_sprite_color["stomach"], vore_sprite_multiply["stomach"] ? ICON_MULTIPLY : ICON_ADD)
 		var/image/working = image(vorebelly_s)
+		if(glowy_belly)
+			working.plane = PLANE_LIGHTING_ABOVE
 		working.overlays += em_block_image_generic(working)
 		return working
 	return null
@@ -39,6 +45,10 @@
 		return
 
 	remove_layer(VORE_TAIL_LAYER)
+
+	// RS Add: Respect vore layer disable flag to avoid rebuilding overlays (Lira, September 2025)
+	if(disable_vore_layers)
+		return
 
 	var/image/vore_tail_image = get_vore_tail_image()
 	if(vore_tail_image)
@@ -58,6 +68,8 @@
 		working.pixel_x = -16
 		if(tail_style.em_block)
 			working.overlays += em_block_image_generic(working)
+		if(glowy_belly)
+			working.plane = PLANE_LIGHTING_ABOVE
 		return working
 	return null
 

@@ -68,6 +68,14 @@
 	body_parts = list(BP_L_HAND,BP_R_HAND)
 	sorting_group = MARKINGS_LIMBS
 
+/datum/sprite_accessory/marking/ch/guilmonarms //RS Add || Chomp Port 5771
+	name = "Guilmon Arms"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "guilmon"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_R_ARM,BP_L_ARM,BP_R_HAND,BP_L_HAND)
+	sorting_group = MARKINGS_LIMBS
+
 /***	Leg Specifics	***/
 /datum/sprite_accessory/marking/vr_harpy_feathers
 	name = "Rapala leg Feather"
@@ -173,6 +181,102 @@
 	icon_state = "birdpants"
 	color_blend_mode = ICON_MULTIPLY
 	body_parts = list(BP_R_LEG, BP_L_LEG, BP_GROIN)
+	sorting_group = MARKINGS_LIMBS
+
+/datum/sprite_accessory/marking/ch/tyranid_legs  //RS Add || Chomp Port 4722
+	name = "Tyranid Legs (Use with Armor)"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "tyranid"
+	color_blend_mode = ICON_MULTIPLY
+	hide_body_parts = list(BP_L_FOOT,BP_R_FOOT,BP_L_LEG,BP_R_LEG)
+	body_parts = list(BP_L_FOOT,BP_R_FOOT,BP_L_LEG,BP_R_LEG,BP_GROIN)
+	sorting_group = MARKINGS_LIMBS
+
+/datum/sprite_accessory/marking/ch/tyranid_legs_armor  //RS Add || Chomp Port 4722
+	name = "Tyranid Legs (Armor)"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "tyranidarmor"
+	color_blend_mode = ICON_MULTIPLY
+	hide_body_parts = list(BP_L_FOOT,BP_R_FOOT,BP_L_LEG,BP_R_LEG)
+	body_parts = list(BP_L_FOOT,BP_R_FOOT,BP_L_LEG,BP_R_LEG,BP_GROIN)
+	sorting_group = MARKINGS_LIMBS
+
+/datum/sprite_accessory/marking/ch/gradient_arms  //RS Add || Chomp Port 5715
+	name = "Gradient Arms"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "gradient"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_R_ARM, BP_R_HAND, BP_L_ARM, BP_L_HAND)
+	sorting_group = MARKINGS_LIMBS
+
+/datum/sprite_accessory/marking/ch/gradient_legs  //RS Add || Chomp Port 5715
+	name = "Gradient Legs"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "gradient"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_R_LEG,BP_R_FOOT,BP_L_LEG,BP_L_FOOT)
+	digitigrade_acceptance = MARKING_ALL_LEGS
+	sorting_group = MARKINGS_LIMBS
+
+/datum/sprite_accessory/marking/ch/fox_hsocks   //RS Add || Chomp Port 5715
+	name = "Fox Hand Socks"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "fox"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_R_ARM, BP_R_HAND, BP_L_ARM, BP_L_HAND)
+	sorting_group = MARKINGS_LIMBS
+
+/datum/sprite_accessory/marking/ch/fox_lsocks  //RS Add || Chomp Port 5715
+	name = "Fox Leg Socks"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "fox"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_R_LEG,BP_R_FOOT,BP_L_LEG,BP_L_FOOT)
+	digitigrade_acceptance = MARKING_ALL_LEGS
+	sorting_group = MARKINGS_LIMBS
+
+/datum/sprite_accessory/marking/ch/tiger_arms  //RS Add || Chomp Port 5715
+	name = "Tiger Arms"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "tiger"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_R_ARM, BP_R_HAND, BP_L_ARM, BP_L_HAND)
+	sorting_group = MARKINGS_LIMBS
+
+/datum/sprite_accessory/marking/ch/tiger_legs  //RS Add || Chomp Port 5715
+	name = "Tiger Legs"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "tiger"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_R_LEG,BP_R_FOOT,BP_L_LEG,BP_L_FOOT)
+	digitigrade_acceptance = MARKING_ALL_LEGS
+	sorting_group = MARKINGS_LIMBS
+
+/datum/sprite_accessory/marking/ch/hawk_talons  //RS Add || Chomp Port 5715
+	name = "Hawk Talons (Legs)"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "hawktalon"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_R_LEG,BP_R_FOOT,BP_L_LEG,BP_L_FOOT)
+	digitigrade_acceptance = MARKING_ALL_LEGS
+	sorting_group = MARKINGS_LIMBS
+
+/datum/sprite_accessory/marking/ch/deer_hooves  //RS Add || Chomp Port 5715
+	name = "Deer Hooves"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "deerhoof"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_R_FOOT, BP_L_FOOT)
+	digitigrade_acceptance = MARKING_ALL_LEGS
+	sorting_group = MARKINGS_LIMBS
+
+/datum/sprite_accessory/marking/ch/guilmonlegs //RS Add || Chomp Port 5771
+	name = "Guilmon Legs"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "guilmon"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_R_LEG,BP_R_FOOT,BP_L_LEG,BP_L_FOOT)
+	digitigrade_acceptance = MARKING_ALL_LEGS
 	sorting_group = MARKINGS_LIMBS
 
 //Digitigrade markings
@@ -322,3 +426,10 @@
 	icon_state = "bigspots"
 	color_blend_mode = ICON_MULTIPLY
 	body_parts = list(BP_R_LEG,BP_R_FOOT)
+
+/datum/sprite_accessory/marking/ch/guilmonlegs //RS Add || Chomp Port 5771
+	name = "Guilmon Legs"
+	icon_state = "guilmon"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_R_LEG,BP_R_FOOT,BP_L_LEG,BP_L_FOOT)
+

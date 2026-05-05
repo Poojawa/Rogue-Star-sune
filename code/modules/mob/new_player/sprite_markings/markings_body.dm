@@ -52,6 +52,7 @@
 
 /datum/sprite_accessory/marking/vr_bellyspiral
 	name = "Belly Spiral"
+	icon = 'icons/mob/human_races/markings_alt.dmi'
 	icon_state = "bellyspiral"
 	color_blend_mode = ICON_MULTIPLY
 	body_parts = list(BP_TORSO,BP_GROIN)
@@ -59,6 +60,7 @@
 
 /datum/sprite_accessory/marking/vr_fluffy_cuffs
 	name = "Wrist Fluff"
+	icon = 'icons/mob/human_races/markings_alt.dmi'
 	icon_state = "fluffy_cuffs"
 	color_blend_mode = ICON_MULTIPLY
 	body_parts = list(BP_L_ARM,BP_R_ARM,BP_L_HAND,BP_R_HAND)
@@ -66,6 +68,7 @@
 
 /datum/sprite_accessory/marking/vr_chubby_belly
 	name = "Chubby Belly"
+	icon = 'icons/mob/human_races/markings_alt.dmi'
 	icon_state = "chubby_belly"
 	color_blend_mode = ICON_MULTIPLY
 	body_parts = list(BP_TORSO,BP_GROIN)
@@ -73,6 +76,7 @@
 
 /datum/sprite_accessory/marking/vr_chubby_belly_s
 	name = "Smooth Chubby Belly"
+	icon = 'icons/mob/human_races/markings_alt.dmi'
 	icon_state = "chubby_belly_s"
 	color_blend_mode = ICON_MULTIPLY
 	body_parts = list(BP_TORSO,BP_GROIN)
@@ -80,6 +84,7 @@
 
 /datum/sprite_accessory/marking/vr_r_belly_fluff
 	name = "Belly Fluff"
+	icon = 'icons/mob/human_races/markings_alt.dmi'
 	icon_state = "belly_fluff"
 	color_blend_mode = ICON_MULTIPLY
 	body_parts = list(BP_TORSO)
@@ -87,6 +92,7 @@
 
 /datum/sprite_accessory/marking/vr_r_chest_fluff
 	name = "Chest Fluff"
+	icon = 'icons/mob/human_races/markings_alt.dmi'
 	icon_state = "chest_fluff"
 	color_blend_mode = ICON_MULTIPLY
 	body_parts = list(BP_TORSO)
@@ -94,6 +100,7 @@
 
 /datum/sprite_accessory/marking/vr_shoulder_fluff
 	name = "Shoulder Fluff"
+	icon = 'icons/mob/human_races/markings_alt.dmi'
 	icon_state = "shoulder_markings"
 	color_blend_mode = ICON_MULTIPLY
 	body_parts = list(BP_L_ARM,BP_R_ARM)
@@ -336,6 +343,193 @@
 	name = "backsail"
 	icon = 'icons/mob/human_races/markings_vr.dmi'
 	icon_state = "backsail"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/vale_belly //RS Add || Chomp Port 535
+	name = "VALE Belly"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "vale_belly"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO, BP_GROIN)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/vale_back //RS Add || Chomp Port 535
+	name = "VALE Back"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "vale_back"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO)
+	sorting_group = MARKINGS_BODY
+
+// Nightstalker Body Markings
+/datum/sprite_accessory/marking/ch/desert_nightstalker //RS Add || Chomp Port 4619
+	name = "Nightstalker Scales (Desert Coloration)"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "nightstalker_desert"
+	body_parts = list(BP_R_ARM,BP_L_ARM,BP_R_HAND,BP_L_HAND,BP_R_LEG,BP_L_LEG,BP_R_FOOT,BP_L_FOOT,BP_TORSO,BP_GROIN) // Fullbody markings, save head
+	do_colouration = 0 // Don't color, these are pre-colored markings
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/diamondback_nightstalker_outer //RS Add || Chomp Port 4619
+	name = "Nightstalker Scales, Outer"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "nightstalker_1"
+	body_parts = list(BP_R_ARM,BP_L_ARM,BP_R_HAND,BP_L_HAND,BP_R_LEG,BP_L_LEG,BP_R_FOOT,BP_L_FOOT,BP_TORSO,BP_GROIN) // Fullbody markings, save head
+	color_blend_mode = ICON_MULTIPLY
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/diamondback_nightstalker_inner //RS Add || Chomp Port 4619
+	name = "Nightstalker Scales, Inner"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "nightstalker_2"
+	body_parts = list(BP_R_ARM,BP_L_ARM,BP_R_LEG,BP_L_LEG,BP_TORSO,BP_GROIN) // Fullbody markings, save head
+	color_blend_mode = ICON_MULTIPLY
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/outer_spots //RS Add || Chomp Port 4619
+	name = "Spots, Outer"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "spots_extremities"
+	body_parts = list(BP_R_ARM,BP_L_ARM,BP_R_LEG,BP_L_LEG,BP_R_FOOT,BP_L_FOOT)
+	color_blend_mode = ICON_MULTIPLY
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/breasts  //RS Add || Chomp Port 7918
+	name = "Breasts"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "breasts"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/breasts/smooth  //RS Add || Chomp Port 7918
+	name = "Smooth Breasts"
+	icon_state = "breasts_smooth"
+
+/datum/sprite_accessory/marking/ch/breasts/reptile  //RS Add || Chomp Port 7918
+	name = "Reptile Breasts"
+	icon_state = "breasts_reptile"
+
+/datum/sprite_accessory/marking/yw/roundhumanoid  //RS Add || Chomp Port 5246
+	name = "Round (Humanoid)"
+	icon = 'icons/mob/human_races/markings_yw.dmi'
+	icon_state = "preg_tummy_humanoid"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO,BP_GROIN,BP_L_HAND,BP_R_HAND,BP_L_LEG,BP_R_LEG)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/tyranid  //RS Add || Chomp Port 4722
+	name = "Tyranid Bodytype (Use with Armor)"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "tyranid"
+	color_blend_mode = ICON_MULTIPLY
+	hide_body_parts = list(BP_L_FOOT,BP_R_FOOT,BP_L_LEG,BP_R_LEG,BP_L_ARM,BP_R_ARM,BP_L_HAND,BP_R_HAND,BP_GROIN,BP_TORSO,BP_HEAD)
+	body_parts = list(BP_L_FOOT,BP_R_FOOT,BP_L_LEG,BP_R_LEG,BP_L_ARM,BP_R_ARM,BP_L_HAND,BP_R_HAND,BP_GROIN,BP_TORSO,BP_HEAD)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/tyranid_armor  //RS Add || Chomp Port 4722
+	name = "Tyranid Bodytype (Armor)"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "tyranidarmor"
+	color_blend_mode = ICON_MULTIPLY
+	hide_body_parts = list(BP_L_FOOT,BP_R_FOOT,BP_L_LEG,BP_R_LEG,BP_L_ARM,BP_R_ARM,BP_L_HAND,BP_R_HAND,BP_GROIN,BP_TORSO,BP_HEAD)
+	body_parts = list(BP_L_FOOT,BP_R_FOOT,BP_L_LEG,BP_R_LEG,BP_L_ARM,BP_R_ARM,BP_L_HAND,BP_R_HAND,BP_GROIN,BP_TORSO,BP_HEAD)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/chestfluff_big //RS Add || Chomp Port 7542
+	name = "Chest Fluff, Big"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "chestfluff_big"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/softbelly //RS Add || Chomp Port 7542
+	name = "Belly Fur, Soft"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "softbelly"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO, BP_GROIN)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/softbelly_navel //RS Add || Chomp Port 7542
+	name = "Belly Fur, Soft With Navel"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "softbelly_navel"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO, BP_GROIN)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/softbelly_fem //RS Add || Chomp Port 7542
+	name = "Belly Fur, Soft (Female)"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "softbelly_fem"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO, BP_GROIN)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/softbelly_fem_navel //RS Add || Chomp Port 7542
+	name = "Belly Fur, Soft With Navel (Female)"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "softbelly_fem_navel"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO, BP_GROIN)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/chitinbelly //RS Add || Chomp Port 7542
+	name = "Chitinous Scutes"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "chitin_belly"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO, BP_GROIN)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/chitinbelly_fem //RS Add || Chomp Port 7542
+	name = "Chitinous Scutes (Female)"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "chitinbelly_fem"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO, BP_GROIN)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/husky_chest  //RS Add || Chomp Port 5715
+	name = "Husky Chest"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "husky"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO, BP_GROIN)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/fox_chest  //RS Add || Chomp Port 5715
+	name = "Fox Chest"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "fox"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO, BP_GROIN)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/tiger_chest  //RS Add || Chomp Port 5715
+	name = "Tiger Chest"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "tiger"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO, BP_GROIN)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/guilmonchest //RS Add || Chomp Port 5771
+	name = "Guilmon Chest"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "guilmon_chest"
+	color_blend_mode = ICON_MULTIPLY
+	body_parts = list(BP_TORSO)
+	sorting_group = MARKINGS_BODY
+
+/datum/sprite_accessory/marking/ch/guilmonchestmarking //RS Add || Chomp Port 5771
+	name = "Guilmon Chest Markings"
+	icon = 'icons/mob/human_races/markings_ch.dmi'
+	icon_state = "guilmon_marking"
 	color_blend_mode = ICON_MULTIPLY
 	body_parts = list(BP_TORSO)
 	sorting_group = MARKINGS_BODY

@@ -88,22 +88,28 @@
 
 	if(client || !user.client || !ai_holder || !isliving(user))
 		return ..()
-	if(!user.devourable || !user.allowmobvore || !user.can_be_drop_prey)
+	if(!ai_holder.vore_check(user)) //RS EDIT || Vore hostile fix (Lira, May 2026)
 		return ..()
 	ai_holder.give_target(user, TRUE)
 	ai_holder.track_target_position()
 	ai_holder.set_stance(STANCE_FIGHT)
+	return ..() // RS Add: Vore hostile fix (Lira, May 2026)
 
 /datum/ai_holder/simple_mob/say_aggro
 	hostile = FALSE
-	forgive_resting = TRUE
+	vore_hostile = TRUE // RS Add: Vore hostile fix (Lira, May 2026)
+	forgive_resting = FALSE // RS Edit: Vore hostile fix (Lira, May 2026)
 	cooperative = FALSE
+
+ // RS Add: Vore hostile fix (Lira, May 2026)
+/datum/ai_holder/simple_mob/say_aggro/find_target(list/possible_targets, has_targets_list)
+	return null
 
 /datum/ai_holder/simple_mob/say_aggro/on_hear_say(mob/living/speaker, message)
 	. = ..()
 	if(holder.client || !speaker.client)
 		return
-	if(!speaker.devourable || !speaker.allowmobvore || !speaker.can_be_drop_prey)
+	if(!vore_check(speaker)) //RS EDIT || Vore hostile fix (Lira, May 2026)
 		return
 	if(speaker.z != holder.z)
 		return
@@ -210,7 +216,7 @@
 	if(!isliving(A))
 		return FALSE
 	var/mob/living/L = A
-	if(!L.devourable || !L.allowmobvore || !L.can_be_drop_prey || !L.throw_vore || L.unacidable)
+	if(!spont_pref_check(src,L,THROW_VORE))	//RS EDIT
 		return FALSE
 
 	set_AI_busy(TRUE)

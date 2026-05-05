@@ -263,7 +263,7 @@
 	to_chat(src, "<span class='notice'>You take a moment to listen in to your environment...</span>")
 	for(var/mob/living/L in range(client.view, src))
 		var/turf/T = get_turf(L)
-		if(!T || L == src || L.stat == DEAD || is_below_sound_pressure(T))
+		if(!T || L == src || L.stat == DEAD || is_below_sound_pressure(T) || L.is_incorporeal()) //RS Edit Chomp port #7484 | CHOMPAdd - No bluespace ears.
 			continue
 		heard_something = TRUE
 		var/feedback = list()
@@ -345,6 +345,11 @@
 				Int.rejuvenate(TRUE)
 
 		handle_organs() // Update everything
+		for(var/organname in organs_by_name)
+			var/list/dna_markings = dna.body_markings[organname]
+			if(dna_markings)
+				var/obj/item/organ/external/EO = organs_by_name[organname]
+				EO.markings = dna_markings.Copy()
 
 		update_icons_body()
 		active_regen = FALSE

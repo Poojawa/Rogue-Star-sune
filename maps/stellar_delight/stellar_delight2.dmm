@@ -408,6 +408,7 @@
 /obj/structure/table/reinforced,
 /obj/random/tech_supply,
 /obj/random/tech_supply,
+/obj/random/tech_supply,
 /turf/simulated/floor/tiled/eris/dark/orangecorner,
 /area/engineering/engine_eva)
 "aP" = (
@@ -571,7 +572,8 @@
 	dir = 8
 	},
 /obj/machinery/door/airlock/angled_bay/hatch/engineering{
-	dir = 4
+	dir = 4;
+	req_access = null
 	},
 /turf/simulated/floor/tiled/steel_ridged,
 /area/stellardelight/deck2/port)
@@ -1930,12 +1932,6 @@
 /obj/structure/disposalpipe/segment,
 /turf/simulated/wall/bay/r_wall/steel,
 /area/stellardelight/deck2/o2production)
-"dW" = (
-/obj/structure/closet/secure_closet/engineering_electrical/double{
-	anchored = 1
-	},
-/turf/simulated/floor/tiled/eris/dark/orangecorner,
-/area/engineering/locker_room)
 "dX" = (
 /obj/machinery/light{
 	dir = 8
@@ -2629,24 +2625,11 @@
 /turf/simulated/floor/tiled/eris/white/cargo,
 /area/stellardelight/deck2/triage)
 "fy" = (
-/obj/item/device/radio,
-/obj/item/device/radio,
-/obj/item/device/radio,
-/obj/item/weapon/tank/emergency/oxygen/engi,
-/obj/item/weapon/tank/emergency/oxygen/engi,
-/obj/item/clothing/mask/breath,
-/obj/item/clothing/mask/breath,
-/obj/structure/closet/crate/medical{
-	desc = "A crate full of emergency supplies to help with response and rescue operations. A logo of NanoTrasen with a checkmark is stamped on the crate.";
-	name = "NanoTrasen Emergency Supply Crate"
-	},
-/obj/item/weapon/storage/briefcase/inflatable,
-/obj/item/weapon/storage/firstaid/adv,
-/obj/item/weapon/storage/firstaid/regular,
-/obj/item/bodybag/cryobag,
-/obj/item/bodybag/cryobag,
-/turf/simulated/floor/tiled/eris/dark/monofloor,
-/area/bridge)
+/obj/structure/table/wooden_reinforced,
+/obj/item/mail/blank,
+/obj/item/mail/blank,
+/turf/simulated/floor/tiled/eris/dark/cargo,
+/area/crew_quarters/recreation_area)
 "fz" = (
 /obj/machinery/atmospherics/pipe/simple/hidden/scrubbers,
 /obj/machinery/atmospherics/pipe/manifold/hidden/supply{
@@ -2772,6 +2755,8 @@
 /obj/item/paint_brush,
 /obj/effect/landmark/vines,
 /obj/structure/closet/walllocker_double/misc_civ/north,
+/obj/item/canvas/drawing_tablet,
+/obj/item/canvas/drawing_tablet,
 /turf/simulated/floor/tiled,
 /area/storage/art)
 "fI" = (
@@ -4332,6 +4317,7 @@
 /obj/structure/table/reinforced,
 /obj/random/tech_supply,
 /obj/random/tech_supply,
+/obj/random/tech_supply,
 /turf/simulated/floor/tiled/eris/dark/orangecorner,
 /area/engineering/engine_eva)
 "ji" = (
@@ -4863,8 +4849,37 @@
 /turf/simulated/floor/tiled/techfloor,
 /area/engineering/atmos/monitoring)
 "ko" = (
-/obj/item/weapon/storage/secure/briefcase/ml3m_pack_med,
 /obj/structure/table/reinforced,
+/obj/item/weapon/storage/firstaid/hypokit/brute{
+	pixel_x = -6;
+	pixel_y = 10
+	},
+/obj/item/weapon/storage/firstaid/hypokit/brute{
+	pixel_x = -6;
+	pixel_y = 5
+	},
+/obj/item/weapon/storage/firstaid/hypokit/burn{
+	pixel_x = 7;
+	pixel_y = 10
+	},
+/obj/item/weapon/storage/firstaid/hypokit/burn{
+	pixel_x = 7;
+	pixel_y = 5
+	},
+/obj/item/weapon/storage/firstaid/hypokit/toxin{
+	pixel_x = -6
+	},
+/obj/item/weapon/storage/firstaid/hypokit/toxin{
+	pixel_x = -6;
+	pixel_y = -5
+	},
+/obj/item/weapon/storage/firstaid/hypokit/oxy{
+	pixel_x = 7
+	},
+/obj/item/weapon/storage/firstaid/hypokit/oxy{
+	pixel_x = 7;
+	pixel_y = -5
+	},
 /obj/machinery/alarm/angled{
 	dir = 4
 	},
@@ -4888,6 +4903,7 @@
 /obj/machinery/light{
 	dir = 4
 	},
+/obj/item/weapon/storage/bag/mail,
 /turf/simulated/floor/tiled/eris/steel/cargo,
 /area/quartermaster/storage)
 "kr" = (
@@ -4959,6 +4975,14 @@
 	},
 /turf/simulated/floor/tiled,
 /area/stellardelight/deck2/aftstarboard)
+"kw" = (
+/obj/structure/table/steel_reinforced,
+/obj/item/weapon/folder/blue,
+/obj/item/weapon/folder/blue{
+	pixel_x = 5
+	},
+/turf/simulated/floor/tiled/eris/dark/monofloor,
+/area/bridge)
 "kx" = (
 /obj/structure/disposalpipe/sortjunction/wildcard/flipped{
 	dir = 1
@@ -5062,6 +5086,11 @@
 	dir = 10
 	},
 /obj/machinery/hologram/holopad,
+/obj/machinery/light_switch{
+	dir = 1;
+	pixel_x = 25;
+	pixel_y = -24
+	},
 /turf/simulated/floor/tiled/eris/dark/techfloor_grid,
 /area/storage/tech)
 "kI" = (
@@ -5204,7 +5233,7 @@
 	dir = 4
 	},
 /turf/simulated/floor/tiled/steel_ridged,
-/area/engineering/engine_eva)
+/area/storage/tech)
 "kU" = (
 /obj/structure/disposalpipe/segment,
 /mob/living/simple_mob/vore/alienanimals/teppi/baby,
@@ -5636,12 +5665,6 @@
 	},
 /turf/simulated/floor/tiled/eris/white/bluecorner,
 /area/medical/cmostore)
-"lM" = (
-/obj/effect/floor_decal/milspec/color/blue/half{
-	dir = 4
-	},
-/turf/space,
-/area/space)
 "lN" = (
 /obj/structure/cable/cyan{
 	icon_state = "1-2"
@@ -6192,6 +6215,9 @@
 /obj/effect/floor_decal/steeldecal/steel_decals5{
 	dir = 1
 	},
+/obj/item/mail/blank,
+/obj/item/mail/blank,
+/obj/item/mail/blank,
 /turf/simulated/floor/tiled,
 /area/storage/art)
 "mR" = (
@@ -6578,8 +6604,8 @@
 /turf/simulated/floor/tiled,
 /area/stellardelight/deck2/aftstarboard)
 "nO" = (
-/turf/simulated/wall/bay/r_wall/orange,
-/area/engineering/engine_eva)
+/turf/simulated/wall/bay/steel,
+/area/stellardelight/deck2/barbackroom)
 "nP" = (
 /obj/structure/cable/green{
 	icon_state = "1-8"
@@ -8978,6 +9004,10 @@
 /obj/structure/cable/cyan{
 	icon_state = "1-2"
 	},
+/obj/machinery/light_switch{
+	pixel_x = 25;
+	pixel_y = 25
+	},
 /turf/simulated/floor/tiled/eris/dark/orangecorner,
 /area/engineering/engine_eva)
 "tn" = (
@@ -9127,8 +9157,7 @@
 	dir = 4
 	},
 /obj/structure/table/reinforced,
-/obj/random/tech_supply,
-/obj/random/tech_supply,
+/obj/item/device/suit_cooling_unit,
 /turf/simulated/floor/tiled/eris/dark/orangecorner,
 /area/engineering/engine_eva)
 "tF" = (
@@ -9241,27 +9270,10 @@
 /turf/simulated/floor/tiled,
 /area/stellardelight/deck2/port)
 "tV" = (
-/obj/item/weapon/storage/box/nifsofts_medical{
-	pixel_x = 7;
-	pixel_y = 7
-	},
-/obj/item/weapon/storage/box/nifsofts_medical,
-/obj/structure/table/reinforced,
-/obj/item/device/radio{
-	pixel_x = -4;
-	pixel_y = 4
-	},
-/obj/item/device/radio{
-	pixel_x = 4;
-	pixel_y = -4
-	},
-/obj/item/device/radio{
-	pixel_x = 7;
-	pixel_y = 8
-	},
 /obj/machinery/light_switch{
 	pixel_y = 24
 	},
+/obj/machinery/vending/medical,
 /turf/simulated/floor/tiled/eris/white/bluecorner,
 /area/medical/cmostore)
 "tW" = (
@@ -9880,6 +9892,20 @@
 	},
 /turf/simulated/floor,
 /area/stellardelight/deck2/combustionworkshop)
+"vl" = (
+/obj/structure/cable/orange{
+	icon_state = "1-2"
+	},
+/obj/structure/disposalpipe/segment,
+/obj/machinery/atmospherics/pipe/simple/hidden/supply,
+/obj/machinery/atmospherics/pipe/simple/hidden/scrubbers,
+/obj/machinery/light_switch{
+	dir = 1;
+	pixel_x = -24;
+	pixel_y = -24
+	},
+/turf/simulated/floor/tiled/eris/dark/orangecorner,
+/area/engineering/workshop)
 "vn" = (
 /obj/machinery/atmospherics/pipe/simple/hidden/yellow{
 	dir = 10
@@ -9911,7 +9937,8 @@
 	dir = 4
 	},
 /obj/machinery/door/airlock/angled_bay/hatch/engineering{
-	dir = 4
+	dir = 4;
+	req_access = null
 	},
 /obj/structure/disposalpipe/segment{
 	dir = 4
@@ -14643,9 +14670,8 @@
 /obj/machinery/atmospherics/unary/vent_scrubber/on{
 	dir = 4
 	},
-/obj/structure/closet/crate/bin{
-	anchored = 1
-	},
+/obj/structure/closet/toolcloset,
+/obj/item/weapon/pickaxe,
 /turf/simulated/floor/tiled/eris/dark/orangecorner,
 /area/engineering/engine_eva)
 "FZ" = (
@@ -16005,6 +16031,10 @@
 	},
 /turf/simulated/floor/tiled/eris/dark/gray_platform,
 /area/bridge)
+"IM" = (
+/obj/structure/table/steel_reinforced,
+/turf/simulated/floor/tiled/eris/dark/monofloor,
+/area/bridge)
 "IN" = (
 /obj/machinery/atmospherics/binary/pump/on{
 	name = "Air to Distro"
@@ -16670,6 +16700,11 @@
 /obj/structure/disposalpipe/segment,
 /obj/machinery/atmospherics/pipe/simple/hidden/scrubbers,
 /obj/machinery/atmospherics/pipe/simple/hidden/supply,
+/obj/machinery/light_switch{
+	dir = 1;
+	pixel_x = -24;
+	pixel_y = -24
+	},
 /turf/simulated/floor/tiled/eris/dark/orangecorner,
 /area/engineering/engineering_monitoring)
 "Kv" = (
@@ -16955,6 +16990,24 @@
 /obj/effect/landmark/vermin,
 /turf/simulated/floor/tiled/eris/white/bluecorner,
 /area/medical/chemistry)
+"KZ" = (
+/obj/item/device/radio,
+/obj/item/device/radio,
+/obj/item/device/radio,
+/obj/item/weapon/tank/emergency/oxygen/engi,
+/obj/item/weapon/tank/emergency/oxygen/engi,
+/obj/item/clothing/mask/breath,
+/obj/item/clothing/mask/breath,
+/obj/item/weapon/storage/briefcase/inflatable,
+/obj/item/weapon/storage/firstaid/adv,
+/obj/item/weapon/storage/firstaid/regular,
+/obj/item/bodybag/cryobag,
+/obj/item/bodybag/cryobag,
+/obj/structure/closet/walllocker_double/command/south{
+	name = "emergency supplies"
+	},
+/turf/simulated/floor/tiled/eris/dark/gray_platform,
+/area/bridge)
 "La" = (
 /obj/machinery/light,
 /turf/simulated/floor/tiled/eris/white/cargo,
@@ -17212,6 +17265,11 @@
 /obj/item/weapon/packageWrap,
 /obj/fiftyspawner/cardboard,
 /obj/machinery/atmospherics/unary/vent_pump/on,
+/obj/item/weapon/storage/bag/mail,
+/obj/item/mail/blank,
+/obj/item/mail/blank,
+/obj/item/mail/blank,
+/obj/item/mail/blank,
 /turf/simulated/floor/tiled/eris/steel/brown_platform,
 /area/quartermaster/storage)
 "LG" = (
@@ -18805,8 +18863,9 @@
 /turf/simulated/floor/tiled/techfloor,
 /area/engineering/atmos/monitoring)
 "OZ" = (
-/obj/structure/closet/toolcloset,
-/obj/item/weapon/pickaxe,
+/obj/structure/closet/secure_closet/engineering_electrical/double{
+	anchored = 1
+	},
 /turf/simulated/floor/tiled/eris/dark/orangecorner,
 /area/engineering/locker_room)
 "Pb" = (
@@ -19481,6 +19540,11 @@
 /obj/machinery/atmospherics/pipe/simple/hidden/scrubbers{
 	dir = 4
 	},
+/obj/machinery/light_switch{
+	dir = 4;
+	pixel_x = -25;
+	pixel_y = -32
+	},
 /turf/simulated/floor/tiled/eris/dark/techfloor_grid,
 /area/storage/tech)
 "Qu" = (
@@ -19629,6 +19693,11 @@
 /obj/machinery/status_display{
 	pixel_y = 32
 	},
+/obj/item/weapon/storage/box/nifsofts_medical{
+	pixel_x = 7;
+	pixel_y = 7
+	},
+/obj/item/weapon/storage/box/nifsofts_medical,
 /turf/simulated/floor/tiled/eris/white/bluecorner,
 /area/medical/cmostore)
 "QO" = (
@@ -19652,6 +19721,11 @@
 	},
 /obj/structure/cable/orange{
 	icon_state = "2-8"
+	},
+/obj/machinery/light_switch{
+	dir = 1;
+	pixel_x = -24;
+	pixel_y = -24
 	},
 /turf/simulated/floor/tiled/eris/dark/orangecorner,
 /area/engineering/locker_room)
@@ -20016,6 +20090,10 @@
 	},
 /obj/structure/cable/cyan{
 	icon_state = "1-8"
+	},
+/obj/machinery/light_switch{
+	pixel_x = 25;
+	pixel_y = 25
 	},
 /turf/simulated/floor/tiled/eris/dark/techfloor_grid,
 /area/engineering/engine_room)
@@ -20875,6 +20953,7 @@
 /obj/structure/cable/yellow{
 	icon_state = "0-8"
 	},
+/obj/item/weapon/storage/bag/mail,
 /turf/simulated/floor/tiled/eris/steel/cargo,
 /area/quartermaster/storage)
 "TL" = (
@@ -21138,12 +21217,28 @@
 /turf/simulated/floor/airless,
 /area/stellardelight/deck2/exterior)
 "Uq" = (
-/obj/machinery/vending/medical,
 /obj/machinery/atmospherics/pipe/simple/hidden/supply{
 	dir = 4
 	},
 /obj/machinery/light{
 	dir = 1
+	},
+/obj/structure/table/reinforced,
+/obj/item/weapon/storage/firstaid/mkIhypokit{
+	pixel_x = 2;
+	pixel_y = 8
+	},
+/obj/item/weapon/storage/firstaid/mkIhypokit{
+	pixel_x = 2;
+	pixel_y = 5
+	},
+/obj/item/weapon/storage/secure/briefcase/ml3m_pack_med{
+	pixel_y = 1;
+	pixel_x = 2
+	},
+/obj/item/weapon/storage/continuous_medigun_box{
+	pixel_x = -2;
+	pixel_y = 0
 	},
 /turf/simulated/floor/tiled/eris/white/bluecorner,
 /area/medical/cmostore)
@@ -21510,7 +21605,7 @@
 	stripe_color = "#89bd66"
 	},
 /turf/simulated/floor/tiled/steel_ridged,
-/area/crew_quarters/bar)
+/area/stellardelight/deck2/barbackroom)
 "Vi" = (
 /obj/machinery/atmospherics/pipe/simple/hidden/fuel{
 	dir = 4
@@ -22837,9 +22932,9 @@
 /turf/simulated/floor/tiled/eris/dark/cargo,
 /area/crew_quarters/recreation_area)
 "Yd" = (
-/obj/item/device/suit_cooling_unit,
-/obj/item/device/suit_cooling_unit,
-/obj/structure/table/reinforced,
+/obj/structure/closet/crate/bin{
+	anchored = 1
+	},
 /turf/simulated/floor/tiled/eris/dark/orangecorner,
 /area/engineering/engine_eva)
 "Ye" = (
@@ -23350,6 +23445,18 @@
 	},
 /obj/machinery/light{
 	dir = 8
+	},
+/obj/item/device/radio{
+	pixel_x = 7;
+	pixel_y = 8
+	},
+/obj/item/device/radio{
+	pixel_x = -4;
+	pixel_y = 4
+	},
+/obj/item/device/radio{
+	pixel_x = 4;
+	pixel_y = -4
 	},
 /turf/simulated/floor/tiled/eris/white/bluecorner,
 /area/medical/cmostore)
@@ -33445,7 +33552,7 @@ Rf
 Uj
 ZU
 JQ
-nK
+kw
 nK
 bL
 wi
@@ -33587,7 +33694,7 @@ HL
 nD
 CG
 wo
-nK
+IM
 nK
 uQ
 xy
@@ -33728,7 +33835,7 @@ Mw
 IL
 Uj
 Nn
-JQ
+KZ
 rN
 rN
 rN
@@ -33869,7 +33976,7 @@ jU
 TP
 Ld
 Uj
-fy
+Zj
 Zj
 rN
 ry
@@ -34424,7 +34531,7 @@ iO
 mt
 lO
 id
-sH
+fy
 nt
 Rq
 Rq
@@ -34900,13 +35007,13 @@ ON
 ON
 Jn
 Vu
-ta
-ta
-ta
-ta
-ta
-ta
-ta
+YY
+YY
+YY
+YY
+YY
+YY
+YY
 ta
 LY
 LY
@@ -35115,14 +35222,14 @@ nP
 Jh
 Jh
 Jh
-HQ
-Sx
-Sx
-Sx
+Yi
+nO
+nO
+nO
 Vh
-Sx
-Sx
-Sx
+nO
+nO
+nO
 FA
 Zr
 sj
@@ -35264,7 +35371,7 @@ LN
 KG
 Rn
 FC
-fl
+nO
 fl
 HW
 fl
@@ -35406,7 +35513,7 @@ Og
 FB
 UC
 JT
-fl
+nO
 Ae
 Rm
 WZ
@@ -35474,7 +35581,7 @@ Eg
 qH
 bM
 Fd
-jY
+vl
 hs
 nb
 fA
@@ -35548,7 +35655,7 @@ yM
 Ly
 NY
 YM
-fl
+nO
 CV
 Wm
 tW
@@ -35690,7 +35797,7 @@ Kx
 Ez
 gP
 pR
-fl
+nO
 FR
 Wm
 HV
@@ -35832,7 +35939,7 @@ Yi
 Yi
 cQ
 Yi
-aN
+Yi
 xI
 Wm
 HV
@@ -35893,7 +36000,7 @@ Re
 OI
 da
 iw
-dW
+vb
 To
 To
 Vo
@@ -36331,12 +36438,12 @@ cL
 Qz
 tm
 az
-nO
-nO
+ow
+ow
 kT
-nO
-nO
-nq
+ow
+ow
+rT
 VJ
 VJ
 Wb
@@ -36473,7 +36580,7 @@ hX
 OF
 OF
 lV
-OF
+ow
 il
 Qt
 on
@@ -36615,7 +36722,7 @@ sw
 OF
 sm
 bz
-OF
+ow
 Ql
 zq
 NC
@@ -36757,7 +36864,7 @@ Lp
 OF
 cN
 Yq
-OF
+ow
 Ij
 sl
 Jg
@@ -36845,7 +36952,7 @@ Jh
 Jh
 Jh
 Jh
-lM
+Jh
 Jh
 Jh
 Jh
@@ -36899,7 +37006,7 @@ fN
 OF
 OF
 Sw
-OF
+ow
 qX
 eK
 li
@@ -37041,7 +37148,7 @@ Vf
 Xo
 pu
 UE
-OF
+ow
 ow
 ow
 ow
@@ -37183,7 +37290,7 @@ UF
 Vx
 Vf
 Gu
-OF
+ow
 MW
 Cr
 ow
@@ -37325,7 +37432,7 @@ Bs
 EP
 Vf
 mC
-OF
+ow
 gh
 kH
 Mz
@@ -37467,7 +37574,7 @@ Vf
 gW
 Vf
 Gu
-OF
+ow
 XB
 Tx
 ow
@@ -37609,7 +37716,7 @@ Vf
 EP
 Vf
 Ix
-ni
+rT
 Ra
 Ra
 rT

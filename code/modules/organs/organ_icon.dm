@@ -1,4 +1,93 @@
 var/global/list/limb_icon_cache = list()
+var/global/list/marking_icon_cache = list() // RS Add: Icon cache (Lira, September 2025)
+
+// RS Add: Compute how far a marking icon should be nudged horizontally to stay centered on a 32px base (Lira, November 2025)
+/proc/get_marking_icon_offset_x(icon/mark_icon, base_size = world.icon_size)
+	if(!isicon(mark_icon))
+		return 0
+	var/base = isnum(base_size) && base_size > 0 ? base_size : 32
+	if(base <= 0)
+		base = 32
+	var/mark_width = mark_icon.Width()
+	if(!isnum(mark_width) || mark_width <= base)
+		return 0
+	return round((mark_width - base) / 2)
+
+// RS Add: Add a marking overlay with optional pixel offset while also blending it into a backing icon (Lira, November 2025)
+/proc/apply_marking_icon(atom/target, icon/mark_icon, icon/accumulator, offset_x = 0)
+	if(!isicon(mark_icon) || !istype(target))
+		return
+	var/image/mark_overlay = null
+	if(offset_x)
+		mark_overlay = image(mark_icon)
+		mark_overlay.pixel_x -= offset_x
+	target.add_overlay(mark_overlay ? mark_overlay : mark_icon)
+	if(!isicon(accumulator))
+		return
+	if(offset_x)
+		var/icon/shifted = new/icon(mark_icon)
+		if(offset_x > 0)
+			shifted.Shift(WEST, offset_x)
+		else if(offset_x < 0)
+			shifted.Shift(EAST, -offset_x)
+		accumulator.Blend(shifted, ICON_OVERLAY)
+	else
+		accumulator.Blend(mark_icon, ICON_OVERLAY)
+
+// RS Add Start: Cached markings (Lira, September 2025)
+
+/proc/get_cached_marking_icon(var/datum/sprite_accessory/marking/mark_style, var/organ_tag, var/mark_color, var/is_digitigrade)
+	if(!istype(mark_style))
+		return null
+	var/icon_resource = is_digitigrade ? (mark_style.digitigrade_icon || mark_style.icon) : mark_style.icon
+	if(!icon_resource)
+		return null
+	var/icon_state = "[mark_style.icon_state]-[organ_tag]"
+	if(!istext(icon_state) || !length(icon_state))
+		return null
+	var/color_text = mark_color
+	if(!istext(color_text))
+		color_text = "[mark_color]"
+	if(!istext(color_text))
+		color_text = ""
+	var/cache_token
+	if(istype(mark_style, /datum/sprite_accessory/marking/custom))
+		var/datum/sprite_accessory/marking/custom/custom_style = mark_style
+		if(custom_style.cache_hash)
+			cache_token = custom_style.cache_hash
+		else if(custom_style.source && !QDELETED(custom_style.source))
+			cache_token = custom_style.get_cache_key()
+		else
+			cache_token = mark_style.icon_state
+	else
+		cache_token = mark_style.icon_state
+	if(!cache_token)
+		cache_token = "default"
+	var/style_ref = REF(mark_style)
+	var/cache_key = "[style_ref]|[icon_resource]|[icon_state]|[color_text]|[cache_token]|[is_digitigrade]|[mark_style.color_blend_mode]"
+	var/icon/I = marking_icon_cache[cache_key]
+	if(!I)
+		I = icon(icon_resource, icon_state)
+		if(mark_style.do_colouration && length(color_text))
+			I.Blend(color_text, mark_style.color_blend_mode)
+		marking_icon_cache[cache_key] = I
+	return I
+
+/proc/clear_cached_marking_icons_for_style(var/datum/sprite_accessory/marking/style)
+	if(!style || !marking_icon_cache || !marking_icon_cache.len)
+		return
+	var/style_ref = REF(style)
+	if(!style_ref)
+		return
+	var/list/remove_keys = list()
+	for(var/key in marking_icon_cache)
+		if(findtext(key, style_ref))
+			remove_keys += key
+	for(var/key in remove_keys)
+		marking_icon_cache -= key
+	return
+
+// RS Add End
 
 /obj/item/organ/external/set_dir()
 	return
@@ -66,7 +155,7 @@ var/global/list/limb_icon_cache = list()
 	if(owner.h_style)
 		var/style = owner.h_style
 		var/datum/sprite_accessory/hair/hair_style = hair_styles_list[style]
-		if(owner.head && (owner.head.flags_inv & BLOCKHEADHAIR))
+		if(owner.head && (owner.head.flags_inv & (BLOCKHEADHAIR | HIDEHEAD))) // RS Edit: Hide head (Lira, October 2025)
 			if(!(hair_style.flags & HAIR_VERY_SHORT))
 				hair_style = hair_styles_list["Short Hair"]
 		if(hair_style && (species.get_bodytype(owner) in hair_style.species_allowed))
@@ -92,44 +181,19 @@ var/global/list/limb_icon_cache = list()
 	else if(dna)
 		digitigrade = check_digi && dna.digitigrade
 
-	for(var/M in markings)
-		if (!markings[M]["on"])
-			continue
-		var/datum/sprite_accessory/marking/mark = markings[M]["datum"]
-		if(mark.organ_override)
-			var/icon/mark_s = new/icon("icon" = mark.icon, "icon_state" = "[mark.icon_state]-[organ_tag]")
-			mob_icon = new /icon("icon" = mark.icon, "icon_state" = "blank")
-			mark_s.Blend(markings[M]["color"], mark.color_blend_mode) // VOREStation edit
-			mob_icon.Blend(mark_s, ICON_OVERLAY) //So when it's on your body, it has icons
-			icon_cache_key = "[M][markings[M]["color"]]"
-			for(var/MM in markings)
-				if (!markings[MM]["on"])
-					continue
-				var/datum/sprite_accessory/marking/mark_style = markings[MM]["datum"]
-				if(mark_style.organ_override)
-					continue
-				var/icon/mark_s_s = new/icon("icon" = mark_style.icon, "icon_state" = "[mark_style.icon_state]-[organ_tag]")
-				mark_s.Blend(markings[MM]["color"], mark_style.color_blend_mode) // VOREStation edit
-				add_overlay(mark_s_s) //So when it's not on your body, it has icons
-				mob_icon.Blend(mark_s_s, ICON_OVERLAY) //So when it's on your body, it has icons
-				icon_cache_key += "[MM][markings[MM]["color"]]"
-
-			dir = EAST
-			icon = mob_icon
-			return mob_icon
+	var/should_apply_transparency = FALSE
 
 	var/gender = "m"
+	var/skip_forced_icon = skip_robo_icon || (digi_prosthetic && digitigrade) //RS EDIT (CS PR #5565)
 	if(owner && owner.gender == FEMALE)
 		gender = "f"
-
-	var/should_apply_transparency = FALSE
 
 	if(!force_icon_key)
 		icon_cache_key = "[icon_name]_[species ? species.get_bodytype() : SPECIES_HUMAN]" //VOREStation Edit
 	else
 		icon_cache_key = "[icon_name]_[force_icon_key]"
 
-	if(force_icon)
+	if(force_icon && !skip_forced_icon) //RS EDIT (CS PR #5565)
 		mob_icon = new /icon(force_icon, "[icon_name][gendered_icon ? "_[gender]" : ""]")
 	else
 		if(!dna)
@@ -146,71 +210,69 @@ var/global/list/limb_icon_cache = list()
 
 			if(skeletal)
 				mob_icon = new /icon('icons/mob/human_races/r_skeleton.dmi', "[icon_name][gender ? "_[gender]" : ""]")
-			else if (robotic >= ORGAN_ROBOT)
+			else if (robotic >= ORGAN_ROBOT && !skip_forced_icon)
 				mob_icon = new /icon('icons/mob/human_races/robotic.dmi', "[icon_name][gender ? "_[gender]" : ""]")
 				should_apply_transparency = TRUE
 				apply_colouration(mob_icon)
-			else if(is_hidden_by_markings())
-				mob_icon = new /icon('icons/mob/human_races/r_blank.dmi', "[icon_name][gender ? "_[gender]" : ""]")
-				should_apply_transparency = TRUE
 			else
-				//Use digi icon if digitigrade, otherwise use regular icon. Ternary operator is based.
-				mob_icon = new /icon(digitigrade ? species.icodigi : species.get_icobase(owner, (status & ORGAN_MUTATED)), "[icon_name][gender ? "_[gender]" : ""]")
-				should_apply_transparency = TRUE
-				apply_colouration(mob_icon)
+				if(is_hidden_by_markings())
+					mob_icon = new /icon('icons/mob/human_races/r_blank.dmi', "[icon_name][gender ? "_[gender]" : ""]")
+					should_apply_transparency = TRUE
+				else
+					//Use digi icon if digitigrade, otherwise use regular icon. Ternary operator is based.
+					mob_icon = new /icon(digitigrade ? species.icodigi : species.get_icobase(owner, (status & ORGAN_MUTATED)), "[icon_name][gender ? "_[gender]" : ""]")
+					should_apply_transparency = TRUE
+					apply_colouration(mob_icon)
 
-			//Body markings, actually does not include head this time. Done separately above.
-			if(!istype(src,/obj/item/organ/external/head))
-				for(var/M in markings)
-					if (!markings[M]["on"])
-						continue
-					var/datum/sprite_accessory/marking/mark_style = markings[M]["datum"]
-					var/icon/mark_s = new/icon("icon" = mark_style.icon, "icon_state" = "[mark_style.icon_state]-[organ_tag]")
-					mark_s.Blend(markings[M]["color"], mark_style.color_blend_mode) // VOREStation edit
-					add_overlay(mark_s) //So when it's not on your body, it has icons
-					mob_icon.Blend(mark_s, ICON_OVERLAY) //So when it's on your body, it has icons
-					icon_cache_key += "[M][markings[M]["color"]]"
-
-			if(body_hair && islist(h_col) && h_col.len >= 3)
-				var/cache_key = "[body_hair]-[icon_name]-[h_col[1]][h_col[2]][h_col[3]]"
-				if(!limb_icon_cache[cache_key])
-					var/icon/I = icon(species.get_icobase(owner), "[icon_name]_[body_hair]")
-					I.Blend(rgb(h_col[1],h_col[2],h_col[3]), ICON_MULTIPLY) //VOREStation edit
-					limb_icon_cache[cache_key] = I
-				mob_icon.Blend(limb_icon_cache[cache_key], ICON_OVERLAY)
-
-			// VOREStation edit start
-			if(nail_polish)
-				var/icon/I = new(nail_polish.icon, nail_polish.icon_state)
-				I.Blend(nail_polish.color, ICON_MULTIPLY)
-				add_overlay(I)
-				mob_icon.Blend(I, ICON_OVERLAY)
-				icon_cache_key += "_[nail_polish.icon]_[nail_polish.icon_state]_[nail_polish.color]"
-			// VOREStation edit end
-
-	if(model)
+	if (model && !skip_forced_icon) //RS EDIT START (CS PR #5565)
 		icon_cache_key += "_model_[model]"
 		should_apply_transparency = TRUE
-		apply_colouration(mob_icon)
-		if(owner && owner.synth_markings)
-			for(var/M in markings)
-				if (!markings[M]["on"])
-					continue
-				var/datum/sprite_accessory/marking/mark_style = markings[M]["datum"]
-				var/icon/mark_s = new/icon("icon" = mark_style.icon, "icon_state" = "[mark_style.icon_state]-[organ_tag]")
-				mark_s.Blend(markings[M]["color"], mark_style.color_blend_mode) // VOREStation edit
-				add_overlay(mark_s) //So when it's not on your body, it has icons
-				mob_icon.Blend(mark_s, ICON_OVERLAY) //So when it's on your body, it has icons
-				icon_cache_key += "[M][markings[M]["color"]]"
+		apply_colouration(mob_icon) //RS END START (CS PR #5565)
 
-		if(body_hair && islist(h_col) && h_col.len >= 3)
-			var/cache_key = "[body_hair]-[icon_name]-[h_col[1]][h_col[2]][h_col[3]]"
-			if(!limb_icon_cache[cache_key])
-				var/icon/I = icon(species.get_icobase(owner), "[icon_name]_[body_hair]")
-				I.Blend(rgb(h_col[1],h_col[2],h_col[3]), ICON_MULTIPLY) //VOREStation edit
-				limb_icon_cache[cache_key] = I
-			mob_icon.Blend(limb_icon_cache[cache_key], ICON_OVERLAY)
-		// VOREStation edit ends here
+	// RS Edit: Default limb fluff renders first so player markings can recolor it (Lira, October 2025)
+	if(body_hair && islist(h_col) && h_col.len >= 3)
+		var/cache_key = "[body_hair]-[icon_name]-[h_col[1]][h_col[2]][h_col[3]]"
+		if(!limb_icon_cache[cache_key]) //RS COMMENT: Technically, CH PR #5565 has some GLOB stuff  going on here. That is a major refractor for something like this.
+			var/icon/I = icon(species.get_icobase(owner), "[icon_name]_[body_hair]")
+			I.Blend(rgb(h_col[1],h_col[2],h_col[3]), ICON_MULTIPLY) //VOREStation edit
+			limb_icon_cache[cache_key] = I
+		mob_icon.Blend(limb_icon_cache[cache_key], ICON_OVERLAY)
+
+	//Body markings, actually does not include head this time. Done separately above. || RS Edit: Custom markings support (Lira, September 2025) || Skip above-body markings so they can render in the priority layer (Lira, Novemember 2025)
+	if((!istype(src,/obj/item/organ/external/head) && !(force_icon && !skip_forced_icon)) || (model && owner && owner.synth_markings)) //RS EDIT (CS PR #5565)
+		for(var/M in markings)
+			var/list/mark_data = markings[M]
+			if(!islist(mark_data) || !mark_data["on"])
+				continue
+			var/datum/sprite_accessory/marking/mark_style = mark_data["datum"]
+			if(!istype(mark_style))
+				mark_style = body_marking_styles_list?[M]
+			if(!istype(mark_style))
+				continue
+			if(mark_style.render_above_body)
+				continue
+			var/isdigitype = mark_style.digitigrade_acceptance //RS EDIT START (CS PR #5565)
+			if(check_digi)
+				if (!(isdigitype & (digitigrade ? MARKING_DIGITIGRADE_ONLY : MARKING_NONDIGI_ONLY))) //checks flags based on which digitigrade type the limb is
+					continue //RS EDIT END (CS PR #5565)
+			var/mark_color = mark_data["color"]
+			var/icon/mark_s = get_cached_marking_icon(mark_style, organ_tag, mark_color, digitigrade) //RS EDIT (CS PR #5565)
+			if(!mark_s)
+				continue
+			// RS Edit Start: Custom markings support (Lira, November 2025)
+			var/mark_offset_x = get_marking_icon_offset_x(mark_s)
+			apply_marking_icon(src, mark_s, mob_icon, mark_offset_x) //So when it's not on your body, it has icons
+			// RS Edit End
+			icon_cache_key += "[M][mark_color]"
+
+	// VOREStation edit start
+	if(nail_polish && !(force_icon && !skip_forced_icon))
+		var/icon/I = new(nail_polish.icon, nail_polish.icon_state)
+		I.Blend(nail_polish.color, ICON_MULTIPLY)
+		add_overlay(I)
+		mob_icon.Blend(I, ICON_OVERLAY)
+		icon_cache_key += "_[nail_polish.icon]_[nail_polish.icon_state]_[nail_polish.color]"
+	// VOREStation edit end
 
 	if (transparent && !istype(src,/obj/item/organ/external/head) && can_apply_transparency && should_apply_transparency) //VORESTATION EDIT: transparent instead of nonsolid
 		mob_icon += rgb(,,,180) //do it here so any markings become transparent as well

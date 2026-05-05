@@ -10,6 +10,13 @@
 	. = 0
 	if(locate(/obj/item/weapon/grab) in src)
 		. += 5
+	//RS Port Chomp PR 7822 || CHOMPAdd Start - When crawling, move slow.
+	if(lying)
+		if(weakened >= 1)
+			. += 14			// Very slow when weakened.
+		else
+			. += 5 //slowed down on maintainer request
+	//RS Port Chomp PR 7822 || CHOMPAdd End
 
 	// Movespeed delay based on movement mode
 	switch(m_intent)
@@ -344,7 +351,24 @@
 ///Process_Incorpmove
 ///Called by client/Move()
 ///Allows mobs to run though walls
+
+//RS Edit start || Ports VOREStation PR 16726
+/client
+	var/is_leaving_belly = FALSE
+
 /client/proc/Process_Incorpmove(direct)
+
+	//Prompts users before they leave a vorebelly
+	if(isbelly(mob.loc) && isobserver(mob))
+		if(is_leaving_belly)
+			return
+		is_leaving_belly = TRUE
+		if(tgui_alert(mob, "Do you want to leave your predator's belly?", "Leave belly?", list("Yes", "No")) != "Yes")
+			is_leaving_belly = FALSE
+			return
+		is_leaving_belly = FALSE
+//RS Edit end
+
 	var/turf/mobloc = get_turf(mob)
 
 	switch(mob.incorporeal_move)
@@ -352,12 +376,23 @@
 			var/turf/T = get_step(mob, direct)
 			if(!T)
 				return
+			var/area/A = T.loc	//RS ADD
 			if(mob.check_holy(T))
 				to_chat(mob, "<span class='warning'>You cannot get past holy grounds while you are in this plane of existence!</span>")
 				return
-			else
-				mob.forceMove(get_step(mob, direct))
-				mob.dir = direct
+			if(!holder)		//RS EDIT START
+				if(isliving(mob) && A.block_phase_shift)
+					to_chat(mob, "<span class='warning'>Something blocks you from entering this location while phased out.</span>")
+					return
+				if(isobserver(mob) && A.block_ghosts)
+					to_chat(mob, "<span class='warning'>Ghosts can't enter this location.</span>")
+					var/area/our_area = mobloc.loc
+					if(our_area.block_ghosts)
+						var/mob/observer/dead/D = mob
+						D.return_to_spawn()
+					return
+			mob.forceMove(get_step(mob, direct))
+			mob.dir = direct	//RS EDIT END
 		if(2)
 			if(prob(50))
 				var/locx

@@ -17,6 +17,8 @@
 #define TRAIT_PREF_TYPE_BOOLEAN 1
 #define TRAIT_PREF_TYPE_COLOR 2
 #define TRAIT_PREF_TYPE_STRING 3
+#define TRAIT_PREF_TYPE_INT 4
+#define TRAIT_PREF_TYPE_LIST 5
 
 #define TRAIT_NO_VAREDIT_TARGET 0
 #define TRAIT_VAREDIT_TARGET_SPECIES 1
@@ -48,7 +50,9 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 	var/dirty_synth = 0		//Are you a synth
 	var/gross_meatbag = 0		//Where'd I leave my Voight-Kampff test kit?
 
-	var/trait_injection_verb = "bites"	//RS EDIT
+	var/trait_injection_verb = "bites"	//RS ADD
+	var/trait_injection_selected = "microcillin"	//RS ADD
+	var/trait_injection_amount = 1	//RS ADD
 
 /datum/preferences/proc/get_custom_bases_for_species(var/new_species)
 	if (!new_species)
@@ -86,8 +90,12 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 					. += link + (trait_prefs[identifier] ? "Enabled" : "Disabled")
 				if (TRAIT_PREF_TYPE_COLOR) //TRAIT_PREF_TYPE_COLOR
 					. += " " + color_square(hex = trait_prefs[identifier]) + link + "Change"
-				if (TRAIT_PREF_TYPE_STRING)	//RS ADD
-					. += link + "[trait_prefs[identifier]]"	//RS ADD
+				if (TRAIT_PREF_TYPE_STRING)						//RS ADD START
+					. += link + "[trait_prefs[identifier]]"
+				if(TRAIT_PREF_TYPE_LIST)
+					. += link + "[trait_prefs[identifier]]"
+				if (TRAIT_PREF_TYPE_INT)
+					. += link + "[trait_prefs[identifier]]"		//RS ADD END
 			. += "</a></li>"
 	. += "</ul>"
 	if (altered)
@@ -138,6 +146,21 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 				to_chat(user, "<span class = 'warning'>Entered text length invalid (must be longer than 2, no more than than 40).</span>")
 				return
 			trait_prefs[preference] = new_verb
+
+		if(TRAIT_PREF_TYPE_INT)
+			var/new_int = 0
+			if(instance.name == "Venomous Injection")
+				new_int = tgui_input_number(user,"Enter a number value for this trait preference:", "Trait Number Entry",max_value = 5, min_value = 0)
+				if(new_int > 5)
+					new_int = 5
+				if(new_int < 0)
+					new_int = 0
+			trait_prefs[preference] = new_int
+		if(TRAIT_PREF_TYPE_LIST)
+			if(instance.name == "Venomous Injection")
+				var/datum/trait/neutral/venom_bite/V = instance
+				var/new_thing = tgui_input_list(user,"Which one would you like to pick?", "Trait List Entry",V.inject_chems)
+				trait_prefs[preference] = new_thing
 		//RS ADD END
 
 // Definition of the stuff for Ears
@@ -166,6 +189,8 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 	S["custom_heat"]	>> pref.custom_heat
 	S["custom_cold"]	>> pref.custom_cold
 	S["trait_injection_verb"] >> pref.trait_injection_verb	//RS ADD
+	S["trait_injection_amount"] >> pref.trait_injection_amount //RS ADD
+	S["trait_injection_selected"] >> pref.trait_injection_selected	//RS ADD
 
 /datum/category_item/player_setup_item/vore/traits/save_character(var/savefile/S)
 	S["custom_species"]	<< pref.custom_species
@@ -188,6 +213,8 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 	S["custom_heat"]	<< pref.custom_heat
 	S["custom_cold"]	<< pref.custom_cold
 	S["trait_injection_verb"] << pref.trait_injection_verb	//RS ADD
+	S["trait_injection_amount"] << pref.trait_injection_amount //RS ADD
+	S["trait_injection_selected"] << pref.trait_injection_selected	//RS ADD
 
 /datum/category_item/player_setup_item/vore/traits/sanitize_character()
 	if(!pref.pos_traits) pref.pos_traits = list()
@@ -214,10 +241,7 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 
 	// Clean up positive traits
 	for(var/datum/trait/path as anything in pref.pos_traits)
-		if(!(path in positive_traits))
-			pref.pos_traits -= path
-			continue
-		if(!(pref.species == SPECIES_CUSTOM) && !(path in everyone_traits_positive))
+		if(!(path in positive_traits_map[pref.species])) // RS EDIT
 			pref.pos_traits -= path
 			continue
 		var/take_flags = initial(path.can_take)
@@ -225,10 +249,7 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 			pref.pos_traits -= path
 	//Neutral traits
 	for(var/datum/trait/path as anything in pref.neu_traits)
-		if(!(path in neutral_traits))
-			pref.neu_traits -= path
-			continue
-		if(!(pref.species == SPECIES_CUSTOM) && !(path in everyone_traits_neutral))
+		if(!(path in neutral_traits_map[pref.species])) // RS EDIT
 			pref.neu_traits -= path
 			continue
 		var/take_flags = initial(path.can_take)
@@ -236,10 +257,7 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 			pref.neu_traits -= path
 	//Negative traits
 	for(var/datum/trait/path as anything in pref.neg_traits)
-		if(!(path in negative_traits))
-			pref.neg_traits -= path
-			continue
-		if(!(pref.species == SPECIES_CUSTOM) && !(path in everyone_traits_negative))
+		if(!(path in negative_traits_map[pref.species])) // RS EDIT
 			pref.neg_traits -= path
 			continue
 		var/take_flags = initial(path.can_take)
@@ -247,6 +265,7 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 			pref.neg_traits -= path
 
 	var/datum/species/selected_species = GLOB.all_species[pref.species]
+
 	if(selected_species.selects_bodytype)
 		if (!(pref.custom_base in pref.get_custom_bases_for_species()))
 			pref.custom_base = SPECIES_HUMAN
@@ -287,11 +306,26 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 		pref.gross_meatbag = 1
 		pref.dirty_synth = 0
 
+	// RS Edit Start: Reduce unneeded processing for character preview (Lira, September 2025)
 	var/datum/species/S = character.species
-	var/datum/species/new_S = S.produceCopy(pref.pos_traits + pref.neu_traits + pref.neg_traits, character, pref.custom_base)
-
-	for(var/datum/trait/T in new_S.traits)
-		T.apply_pref(src)
+	var/datum/species/new_S = S
+	var/rebuild_traits = TRUE
+	var/signature = null
+	if(character.preview_fast && pref.species == SPECIES_CUSTOM)
+		signature = pref.get_custom_trait_signature()
+		if(signature && character.preview_trait_signature == signature)
+			rebuild_traits = FALSE
+	if(rebuild_traits)
+		new_S = S.produceCopy(pref.pos_traits + pref.neu_traits + pref.neg_traits, character, pref.custom_base)
+		if(character.preview_fast)
+			character.preview_trait_signature = signature
+		for(var/datum/trait/T in new_S.traits)
+			T.apply_pref(src)
+	else if(character.preview_fast)
+		character.preview_trait_signature = signature
+	else
+		character.preview_trait_signature = null
+	// RS Edit End
 
 	//Any additional non-trait settings can be applied here
 	new_S.blood_color = pref.blood_color
@@ -327,21 +361,21 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 	. += "<a href='?src=\ref[src];add_trait=[POSITIVE_MODE]'>Positive Trait +</a><br>"
 	. += "<ul>"
 	for(var/T in pref.pos_traits)
-		var/datum/trait/trait = positive_traits[T]
+		var/datum/trait/trait = positive_traits_map[pref.species][T] // RS EDIT
 		. += "<li>- <a href='?src=\ref[src];clicked_pos_trait=[T]'>[trait.name] </a> [get_html_for_trait(trait, pref.pos_traits[T])]</li>"	//RS REMOVAL
 	. += "</ul>"
 
 	. += "<a href='?src=\ref[src];add_trait=[NEUTRAL_MODE]'>Neutral Trait +</a><br>"
 	. += "<ul>"
 	for(var/T in pref.neu_traits)
-		var/datum/trait/trait = neutral_traits[T]
+		var/datum/trait/trait = neutral_traits_map[pref.species][T] // RS EDIT
 		. += "<li>- <a href='?src=\ref[src];clicked_neu_trait=[T]'>[trait.name] </a> [get_html_for_trait(trait, pref.neu_traits[T])]</li>"	//RS REMOVAL
 	. += "</ul>"
 
 	. += "<a href='?src=\ref[src];add_trait=[NEGATIVE_MODE]'>Negative Trait +</a><br>"
 	. += "<ul>"
 	for(var/T in pref.neg_traits)
-		var/datum/trait/trait = negative_traits[T]
+		var/datum/trait/trait = negative_traits_map[pref.species][T] // RS EDIT
 		. += "<li>- <a href='?src=\ref[src];clicked_neg_trait=[T]'>[trait.name] </a> [get_html_for_trait(trait, pref.neg_traits[T])]</li>"	//RS REMOVAL
 	. += "</ul>"
 
@@ -543,28 +577,22 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 		var/mode = text2num(href_list["add_trait"])
 		var/list/picklist
 		var/list/mylist
+		var/list/listtocopy
 		switch(mode)
+			// RS EDIT START
 			if(POSITIVE_MODE)
-				if(pref.species == SPECIES_CUSTOM)
-					picklist = positive_traits.Copy() - pref.pos_traits
-					mylist = pref.pos_traits
-				else
-					picklist = everyone_traits_positive.Copy() - pref.pos_traits
-					mylist = pref.pos_traits
+				listtocopy = positive_traits_map[pref.species]
+				picklist = listtocopy.Copy() - pref.pos_traits
+				mylist = pref.pos_traits
 			if(NEUTRAL_MODE)
-				if(pref.species == SPECIES_CUSTOM)
-					picklist = neutral_traits.Copy() - pref.neu_traits
-					mylist = pref.neu_traits
-				else
-					picklist = everyone_traits_neutral.Copy() - pref.neu_traits
-					mylist = pref.neu_traits
+				listtocopy =  neutral_traits_map[pref.species]
+				picklist = listtocopy.Copy() - pref.neu_traits
+				mylist = pref.neu_traits
 			if(NEGATIVE_MODE)
-				if(pref.species == SPECIES_CUSTOM)
-					picklist = negative_traits.Copy() - pref.neg_traits
-					mylist = pref.neg_traits
-				else
-					picklist = everyone_traits_negative.Copy() - pref.neg_traits
-					mylist = pref.neg_traits
+				listtocopy = negative_traits_map[pref.species]
+				picklist = listtocopy.Copy() - pref.neg_traits
+				mylist = pref.neg_traits
+			// RS EDIT END
 			else
 
 		if(isnull(picklist))
@@ -624,11 +652,8 @@ var/global/list/valid_bloodreagents = list("iron","copper","phoron","silver","go
 				tgui_alert_async(usr, "The trait you've selected can only be taken by synthetic characters!", "Error")
 				return TOPIC_REFRESH
 
-			if(pref.species in instance.banned_species)
-				tgui_alert_async(usr, "The trait you've selected cannot be taken by the species you've chosen!", "Error")
-				return TOPIC_REFRESH
-
-			if( LAZYLEN(instance.allowed_species) && !(pref.species in instance.allowed_species))
+			if(pref.species in instance.banned_species || (LAZYLEN(instance.allowed_species) && !(pref.species in instance.allowed_species))) // RS EDIT
+				// We shouldn't be able to get here anymore, but let's keep it, just in case...
 				tgui_alert_async(usr, "The trait you've selected cannot be taken by the species you've chosen!", "Error")
 				return TOPIC_REFRESH
 

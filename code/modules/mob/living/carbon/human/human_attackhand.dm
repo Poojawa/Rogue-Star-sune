@@ -53,7 +53,7 @@
 	// Should this all be in Touch()?
 	if(istype(H))
 		if(H.get_accuracy_penalty() && H != src)	//Should only trigger if they're not aiming well
-			var/hit_zone = get_zone_with_miss_chance(H.zone_sel.selecting, src, H.get_accuracy_penalty())
+			var/hit_zone = get_zone_with_miss_chance(H.zone_sel.selecting, src, H.get_accuracy_penalty(), attacker = H) //RS Edit || Ports VOREStation PR17340
 			if(!hit_zone)
 				H.do_attack_animation(src)
 				playsound(src, 'sound/weapons/punchmiss.ogg', 25, 1, -1)
@@ -70,7 +70,7 @@
 
 	switch(M.a_intent)
 		if(I_HELP)
-
+			M.game_tag(src)	//RS ADD - We are being clicked, so M is tagging us
 			// VOREStation Edit - Begin
 			if (istype(H) && attempt_to_scoop(H))
 				return 0;
@@ -114,6 +114,7 @@
 			return TRUE
 
 		if(I_GRAB)
+			M.game_tag(src)	//RS ADD - We are being clicked, so M is tagging us
 			if(M == src || anchored)
 				return 0
 			for(var/obj/item/weapon/grab/G in src.grabbed_by)
@@ -278,6 +279,7 @@
 			apply_damage(real_damage, hit_dam_type, hit_zone, armour, soaked, sharp=attack.sharp, edge=attack.edge)
 
 		if(I_DISARM)
+			M.game_tag(src)	//RS ADD - We are being clicked, so M is tagging us
 			add_attack_logs(H,src,"Disarmed")
 
 			M.do_attack_animation(src)
@@ -313,6 +315,7 @@
 				apply_effect(3, WEAKEN, armor_check)
 				playsound(src, 'sound/weapons/thudswoosh.ogg', 50, 1, -1)
 				if(armor_check < 60)
+					drop_both_hands()	//RS Port Chomp PR 7822 || CHOMPEdit - We've been pushed! Drop our stuff as well
 					visible_message("<span class='danger'>[M] has pushed [src]!</span>")
 				else
 					visible_message("<span class='warning'>[M] attempted to push [src]!</span>")

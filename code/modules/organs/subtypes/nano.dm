@@ -11,11 +11,12 @@
 	encased = FALSE
 	max_damage = 30 // <-- This is different from the rest
 	min_broken_damage = 1000 //Multiple
-	vital = FALSE
+	vital = TRUE //RS Edit (counts towards dying now)
 	model = "protean"
 /obj/item/organ/external/head/unbreakable/nano
 	robotic = ORGAN_NANOFORM
 	encased = FALSE
+	cannot_gib = 0 //RS Edit (Can be destroyed, if not desired set vital to 1 to count towards death)
 	max_damage = 30
 	min_broken_damage = 1000 //Inheritance
 	vital = FALSE
@@ -93,6 +94,16 @@
 		/mob/living/carbon/human/proc/self_diagnostics
 	)
 
+//RSEdit start || Ports VOREStation PR15545
+/obj/item/organ/internal/nano/orchestrator/robotize()
+	. = ..()
+	icon_state = "orchestrator"
+
+/obj/item/organ/internal/nano/orchestrator/mechassist()
+	. = ..()
+	icon_state = "orchestrator"
+//RSEdit end
+
 /obj/item/organ/internal/nano/refactory
 	name = "refactory module"
 	desc = "A miniature metal processing unit and nanite factory."
@@ -106,6 +117,16 @@
 	organ_verbs = list(
 		/mob/living/carbon/human/proc/reagent_purge
 	)
+
+//RS Edit Start || Ports VOREStation PR 15545
+/obj/item/organ/internal/nano/refactory/robotize()
+	. = ..()
+	icon_state = "refactory"
+
+/obj/item/organ/internal/nano/refactory/mechassist()
+	. = ..()
+	icon_state = "refactory"
+//RS Edit End
 
 /obj/item/organ/internal/nano/refactory/proc/get_stored_material(var/material)
 	if(status & ORGAN_DEAD)

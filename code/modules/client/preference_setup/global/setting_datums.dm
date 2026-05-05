@@ -84,6 +84,14 @@ var/list/_client_preferences_by_type
 	else
 		preference_mob.update_music()
 
+//RS ADD START
+/datum/client_preference/food_eating_noises
+	description = "Food Eating Noises"
+	key = "FOOD EATING_NOISES"
+	enabled_description = "Enabled"
+	disabled_description = "Disabled"
+//RS ADD END
+
 /datum/client_preference/eating_noises
 	description = "Eating Noises"
 	key = "EATING_NOISES"
@@ -101,6 +109,12 @@ var/list/_client_preferences_by_type
 	key = "BELCH_NOISES"
 	enabled_description = "Noisy"
 	disabled_description = "Silent"
+
+/datum/client_preference/smooch_noises // Smooching noises - pref toggle for 'em //RS Edit Start
+	description = "Smooches"
+	key = "SMOOCH_NOISES"
+	enabled_description = "Noisy"
+	disabled_description = "Silent" //RS Edit End
 
 /datum/client_preference/emote_noises
 	description = "Emote Noises" //MERP
@@ -281,6 +295,11 @@ var/list/_client_preferences_by_type
 	description ="Hear In-game Instruments"
 	key = "SOUND_INSTRUMENT"
 
+// RS Add: Browser-based instrument audio (Lira, March 2026)
+/datum/client_preference/instrument_toggle/toggled(var/mob/preference_mob, var/enabled)
+	. = ..()
+	preference_mob?.client?.refresh_instrument_audio()
+
 /datum/client_preference/vchat_enable
 	description = "Enable/Disable VChat"
 	key = "VCHAT_ENABLE"
@@ -342,6 +361,12 @@ var/list/_client_preferences_by_type
 	enabled_description = "Enabled"
 	disabled_description = "Disabled"
 
+/datum/client_preference/vore_damage_overlay
+	description = "Vore Self Damage Overlay"
+	key = "VORE_DAMAGE_OVERLAY"
+	enabled_description = "Enabled"
+	disabled_description = "Disabled"
+
 //RS ADDITION END
 
 /datum/client_preference/runechat_mob
@@ -388,13 +413,13 @@ var/list/_client_preferences_by_type
 	key = "SOUND_MENTORHELP"
 	enabled_description = "Hear"
 	disabled_description = "Silent"
-
+/* Rs removal
 /datum/client_preference/player_tips
 	description = "Receive Tips Periodically"
 	key = "RECEIVE_TIPS"
 	enabled_description = "Enabled"
 	disabled_description = "Disabled"
-
+*/ // RS Removal
 /datum/client_preference/pain_frequency
 	description = "Pain Messages Cooldown"
 	key = "PAIN_FREQUENCY"
@@ -402,6 +427,14 @@ var/list/_client_preferences_by_type
 	enabled_description = "Extended"
 	disabled_description = "Default"
 
+//RS ADD START
+/datum/client_preference/game_toggle
+	description = "Game Participation"
+	key = "GAME_PARTICIPATION"
+	enabled_by_default = TRUE
+	enabled_description = "Participate"
+	disabled_description = "Sit out"
+//RS ADD END
 
 /********************
 * Staff Preferences *
@@ -461,3 +494,12 @@ var/list/_client_preferences_by_type
 	key = "CHAT_ADSAY"
 	enabled_description = "Show"
 	disabled_description = "Hide"
+
+//RS ADD START
+/datum/client_preference/holder/show_staff_secrets
+	description ="Staff Secrets"
+	key = "STAFF_SECRETS"
+	enabled_description = "Show"
+	disabled_description = "Hide"
+	enabled_by_default = FALSE
+//RS ADD END

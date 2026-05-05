@@ -666,8 +666,8 @@
 		jobs += "</tr></table>"
 
 		// Finished
-		body = "<body>[jobs]</body>"
-		dat = "<tt>[header][body]</tt>"
+		body = "<body><tt>[jobs]</tt></body>" // RS Edit: Job ban html fix (Lira, April 2026)
+		dat = "<html>[header][body]</html>" // RS Edit: Job ban html fix (Lira, April 2026)
 		usr << browse(dat, "window=jobban2;size=800x490")
 		return
 
@@ -1728,7 +1728,7 @@
 			tgui_alert_async(usr, "Removed:\n" + jointext(removed_paths, "\n"))
 
 		var/list/offset = splittext(href_list["offset"],",")
-		var/number = dd_range(1, 100, text2num(href_list["object_count"]))
+		var/number = dd_range(1, ADMIN_SPAWN_CAP, text2num(href_list["object_count"]))
 		var/X = offset.len > 0 ? text2num(offset[1]) : 0
 		var/Y = offset.len > 1 ? text2num(offset[2]) : 0
 		var/Z = offset.len > 2 ? text2num(offset[3]) : 0
@@ -2002,14 +2002,15 @@
 		if(check_rights(R_ADMIN|R_SERVER))
 			populate_inactive_customitems_list(src.owner)
 
+	// RS Edit: vsc global fix (Lira, March 2026)
 	else if(href_list["vsc"])
 		if(check_rights(R_ADMIN|R_SERVER|R_EVENT))
 			if(href_list["vsc"] == "airflow")
-				vsc.ChangeSettingsDialog(usr,vsc.settings)
+				GLOB.vsc.ChangeSettingsDialog(usr,GLOB.vsc.settings)
 			if(href_list["vsc"] == "phoron")
-				vsc.ChangeSettingsDialog(usr,vsc.plc.settings)
+				GLOB.vsc.ChangeSettingsDialog(usr,GLOB.vsc.plc.settings)
 			if(href_list["vsc"] == "default")
-				vsc.SetDefault(usr)
+				GLOB.vsc.SetDefault(usr)
 
 	else if(href_list["toglang"])
 		if(check_rights(R_SPAWN)) //VOREStation Edit

@@ -32,8 +32,13 @@
 	if(!destination)
 		to_chat(src, "<span class='notice'>There is nothing of interest in this direction.</span>")
 		return 0
+	var/allow_solid_up = FALSE // RS Add: No floating/flying through ceilings (Lira, February 2026)
 
 	if(is_incorporeal())
+		var/area/our_area = get_area(destination)	//RS ADD - Stops shadekin from going where they shouldn't
+		if(our_area.block_phase_shift && isliving(src))
+			to_chat(src, "<span class='warning'>Something blocks you from entering this location while phased out.</span>")
+			return 0	//RS ADD END
 		forceMove(destination)
 		return 1
 
@@ -68,6 +73,7 @@
 			var/obj/structure/lattice/lattice = locate() in destination.contents
 			var/obj/structure/catwalk/catwalk = locate() in destination.contents
 			var/turf/simulated/floor/water/deep/ocean/diving/surface = destination
+			var/turf/simulated/open/openspace = destination //RS Edit - Prevents noclipping
 
 			if(lattice)
 				var/pull_up_time = max(5 SECONDS + (src.movement_delay() * 10), 1)
@@ -85,6 +91,7 @@
 				src.audible_message("<span class='notice'>[src] begins to swim towards the surface.</span>", runemessage = "splish splosh")
 				if(do_after(src, pull_up_time))
 					to_chat(src, "<span class='notice'>You reach the surface.</span>")
+					allow_solid_up = TRUE // RS Add: No floating/flying through ceilings (Lira, February 2026)
 				else
 					to_chat(src, "<span class='warning'>You stopped swimming upwards.</span>")
 					return 0
@@ -100,9 +107,14 @@
 				src.audible_message("<span class='notice'>[src] begins climbing up \the [lattice].</span>", runemessage = "clank clang")
 				if(do_after(src, pull_up_time))
 					to_chat(src, "<span class='notice'>You pull yourself up.</span>")
+					allow_solid_up = TRUE // RS Add: No floating/flying through ceilings (Lira, February 2026)
 				else
 					to_chat(src, "<span class='warning'>You gave up on pulling yourself up.</span>")
 					return 0
+
+			else if(!istype(openspace)) //RS Edit Start - Prevents noclipping
+				to_chat(src, "<span class='warning'>Something solid above stops you from passing.</span>")
+				return 0 //RS Edit End - Prevents noclipping
 
 			else if(isliving(src)) //VOREStation Edit Start. Are they a mob, and are they currently flying??
 				var/mob/living/H = src
@@ -126,6 +138,11 @@
 			else
 				to_chat(src, "<span class='warning'>Gravity stops you from moving upward.</span>")
 				return 0
+
+	// RS Add: No floating/flying through ceilings (Lira, February 2026)
+	if(direction == UP && !allow_solid_up && !destination.CanZPass(src, direction))
+		to_chat(src, "<span class='warning'>Something solid above stops you from passing.</span>")
+		return 0
 
 	for(var/atom/A in destination)
 		if(!A.CanPass(src, start, 1.5, 0))

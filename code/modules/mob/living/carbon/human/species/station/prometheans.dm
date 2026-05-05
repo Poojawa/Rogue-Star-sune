@@ -34,6 +34,7 @@ var/datum/species/shapeshifter/promethean/prometheans
 	species_language = LANGUAGE_PROMETHEAN
 	secondary_langs = list(LANGUAGE_PROMETHEAN, LANGUAGE_SOL_COMMON)	// For some reason, having this as their species language does not allow it to be chosen.
 	assisted_langs = list(LANGUAGE_ROOTGLOBAL, LANGUAGE_VOX)	// Prometheans are weird, let's just assume they can use basically any language.
+	digi_allowed = TRUE
 
 	blood_name = "gelatinous ooze"
 	blood_reagents = "slimejelly"
@@ -121,6 +122,8 @@ var/datum/species/shapeshifter/promethean/prometheans
 		)
 
 	valid_transform_species = list(SPECIES_HUMAN, SPECIES_HUMAN_VATBORN, SPECIES_UNATHI, SPECIES_TAJ, SPECIES_SKRELL, SPECIES_DIONA, SPECIES_TESHARI, SPECIES_MONKEY)
+
+	food_class = FP_SLIME	//RS ADD
 
 	var/heal_rate = 0.5 // Temp. Regen per tick.
 

@@ -152,7 +152,7 @@
 	B.name = vore_stomach_name ? vore_stomach_name : "stomach"
 	B.desc = vore_stomach_flavor ? vore_stomach_flavor : "Your surroundings are warm, soft, and slimy. Makes sense, considering you're inside \the [name]."
 	B.digest_mode = vore_default_mode
-	B.escapable = vore_escape_chance > 0
+	B.escapable = 1
 	B.escapechance = vore_escape_chance
 	B.digestchance = vore_digest_chance
 	B.absorbchance = vore_absorb_chance
@@ -210,8 +210,13 @@
 		check_timer = 0
 		var/non_kin_count = 0
 		for(var/mob/living/M in view(6,src))
-			if(!istype(M, /mob/living/simple_mob/shadekin))
-				non_kin_count ++
+			if(istype(M, /mob/living/simple_mob/shadekin))	//RS EDIT START - Consider carbon shadekin
+				continue
+			if(ishuman(M))
+				var/mob/living/carbon/human/H = M
+				if(istype(H.species,/datum/species/shadekin) || istype(H.species,/datum/species/crew_shadekin))
+					continue
+			non_kin_count ++	//RS ADD END
 		// Technically can be combined with ||, they call the same function, but readability is poor
 		if(!non_kin_count && (ability_flags & AB_PHASE_SHIFTED))
 			phase_shift() // shifting back in, nobody present

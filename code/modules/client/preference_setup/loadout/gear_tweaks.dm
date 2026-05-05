@@ -1,3 +1,7 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+//Updated by Lira for Rogue Star September 2025 to call the colormate when coloring via color matrix //
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #define LOADOUT_BAN_STRING "Custom loadout"
 
 /datum/gear_tweak/proc/get_contents(var/metadata)
@@ -40,7 +44,66 @@
 /datum/gear_tweak/color/tweak_item(var/obj/item/I, var/metadata)
 	if(valid_colors && !(metadata in valid_colors))
 		return
-	I.color = metadata
+	if(!metadata || (metadata == "#ffffff"))  //RS Add Start || Port Virgo PR 15836
+		return
+	if(istype(I))
+		I.add_atom_colour(metadata, FIXED_COLOUR_PRIORITY)
+	else
+		I.color = metadata
+
+GLOBAL_DATUM_INIT(gear_tweak_free_matrix_recolor, /datum/gear_tweak/matrix_recolor, new)
+
+/datum/gear_tweak/matrix_recolor
+
+/datum/gear_tweak/matrix_recolor/get_contents(var/metadata)
+	if(islist(metadata) && length(metadata))
+		return "Matrix Recolor: [english_list(metadata)]"
+	return "Matrix Recolor"
+
+/datum/gear_tweak/matrix_recolor/get_default()
+	return null
+
+// Use Colormate UI instead of the legacy browser window (Lira, September 2025)
+/datum/gear_tweak/matrix_recolor/get_metadata(user, metadata, datum/gear/gear = null, list/all_metadata = null)
+	var/obj/preview_item = null
+	if(istype(gear))
+		// Spawn a temporary instance of the gear item for preview; no location needed
+		var/datum/gear_data/gd = new(gear.path, null)
+		if(length(gear.gear_tweaks) && islist(all_metadata))
+			for(var/datum/gear_tweak/gt in gear.gear_tweaks)
+				gt.tweak_gear_data(all_metadata["[gt]"], gd)
+		var/path_to_item = gd.path
+		if(ispath(path_to_item))
+			// Try to construct without location; this should be fine for icon previews
+			preview_item = new path_to_item
+	var/list/returned = colormate_matrix_picker(user, islist(metadata) && metadata, preview_item)
+	var/list/L = returned["matrix"]
+	var/out
+	if(returned["button"] == 3)
+		out = metadata
+	else if((returned["button"] == 2) || !islist(L) || !ISINRANGE(L.len, 9, 20))
+		out = list()
+	else
+		var/identity = TRUE
+		var/static/list/ones = list(1, 5, 9)
+		for(var/i in 1 to L.len)
+			if(L[i] != ((i in ones)? 1 : 0))
+				identity = FALSE
+				break
+		out = identity? list() : L
+	// Cleanup preview item if created
+	if(preview_item)
+		qdel(preview_item)
+	return out
+
+/datum/gear_tweak/matrix_recolor/tweak_item(obj/item/I, metadata)
+	. = ..()
+	if(!islist(metadata) || (length(metadata) < 12))
+		return
+	if(istype(I))
+		I.add_atom_colour(metadata, FIXED_COLOUR_PRIORITY)
+	else
+		I.color = metadata //RS Add End || Port Virgo PR 15836
 
 /*
 * Path adjustment
@@ -130,7 +193,7 @@
 	return "Random"
 
 /datum/gear_tweak/reagents/get_metadata(var/user, var/list/metadata)
-	. = tgui_input_list(user, "Choose an entry.", "Character Preference", valid_reagents + list("Random", "None"), metadata)
+	. = tgui_input_list(user, "Choose an entry.", "Character Preference", valid_reagents + list("Random", "Random Alcoholic", "Random Non-Alcoholic", "None"), metadata) //RS Edit: Add random alcoholic and random non-alcoholic options (Lira, September 2025)
 	if(!.)
 		return metadata
 
@@ -139,6 +202,12 @@
 		return
 	if(metadata == "Random")
 		. = valid_reagents[pick(valid_reagents)]
+	else if(metadata == "Random Alcoholic") //RS Add: Random alcoholic drink (Lira, September 2025)
+		var/list/alcohols = lunchables_ethanol_reagents()
+		. = alcohols[pick(alcohols)]
+	else if(metadata == "Random Non-Alcoholic") //RS Add: Random non-alcoholic drink (Lira, September 2025)
+		var/list/softs = lunchables_drink_reagents()
+		. = softs[pick(softs)]
 	else
 		. = valid_reagents[metadata]
 	I.reagents.add_reagent(., I.reagents.get_free_space())

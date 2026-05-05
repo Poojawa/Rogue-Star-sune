@@ -3,27 +3,30 @@
 //return non-negative integer: Amount of nutrition/charge gained (scaled to nutrition, other end can multiply for charge scale).
 
 // Ye default implementation.
-/obj/item/proc/digest_act(atom/movable/item_storage = null)
+/obj/item/proc/digest_act(atom/movable/item_storage = null, splashing=0) // RS Edit || Chomp Port
+	var/inv_return = SSinventory_return.check_item(src)	//RS EDIT START
 	if(istype(item_storage, /obj/item/device/dogborg/sleeper))
-		if(istype(src, /obj/item/device/pda))
-			var/obj/item/device/pda/P = src
-			if(P.id)
-				P.id = null
-
 		for(var/mob/living/voice/V in possessed_voice) // Delete voices.
 			V.Destroy() //Destroy the voice.
 		for(var/mob/living/M in contents)//Drop mobs from objects(shoes) before deletion
 			M.forceMove(item_storage)
-		for(var/obj/item/O in contents)
-			if(istype(O, /obj/item/weapon/storage/internal)) //Dump contents from dummy pockets.
-				for(var/obj/item/SO in O)
-					if(item_storage)
-						SO.forceMove(item_storage)
-					qdel(O)
-			else if(item_storage)
-				O.forceMove(item_storage)
+		if(!inv_return)
+			if(istype(src, /obj/item/device/pda))
+				var/obj/item/device/pda/P = src
+				if(P.id)
+					P.id = null
+			for(var/obj/item/O in contents)
+				if(istype(O, /obj/item/weapon/storage/internal)) //Dump contents from dummy pockets.
+					for(var/obj/item/SO in O)
+						if(item_storage)
+							SO.forceMove(item_storage)
+						qdel(O)
+				else if(item_storage)
+					O.forceMove(item_storage)
 		GLOB.items_digested_roundstat++
-		qdel(src)
+		if(!SSinventory_return.preserve_object(src))
+			qdel(src)	//RS EDIT END
+
 		return w_class
 
 	var/g_damage = 1
@@ -32,29 +35,34 @@
 
 	if(isbelly(item_storage))
 		var/obj/belly/B = item_storage
-		g_damage = 0.25 * (B.digest_brute + B.digest_burn)
-
+		if(splashing > 0) // Reagent bellies || RS Add || Chomp Port
+			g_damage = 0.25 * splashing
+		else
+			g_damage = 0.25 * (B.digest_brute + B.digest_burn)
+		if(g_damage <= 0) // Reagent bellies || RS Add || Chomp Port
+			return FALSE
 	if(digest_stage > 0)
 		if(g_damage > digest_stage)
 			g_damage = digest_stage
 		digest_stage -= g_damage
 	if(digest_stage <= 0)
-		if(istype(src, /obj/item/device/pda))
-			var/obj/item/device/pda/P = src
-			if(P.id)
-				P.id = null
-		for(var/mob/living/voice/V in possessed_voice) // Delete voices.
+		for(var/mob/living/voice/V in possessed_voice) // Delete voices.	//RS EDIT START
 			V.Destroy() //Destroy the voice.
 		for(var/mob/living/M in contents)//Drop mobs from objects(shoes) before deletion
 			M.forceMove(item_storage)
-		for(var/obj/item/O in contents)
-			if(istype(O,/obj/item/weapon/storage/internal)) //Dump contents from dummy pockets.
-				for(var/obj/item/SO in O)
-					if(item_storage)
-						SO.forceMove(item_storage)
-					qdel(O)
-			else if(item_storage)
-				O.forceMove(item_storage)
+		if(!inv_return)
+			if(istype(src, /obj/item/device/pda))
+				var/obj/item/device/pda/P = src
+				if(P.id)
+					P.id = null
+			for(var/obj/item/O in contents)
+				if(istype(O,/obj/item/weapon/storage/internal)) //Dump contents from dummy pockets.
+					for(var/obj/item/SO in O)
+						if(item_storage)
+							SO.forceMove(item_storage)
+						qdel(O)
+				else if(item_storage)
+					O.forceMove(item_storage)	//RS EDIT END
 		if(istype(src,/obj/item/stack))
 			var/obj/item/stack/S = src
 			if(S.get_amount() <= 1)
@@ -64,7 +72,17 @@
 				digest_stage = w_class
 		else
 			GLOB.items_digested_roundstat++
-			qdel(src)
+			if(isbelly(item_storage)) //RS Edit start: Ports item digestion sounds || CHOMPStation PR 5858
+				var/soundfile
+				if(w_class >= 4)
+					soundfile = pick('sound/vore/shortgurgles/gurgle_L1.ogg', 'sound/vore/shortgurgles/gurgle_L2.ogg', 'sound/vore/shortgurgles/gurgle_L3.ogg')
+				else if(w_class >= 3)
+					soundfile = pick('sound/vore/shortgurgles/gurgle_M1.ogg', 'sound/vore/shortgurgles/gurgle_M2.ogg', 'sound/vore/shortgurgles/gurgle_M3.ogg')
+				else
+					soundfile = pick('sound/vore/shortgurgles/gurgle_S1.ogg', 'sound/vore/shortgurgles/gurgle_S2.ogg', 'sound/vore/shortgurgles/gurgle_S3.ogg')
+				playsound(src, soundfile, vary = 1, vol=75, falloff = VORE_SOUND_FALLOFF, preference = /datum/client_preference/digestion_noises, volume_channel = VOLUME_CHANNEL_VORE) //RS edit end
+			if(!SSinventory_return.preserve_object(src))	//RS EDIT
+				qdel(src)									//RS EDIT
 	if(g_damage > w_class)
 		return w_class
 	return g_damage
@@ -104,7 +122,7 @@
 		if(!sprite_stack.Find("digested"))
 			sprite_stack += "digested"
 	update_icon()
-	return FALSE
+	return ..()	//RS EDIT - :)
 
 /obj/item/weapon/reagent_containers/food/digest_act(atom/movable/item_storage = null)
 	if(isbelly(item_storage))

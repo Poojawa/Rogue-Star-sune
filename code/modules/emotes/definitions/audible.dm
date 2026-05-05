@@ -88,6 +88,10 @@
 /decl/emote/audible/clap
 	key = "clap"
 	emote_message_3p = "claps."
+	emote_sound = list('sound/misc/clap1.ogg', //RS Edit start || Ports CHOMPStation PR8082
+						'sound/misc/clap2.ogg',
+						'sound/misc/clap3.ogg',
+						'sound/misc/clap4.ogg') //RS Edit end
 
 /decl/emote/audible/chuckle
 	key = "chuckle"
@@ -266,3 +270,12 @@
 	emote_message_1p_target = "You prbt at TARGET."
 	emote_message_3p_target = "prbts at TARGET."
 	emote_sound = 'sound/voice/prbt.ogg'
+
+/decl/emote/audible/caw //RS Add
+	key = "caw"
+	emote_message_1p = "You caw! CAW!"
+	emote_message_3p = "caws! CAW!"
+	emote_message_1p_target = "You caw at TARGET! CAW!"
+	emote_message_3p_target = "caws at TARGET! CAW!"
+	emote_sound = 'sound/voice/caw.ogg'
+	sound_vary = TRUE

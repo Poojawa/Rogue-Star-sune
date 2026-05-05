@@ -247,6 +247,18 @@ var/global/floorIsLava = 0
 	A.ckeys = note_keys
 	A.tgui_interact(usr)
 
+// RS Add: Etching viewer support (Lira, December 2025)
+/datum/admins/proc/EtchingViewer()
+	set category = "Admin"
+	set name = "Etching Viewer"
+	if (!istype(src,/datum/admins))
+		src = usr.client.holder
+	if (!istype(src,/datum/admins))
+		to_chat(usr, "Error: you are not an admin!")
+		return
+	var/datum/tgui_module/admin/client_etching_viewer/A = new(src)
+	A.tgui_interact(usr)
+
 
 /datum/admins/proc/player_has_info(var/key as text)
 	var/savefile/info = new("data/player_saves/[copytext(key, 1, 2)]/[key]/info.sav")
@@ -522,22 +534,22 @@ var/global/floorIsLava = 0
 /datum/admins/proc/Jobbans()
 	if(!check_rights(R_BAN))	return
 
-	var/dat = "<B>Job Bans!</B><HR><table>"
+	var/dat = "<html><B>Job Bans!</B><HR><table>" // RS Edit: Job ban html fix (Lira, April 2026)
 	for(var/t in jobban_keylist)
 		var/r = t
 		if( findtext(r,"##") )
 			r = copytext( r, 1, findtext(r,"##") )//removes the description
 		dat += text("<tr><td>[t] (<A href='?src=\ref[src];[HrefToken()];removejobban=[r]'>unban</A>)</td></tr>")
-	dat += "</table>"
+	dat += "</table></html>" // RS Edit: Job ban html fix (Lira, April 2026)
 	usr << browse(dat, "window=ban;size=400x400")
 
 /datum/admins/proc/Game()
 	if(!check_rights(0))	return
 
 	var/dat = {"
-		<center><B>Game Panel</B></center><hr>\n
+		<html><center><B>Game Panel</B></center><hr>\n
 		<A href='?src=\ref[src];[HrefToken()];c_mode=1'>Change Game Mode</A><br>
-		"}
+		"} //RS Edit || Add html tag for 516 compatibility
 	if(master_mode == "secret")
 		dat += "<A href='?src=\ref[src];[HrefToken()];f_secret=1'>(Force Secret Mode)</A><br>"
 
@@ -552,6 +564,7 @@ var/global/floorIsLava = 0
 		<A href='?src=\ref[src];[HrefToken()];vsc=default'>Choose a default ZAS setting</A><br>
 		"}
 
+	dat += "</html>" //RS Edit || Add html tag for 516 compatibility
 	usr << browse(dat, "window=admin2;size=210x280")
 	return
 
@@ -689,13 +702,13 @@ var/datum/announcement/minor/admin_min_announcer = new
 		return
 
 	//Split on pipe or \n
+	message += "|0" //RS Edit: Change the way we add the final time
 	decomposed = splittext(message,regex("\\||$","m"))
-	decomposed += "0" //Tack on a final 0 sleep to make 3-per-message evenly
 
 	//Time to find how they screwed up.
 	//Wasn't the right length
-	if((decomposed.len) % 3) //+1 to accomidate the lack of a wait time for the last message
-		to_chat(usr, "<span class='warning'>You passed [decomposed.len] segments (senders+messages+pauses). You must pass a multiple of 3, minus 1 (no pause after the last message). That means a sender and message on every other line (starting on the first), separated by a pipe character (|), and a number every other line that is a pause in seconds.</span>")
+	if((decomposed.len - 1) % 3) //RS Edit: Fix length check
+		to_chat(usr, "<span class='warning'>You passed [decomposed.len - 2] segments (senders+messages+pauses). You must pass a multiple of 3, minus 1 (no pause after the last message). That means a sender and message on every other line (starting on the first), separated by a pipe character (|), and a number every other line that is a pause in seconds.</span>") //RS Edit: Fix debug message
 		return
 
 	//Too long a conversation
@@ -1112,33 +1125,29 @@ var/datum/announcement/minor/admin_min_announcer = new
 	set category = "Debug"
 	set desc = "(atom path) Spawn an atom"
 
-	if(!check_rights(R_SPAWN))	return
-
-	var/list/types = typesof(/atom)
-	var/list/matches = new()
-
-	for(var/path in types)
-		if(findtext("[path]", object))
-			matches += path
-
-	if(matches.len==0)
+	if(!check_rights(R_SPAWN) || !object)
 		return
 
-	var/chosen
-	if(matches.len==1)
-		chosen = matches[1]
-	else
-		chosen = tgui_input_list(usr, "Select an atom type", "Spawn Atom", matches)
-		if(!chosen)
-			return
+	var/list/preparsed = splittext(object,":")
+	var/path = preparsed[1]
+	var/amount = 1
+	if(preparsed.len > 1)
+		amount = clamp(text2num(preparsed[2]),1,ADMIN_SPAWN_CAP)
 
-	if(ispath(chosen,/turf))
-		var/turf/T = get_turf(usr.loc)
+	var/chosen = pick_closest_path(path)
+	if(!chosen)
+		return
+	var/turf/T = get_turf(usr)
+
+	if(ispath(chosen, /turf))
 		T.ChangeTurf(chosen)
 	else
-		new chosen(usr.loc)
+		for(var/i in 1 to amount)
+			new chosen(T)
+		//	A.flags_1 |= ADMIN_SPAWNED_1	//ain't got flags, sadly.
 
-	log_and_message_admins("spawned [chosen] at ([usr.x],[usr.y],[usr.z])")
+
+	log_and_message_admins("spawned [amount] x [chosen] at [ADMIN_COORDJMP(usr)]")
 	feedback_add_details("admin_verb","SA") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 

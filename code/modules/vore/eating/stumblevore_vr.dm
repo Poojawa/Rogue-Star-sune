@@ -1,13 +1,7 @@
 /mob/living/proc/CanStumbleVore(mob/living/target)
-	if(!can_be_drop_pred)
-		return FALSE
 	if(!is_vore_predator(src))
 		return FALSE
-	if(!target.devourable)
-		return FALSE
-	if(!target.can_be_drop_prey)
-		return FALSE
-	if(!target.stumble_vore || !stumble_vore)
+	if(!spont_pref_check(src,target,STUMBLE_VORE))	//RS EDIT
 		return FALSE
 	return TRUE
 
@@ -29,19 +23,27 @@
 	var/mob/living/carbon/human/S = src
 
 	playsound(src, "punch", 25, 1, -1)
-	M.Weaken(4)
+	M.Stun(4)
 	M.stop_flying()
 	if(CanStumbleVore(M))
 		visible_message("<span class='warning'>[M] flops carelessly into [src]!</span>")
-		perform_the_nom(src,M,src,src.vore_selected,1)
+		// RS Edit Start: Use spont belly (Lira, January 2026)
+		var/obj/belly/belly = src.get_spontaneous_belly(STUMBLE_VORE)
+		if(belly)
+			perform_the_nom(src, M, src, belly, 1)
+		// RS Edit End
 	else if(M.CanStumbleVore(src))
 		visible_message("<span class='warning'>[M] flops carelessly into [src]!</span>")
-		perform_the_nom(M,src,M,M.vore_selected,1)
+		// RS Edit Start: Use spont belly (Lira, January 2026)
+		var/obj/belly/belly = M.get_spontaneous_belly(STUMBLE_VORE)
+		if(belly)
+			perform_the_nom(M, src, M, belly, 1)
+		// RS Edit End
 	else if(istype(S) && S.species.lightweight == 1)
 		visible_message("<span class='warning'>[M] carelessly bowls [src] over!</span>")
 		M.forceMove(get_turf(src))
 		M.apply_damage(0.5, BRUTE)
-		Weaken(4)
+		Stun(4)
 		stop_flying()
 		apply_damage(0.5, BRUTE)
 	else if(round(weight) > 474)

@@ -83,6 +83,7 @@
 	set category = "Object"
 
 	if(AM.Adjacent(src))
+		if(isobj(AM) && is_incorporeal()) return	//RS ADD - Prevent shadekin from pulling objects while phased out
 		src.start_pulling(AM)
 
 	return
@@ -188,8 +189,8 @@
 //'include_robo' only applies to healing, for legacy purposes, as all damage typically hurts both types of organs
 /mob/living/proc/adjustBruteLoss(var/amount,var/include_robo)
 	if(status_flags & GODMODE)	return 0	//godmode
-
 	if(amount > 0)
+		SEND_SIGNAL(src, COMSIG_MOB_APPLY_DAMGE)	//RS ADD
 		for(var/datum/modifier/M in modifiers)
 			if(!isnull(M.incoming_damage_percent))
 				if(M.energy_based)
@@ -221,6 +222,7 @@
 	if(status_flags & GODMODE)	return 0	//godmode
 
 	if(amount > 0)
+		SEND_SIGNAL(src, COMSIG_MOB_APPLY_DAMGE)	//RS ADD
 		for(var/datum/modifier/M in modifiers)
 			if(!isnull(M.incoming_damage_percent))
 				if(M.energy_based)
@@ -249,6 +251,7 @@
 	if(status_flags & GODMODE)	return 0	//godmode
 
 	if(amount > 0)
+		SEND_SIGNAL(src, COMSIG_MOB_APPLY_DAMGE)	//RS ADD
 		for(var/datum/modifier/M in modifiers)
 			if(!isnull(M.incoming_damage_percent))
 				if(M.energy_based)
@@ -283,6 +286,7 @@
 /mob/living/proc/adjustFireLoss(var/amount,var/include_robo)
 	if(status_flags & GODMODE)	return 0	//godmode
 	if(amount > 0)
+		SEND_SIGNAL(src, COMSIG_MOB_APPLY_DAMGE)	//RS ADD
 		for(var/datum/modifier/M in modifiers)
 			if(!isnull(M.incoming_damage_percent))
 				if(M.energy_based)
@@ -312,6 +316,7 @@
 	if(status_flags & GODMODE)	return 0	//godmode
 
 	if(amount > 0)
+		SEND_SIGNAL(src, COMSIG_MOB_APPLY_DAMGE)	//RS ADD
 		for(var/datum/modifier/M in modifiers)
 			if(!isnull(M.incoming_damage_percent))
 				if(M.energy_based)
@@ -338,6 +343,9 @@
 
 /mob/living/proc/adjustBrainLoss(var/amount)
 	if(status_flags & GODMODE)	return 0	//godmode
+	if(amount > 0)	//RS ADD
+		SEND_SIGNAL(src, COMSIG_MOB_APPLY_DAMGE)	//RS ADD
+
 	brainloss = min(max(brainloss + amount, 0),(getMaxHealth()*2))
 
 /mob/living/proc/setBrainLoss(var/amount)
@@ -350,6 +358,7 @@
 /mob/living/proc/adjustHalLoss(var/amount)
 	if(status_flags & GODMODE)	return 0	//godmode
 	if(amount > 0)
+		SEND_SIGNAL(src, COMSIG_MOB_APPLY_DAMGE)	//RS ADD
 		for(var/datum/modifier/M in modifiers)
 			if(M.energy_based && (!isnull(M.incoming_hal_damage_percent) || !isnull(M.disable_duration_percent)))
 				M.energy_source.use(M.damage_cost*amount) // Cost of the Damage absorbed.
@@ -414,6 +423,7 @@
 
 /mob/living/AdjustStunned(amount)
 	if(amount > 0)
+		SEND_SIGNAL(src, COMSIG_MOB_APPLY_DAMGE)	//RS ADD
 		for(var/datum/modifier/M in modifiers)
 			if(!isnull(M.disable_duration_percent))
 				amount = round(amount * M.disable_duration_percent)
@@ -440,6 +450,7 @@
 
 /mob/living/AdjustWeakened(amount)
 	if(amount > 0)
+		SEND_SIGNAL(src, COMSIG_MOB_APPLY_DAMGE)	//RS ADD
 		for(var/datum/modifier/M in modifiers)
 			if(!isnull(M.disable_duration_percent))
 				amount = round(amount * M.disable_duration_percent)
@@ -466,6 +477,7 @@
 
 /mob/living/AdjustParalysis(amount)
 	if(amount > 0)
+		SEND_SIGNAL(src, COMSIG_MOB_APPLY_DAMGE)	//RS ADD
 		for(var/datum/modifier/M in modifiers)
 			if(!isnull(M.disable_duration_percent))
 				amount = round(amount * M.disable_duration_percent)
@@ -808,6 +820,15 @@
 /mob/living/proc/slip(var/slipped_on,stun_duration=8)
 	return 0
 
+//RS Port Chomp PR 7822 || CHOMPAdd - Drop both things on hands
+/mob/living/proc/drop_both_hands()
+	if(l_hand)
+		unEquip(l_hand)
+	if(r_hand)
+		unEquip(r_hand)
+	return
+//RS Port Chomp PR 7822 || CHOMPEnd
+
 /mob/living/carbon/drop_from_inventory(var/obj/item/W, var/atom/target = null)
 	return !(W in internal_organs) && ..()
 
@@ -935,17 +956,44 @@
 			lying = incapacitated(INCAPACITATION_KNOCKDOWN)
 			canmove = !incapacitated(INCAPACITATION_DISABLED)
 
+	if(incapacitated(INCAPACITATION_KNOCKOUT) || incapacitated(INCAPACITATION_STUNNED)) //RS Port Chomp PR 7949 Fix || CHOMPAdd - Making sure we're in good condition to crawl
+		canmove = 0
+		//RS Port Chomp PR 8154 || drop_both_hands() CHOMPremove, purple stuns dont drop items, this makes space EVA less frustrating and slips/shoves are already coded to drop your stuff.
+	else
+		canmove = 1
 	if(lying)
 		density = FALSE
+		/* //RS Port Chomp PR 7822 || CHOMPEdit - Allow us to hold stuff while laying down.
 		if(l_hand)
 			unEquip(l_hand)
 		if(r_hand)
 			unEquip(r_hand)
 		for(var/obj/item/weapon/holder/holder in get_mob_riding_slots())
 			unEquip(holder)
+		*/
 		update_water() // Submerges the mob.
+		//RS Port Chomp PR 7822 || CHOMPAdd Start - For crawling.
+		stop_pulling()
+
+		/*if(!passtable_crawl_checked)
+			passtable_crawl_checked = TRUE
+			if(pass_flags & PASSTABLE)
+				passtable_reset = FALSE
+			else
+				passtable_reset = TRUE
+				pass_flags |= PASSTABLE
+		*/ //Commented out on request by maintainers
+		//RS Port Chomp PR 7822 || CHOMPEdit End
 	else
 		density = initial(density)
+	//RS Port Chomp PR 7822 || CHOMPEdit Start - Rest passtable when crawling
+	/*
+		if(passtable_reset)
+			passtable_reset = TRUE
+			pass_flags &= ~PASSTABLE
+		passtable_crawl_checked = FALSE
+	*/ //Commented out on request by maintainers
+	//RS Port Chomp PR 7822 || CHOMPEdit End
 
 	for(var/obj/item/weapon/grab/G in grabbed_by)
 		if(G.state >= GRAB_AGGRESSIVE)
@@ -1139,7 +1187,7 @@
 	if(a_intent == I_HELP && Adjacent(target) && isitem(item) && ishuman(target))
 		var/obj/item/I = item
 		var/mob/living/carbon/human/H = target
-		if(H.in_throw_mode && H.a_intent == I_HELP && unEquip(I))
+		if(H.click_flags & CLICK_THROW && H.a_intent == I_HELP && unEquip(I))	//RS EDIT
 			H.put_in_hands(I) // If this fails it will just end up on the floor, but that's fitting for things like dionaea.
 			visible_message("<span class='filter_notice'><b>[src]</b> hands \the [H] \a [I].</span>", SPAN_NOTICE("You give \the [target] \a [I]."))
 		else
@@ -1306,5 +1354,5 @@
 
 /mob/living/set_dir(var/new_dir)
 	. = ..()
-	if(size_multiplier != 1 || icon_scale_x != 1 && center_offset > 0)
+	if((dir != new_dir) && (size_multiplier != 1 || icon_scale_x != 1 && center_offset > 0))
 		update_transform(TRUE)

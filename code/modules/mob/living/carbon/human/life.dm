@@ -1140,15 +1140,15 @@
 					if(src.species && src.species.get_bodytype() != "Vox" && src.species.get_bodytype() != "Shadekin")	//VOREStation Edit: shadekin
 						// This is hacky, I'm so sorry.
 						if(I != l_hand && I != r_hand)	//If the item isn't in your hands, you're probably wearing it. Full damage for you.
-							total_phoronloss += vsc.plc.CONTAMINATION_LOSS
+							total_phoronloss += GLOB.vsc.plc.CONTAMINATION_LOSS // RS Edit: vsc global fix (Lira, March 2026)
 						else if(I == l_hand)	//If the item is in your hands, but you're wearing protection, you might be alright.
 							var/l_hand_blocked = 0
 							l_hand_blocked = 1-(100-getarmor(BP_L_HAND, "bio"))/100	//This should get a number between 0 and 1
-							total_phoronloss += vsc.plc.CONTAMINATION_LOSS * l_hand_blocked
+							total_phoronloss += GLOB.vsc.plc.CONTAMINATION_LOSS * l_hand_blocked // RS Edit: vsc global fix (Lira, March 2026)
 						else if(I == r_hand)	//If the item is in your hands, but you're wearing protection, you might be alright.
 							var/r_hand_blocked = 0
 							r_hand_blocked = 1-(100-getarmor(BP_R_HAND, "bio"))/100	//This should get a number between 0 and 1
-							total_phoronloss += vsc.plc.CONTAMINATION_LOSS * r_hand_blocked
+							total_phoronloss += GLOB.vsc.plc.CONTAMINATION_LOSS * r_hand_blocked // RS Edit: vsc global fix (Lira, March 2026)
 			if(total_phoronloss)
 				if(!(status_flags & GODMODE))
 					adjustToxLoss(total_phoronloss)
@@ -1244,6 +1244,12 @@
 			src.visible_message("<B>[src]</B> slumps to the ground, too weak to continue fighting.")
 			Paralyse(10)
 			setHalLoss(species.total_health - 1)
+
+		//RS Edit || Ports VOREStation PR15876
+		if(tiredness) //tiredness for vore drain
+			tiredness = (tiredness - 1)
+			if(tiredness >= 100)
+				Sleeping(5)
 
 		if(paralysis || sleeping)
 			blinded = 1
@@ -1429,6 +1435,22 @@
 		else
 			clear_fullscreen("brute")
 
+		//RS Edit || Ports VOREStation PR15876
+		//tiredness for drain vore
+		if(tiredness)
+			var/severity = 0
+			switch(tiredness)
+				if(10 to 20)		severity = 1
+				if(20 to 30)		severity = 2
+				if(30 to 45)		severity = 3
+				if(45 to 60)		severity = 4
+				if(60 to 75)		severity = 5
+				if(75 to 90)		severity = 6
+				if(90 to INFINITY)	severity = 7
+			overlay_fullscreen("tired", /obj/screen/fullscreen/oxy, severity)
+		else
+			clear_fullscreen("tired")
+
 		if(healths)
 			if (chem_effects[CE_PAINKILLER] > 100)
 				healths.icon_state = "health_numb"
@@ -1531,6 +1553,7 @@
 			clear_fullscreen("belly2")
 			clear_fullscreen("belly3")
 			clear_fullscreen("belly4")
+			clear_fullscreen("belly5") // Reagent bellies || RS Add || Chomp Port
 
 		if(config.welder_vision)
 			var/found_welder

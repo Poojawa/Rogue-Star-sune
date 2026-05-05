@@ -29,6 +29,23 @@
 		to_chat(src, "You can't use that ability again so soon!")
 		return
 
+	// RS Add Start: Xenochimera slot guards (Lira, October 2025)
+	if(client && client.prefs)
+		if(client.prefs.real_name && client.prefs.real_name != real_name)
+			to_chat(src, "<span class='warning'>Your current character preferences do not match the body you are trying to reconstruct. Load the correct slot first.</span>")
+			return
+		var/current_species = species ? species.name : null
+		if(client.prefs.species && current_species && client.prefs.species != current_species)
+			to_chat(src, "<span class='warning'>Your current species preferences do not match this body. Load the matching slot before regenerating.</span>")
+			return
+
+	chimera_expected_real_name = real_name
+	chimera_expected_species = species ? species.name : null
+	if(client && client.prefs)
+		chimera_expected_real_name = client.prefs.real_name
+		chimera_expected_species = client.prefs.species
+	// RS Add End
+
 	var/time = min(900, (120+780/(1 + nutrition/100))) //capped at 15 mins, roughly 6 minutes at 250 (yellow) nutrition, 4.1 minutes at 500 (grey), cannot be below 2 mins
 	if (quickcheckuninjured()) //if you're completely uninjured, then you get a speedymode - check health first for quickness
 		time = 30
@@ -53,6 +70,10 @@
 				revive_ready = REVIVING_READY //reset their cooldown
 				clear_alert("regen")
 				throw_alert("hatch", /obj/screen/alert/xenochimera/readytohatch)
+				// RS Add Start: Xenochimera slot guards (Lira, October 2025)
+				chimera_expected_real_name = null
+				chimera_expected_species = null
+				// RS Add End
 
 			// Was dead, still dead.
 			else
@@ -113,6 +134,16 @@
 		verbs -= /mob/living/carbon/human/proc/hatch
 		return
 
+	// RS Add: Xenochimera slot guards (Lira, October 2025)
+	if(chimera_expected_real_name || chimera_expected_species)
+		if(client && client.prefs)
+			if(chimera_expected_real_name && client.prefs.real_name != chimera_expected_real_name)
+				to_chat(src, "<span class='warning'>Your regeneration falters; the body you are focusing on does not match the one that began this process.</span>")
+				return
+			if(chimera_expected_species && client.prefs.species != chimera_expected_species)
+				to_chat(src, "<span class='warning'>Your regeneration recoils from the unfamiliar form. Load the correct slot before attempting to hatch.</span>")
+				return
+
 	var/confirm = tgui_alert(usr, "Are you sure you want to hatch right now? This will be very obvious to anyone in view.", "Confirm Regeneration", list("Yes", "No"))
 	if(confirm == "Yes")
 
@@ -170,6 +201,10 @@
 	weakened = 2
 
 	revive_ready = world.time + 10 MINUTES //set the cooldown CHOMPEdit: Reduced this to 10 minutes, you're playing with fire if you're reviving that often.
+	// RS Add Start: Xenochimera slot guards (Lira, October 2025)
+	chimera_expected_real_name = null
+	chimera_expected_species = null
+	// RS Add End
 
 /datum/modifier/resleeving_sickness/chimera //near identical to the regular version, just with different flavortexts
 	name = "imperfect regeneration"
@@ -180,6 +215,10 @@
 
 /mob/living/carbon/human/proc/revivingreset() // keep this as a debug proc or potential future use
 		revive_ready = REVIVING_READY
+		// RS Add Start: Xenochimera slot guards (Lira, October 2025)
+		chimera_expected_real_name = null
+		chimera_expected_species = null
+		// RS Add End
 
 /obj/effect/gibspawner/human/xenochimera
 	fleshcolor = "#14AD8B"
@@ -492,6 +531,7 @@
 		else
 			B.apply_damage(5, BRUTE, BP_HEAD) //You're getting fangs pushed into your neck. What do you expect????
 
+		shadekin_adjust_energy(50,TRUE) //RS Edit End A base 50. Goes off the equation that can be seen in bellymodes_vr, plus 10 for drinking blood!
 
 		if(!noise && !bleed) //If we're quiet and careful, there should be no blood to serve as evidence
 			B.remove_blood(82) //Removing in one go since we dont want splatter
@@ -503,7 +543,6 @@
 			B.drip(1)
 			sleep(50)
 			B.drip(1)
-
 
 //Welcome to the adapted changeling absorb code.
 /mob/living/carbon/human/verb/succubus_drain()
@@ -538,15 +577,18 @@
 				to_chat(C, "<span class='notice'>You begin to drain [T]...</span>")
 				to_chat(T, "<span class='danger'>An odd sensation flows through your body as [C] begins to drain you!</span>")
 				C.nutrition = (C.nutrition + (T.nutrition*0.05)) //Drain a small bit at first. 5% of the prey's nutrition.
+				shadekin_adjust_energy(T.nutrition*0.05/10,TRUE) //RS Edit
 				T.nutrition = T.nutrition*0.95
 			if(2)
 				to_chat(C, "<span class='notice'>You feel stronger with every passing moment of draining [T].</span>")
 				src.visible_message("<span class='danger'>[C] seems to be doing something to [T], resulting in [T]'s body looking weaker with every passing moment!</span>")
 				to_chat(T, "<span class='danger'>You feel weaker with every passing moment as [C] drains you!</span>")
 				C.nutrition = (C.nutrition + (T.nutrition*0.1))
+				shadekin_adjust_energy(T.nutrition*0.1/10,TRUE) //RS Edit
 				T.nutrition = T.nutrition*0.9
 			if(3 to 99)
 				C.nutrition = (C.nutrition + (T.nutrition*0.1)) //Just keep draining them.
+				shadekin_adjust_energy(T.nutrition*0.1/10,TRUE) //RS Edit
 				T.nutrition = T.nutrition*0.9
 				T.eye_blurry += 5 //Some eye blurry just to signify to the prey that they are still being drained. This'll stack up over time, leave the prey a bit more "weakened" after the deed is done.
 				if(T.nutrition < 100 && stage < 99 && C.drain_finalized == 1)//Did they drop below 100 nutrition? If so, immediately jump to stage 99 so it can advance to 100.
@@ -555,6 +597,7 @@
 					stage = 3
 			if(100)
 				C.nutrition = (C.nutrition + T.nutrition)
+				shadekin_adjust_energy(T.nutrition/10,TRUE) //RS Edit
 				T.nutrition = 0 //Completely drained of everything.
 				var/damage_to_be_applied = T.species.total_health //Get their max health.
 				T.apply_damage(damage_to_be_applied, HALLOSS) //Knock em out.
@@ -575,7 +618,6 @@
 	set category = "Abilities"
 	if(!ishuman(src))
 		return //If you're not a human you don't have permission to do this.
-
 	var/obj/item/weapon/grab/G = src.get_active_hand()
 	if(!istype(G))
 		to_chat(src, "<span class='warning'>You must be grabbing a creature in your active hand to drain them.</span>")
@@ -604,15 +646,18 @@
 				to_chat(src, "<span class='notice'>You begin to drain [T]...</span>")
 				to_chat(T, "<span class='danger'>An odd sensation flows through your body as [src] begins to drain you!</span>")
 				nutrition = (nutrition + (T.nutrition*0.05)) //Drain a small bit at first. 5% of the prey's nutrition.
+				shadekin_adjust_energy(T.nutrition*0.05/10,TRUE) //RS Edit
 				T.nutrition = T.nutrition*0.95
 			if(2)
 				to_chat(src, "<span class='notice'>You feel stronger with every passing moment as you drain [T].</span>")
 				visible_message("<span class='danger'>[src] seems to be doing something to [T], resulting in [T]'s body looking weaker with every passing moment!</span>")
 				to_chat(T, "<span class='danger'>You feel weaker with every passing moment as [src] drains you!</span>")
 				nutrition = (nutrition + (T.nutrition*0.1))
+				shadekin_adjust_energy(T.nutrition*0.10/10,TRUE) //RS Edit
 				T.nutrition = T.nutrition*0.9
 			if(3 to 48) //Should be more than enough to get under 100.
 				nutrition = (nutrition + (T.nutrition*0.1)) //Just keep draining them.
+				shadekin_adjust_energy(T.nutrition*0.10/10,TRUE) //RS Edit
 				T.nutrition = T.nutrition*0.9
 				T.eye_blurry += 5 //Some eye blurry just to signify to the prey that they are still being drained. This'll stack up over time, leave the prey a bit more "weakened" after the deed is done.
 				if(T.nutrition < 100)//Did they drop below 100 nutrition? If so, do one last check then jump to stage 50 (Lethal!)
@@ -625,6 +670,7 @@
 					to_chat(src, "<span class='danger'>You feel invigorated as you completely drain [T] and begin to move onto draining them lethally before realizing they are too strong for you to do so!</span>")
 					to_chat(T, "<span class='danger'>You feel completely drained as [src] finishes draining you and begins to move onto draining you lethally, but you are too strong for them to do so!</span>")
 					nutrition = (nutrition + T.nutrition)
+					shadekin_adjust_energy(T.nutrition/10,TRUE) //RS Edit
 					T.nutrition = 0 //Completely drained of everything.
 					var/damage_to_be_applied = T.species.total_health //Get their max health.
 					T.apply_damage(damage_to_be_applied, HALLOSS) //Knock em out.
@@ -644,6 +690,7 @@
 					T.adjustBrainLoss(5) //Will kill them after a short bit!
 				T.eye_blurry += 20 //A lot of eye blurry just to signify to the prey that they are still being drained. This'll stack up over time, leave the prey a bit more "weakened" after the deed is done. More than non-lethal due to their lifeforce being sucked out
 				nutrition = (nutrition + 25) //Assuming brain damage kills at 60, this gives 300 nutrition.
+				shadekin_adjust_energy(2.5,TRUE) //RS Edit
 			if(99)
 				if(drain_finalized != 1)
 					stage = 51
@@ -692,15 +739,18 @@
 				to_chat(C, "<span class='notice'>You begin to feed [T]...</span>")
 				to_chat(T, "<span class='notice'>An odd sensation flows through your body as [C] begins to feed you!</span>")
 				T.nutrition = (T.nutrition + (C.nutrition*0.05)) //Drain a small bit at first. 5% of the prey's nutrition.
+				T.shadekin_adjust_energy(C.nutrition*0.05/10,TRUE) //RS Edit
 				C.nutrition = C.nutrition*0.95
 			if(2)
 				to_chat(C, "<span class='notice'>You feel weaker with every passing moment of feeding [T].</span>")
 				src.visible_message("<span class='notice'>[C] seems to be doing something to [T], resulting in [T]'s body looking stronger with every passing moment!</span>")
 				to_chat(T, "<span class='notice'>You feel stronger with every passing moment as [C] feeds you!</span>")
 				T.nutrition = (T.nutrition + (C.nutrition*0.1))
+				T.shadekin_adjust_energy(C.nutrition*0.1/10,TRUE) //RS Edit
 				C.nutrition = C.nutrition*0.90
 			if(3 to 99)
 				T.nutrition = (T.nutrition + (C.nutrition*0.1)) //Just keep draining them.
+				T.shadekin_adjust_energy(C.nutrition*0.1/10,TRUE) //RS Edit
 				C.nutrition = C.nutrition*0.9
 				T.eye_blurry += 1 //Eating a slime's body is odd and will make your vision a bit blurry!
 				if(C.nutrition < 100 && stage < 99 && C.drain_finalized == 1)//Did they drop below 100 nutrition? If so, immediately jump to stage 99 so it can advance to 100.
@@ -709,6 +759,7 @@
 					stage = 3
 			if(100)
 				T.nutrition = (T.nutrition + C.nutrition)
+				T.shadekin_adjust_energy(C.nutrition/10,TRUE) //RS Edit
 				C.nutrition = 0 //Completely drained of everything.
 				C.absorbing_prey = 0
 				to_chat(C, "<span class='danger'>You have completely fed [T] every part of your body!</span>")
@@ -918,6 +969,7 @@
 
 /mob/living/
 	var/flight_vore = FALSE
+	var/allow_smooches = TRUE // RS EDIT
 
 /mob/living/proc/flying_vore_toggle()
 	set name = "Toggle Flight Vore"
@@ -929,6 +981,32 @@
 		to_chat(src, "You have allowed for flight vore! Bumping into characters while flying will now trigger dropnoms! Unless prefs don't match.. then you will take a tumble!")
 	else
 		to_chat(src, "Flight vore disabled! You will no longer engage dropnoms while in flight.")
+
+/mob/living/verb/toggle_smooches() // RS EDIT START
+	set name = "Toggle Smooch Target"
+	set desc = "Allows you to toggle if you wish to be targetable with smooches or not"
+	set category = "Preferences"
+
+	allow_smooches = !allow_smooches
+	if(allow_smooches)
+		to_chat(src, "You have enabled it so someone can *blowkiss at you!")
+	else
+		to_chat(src, "You have disabled smooches. People can no longer *blowkiss at you!")
+
+/client/verb/toggle_smooch_noises()
+	set name = "Toggle Smooch Sounds"
+	set category = "Preferences"
+	set desc = "Toggles hearing audible smooches."
+
+	var/pref_path = /datum/client_preference/smooch_noises
+
+	toggle_preference(pref_path)
+
+	to_chat(src, "You will [ (is_preference_enabled(pref_path)) ? "now" : "no longer"] hear smooches.")
+
+	SScharacter_setup.queue_preferences_save(prefs)
+
+	feedback_add_details("admin_verb","TSmoochNoise") // RS EDIT END
 
 //Proc to stop inertial_drift. Exchange nutrition in order to stop gliding around.
 /mob/living/proc/start_wings_hovering()
@@ -1210,7 +1288,7 @@
 			for(var/mob/living/L in T)
 				if(L == src) //no eating yourself. 1984.
 					continue
-				if(L.devourable && L.can_be_drop_prey)
+				if(spont_pref_check(src,L,SPONT_PRED)) //RS EDIT
 					targets += L
 
 	if(!(targets.len))
@@ -1237,6 +1315,74 @@
 		to_chat(src, "<span class='notice'>You successfully drag \the [target] into the water, slipping them into your [vore_selected].</span>")
 		target.forceMove(src.vore_selected)
 
+//RS Edit Start
+/mob/living/carbon/human/proc/rushdown()
+	set name = "Rush Down Prey"
+	set desc = "Rush down someone in the water, putting you into your selected stomach (or being put in their stomach if prefs align)."
+	set category = "Abilities"
+
+	if(last_special > world.time)
+		to_chat(src, "<span class='notice'>You recently used a special ability. Please wait a few seconds!</span>")
+		return
+	last_special = world.time + 50 //No spamming! This one does some big searching, so big delay!
+
+	if(stat == DEAD || paralysis || weakened || stunned)
+		to_chat(src, "<span class='notice'>You cannot do that while in your current state.</span>")
+		return
+
+	if(!(src.vore_selected))
+		to_chat(src, "<span class='notice'>No selected belly found. Please select one, even if you expect to be prey!</span>")
+		return
+
+
+	if(!has_modifier_of_type(/datum/modifier/underwater_stealth))
+		to_chat(src, "You must be underwater to do this!!")
+		return
+
+	var/list/targets = list() //Shameless copy and paste. If it ain't broke don't fix it!
+
+	for(var/turf/T in range(8, src)) //Check around us in an 8 tile radius.
+		if(istype(T, /turf/simulated/floor/water))
+			for(var/mob/living/L in T)
+				if(L == src) //no eating yourself. 1984.
+					continue
+				if(spont_pref_check(src,L,SPONT_PRED))	//RS EDIT
+					targets += L
+				//With the current throw-vore logic:
+				//If both have pred&prey enabled, person being hit eats the person being thrown. Aka the diver gets eaten.
+				//If one has pred and the other have prey, works as expected.
+				//If both are pred/both are prey, it results in them rushing up and awkwardly staring at them. This is funny.
+
+	if(!(targets.len))
+		to_chat(src, "<span class='notice'>No eligible targets found.</span>")
+		return
+
+	var/mob/living/target = tgui_input_list(src, "Please select a target.", "Victim...Or pred?", targets)
+
+	if(!target) //Cancelled
+		return
+
+	to_chat(target, "<span class='critical'>You feel a shiver run down your spine...Something has it's eyes on you. You should MOVE if you don't want to befall whatever fate is about to occur!</span>")
+	var/starting_loc = target.loc
+
+	if(do_after(src, 50))
+		if(target.loc != starting_loc)
+			to_chat(target, "<span class='warning'>You got away from whatever that was...</span>")
+			to_chat(src, "<span class='notice'>They got away.</span>")
+			return
+		remove_modifiers_of_type(/datum/modifier/underwater_stealth) //Remove your stealth
+		add_modifier(/datum/modifier/underwater_dive) //Replace it with your dive!
+		if(target.buckled)
+			target.buckled.unbuckle_mob()
+		var/throw_range = get_dist(src,target)
+		throw_range += 3 //Yes, this looks weird, but it's required for non-straight lines.
+		throw_at(target, throw_range, throw_speed, src, FALSE)
+		target.visible_message("<span class='warning'>Something under the water suddenly dives at \The [target]!</span>",\
+			"<span class='danger'>You are dove at by something below the water!</span>")
+		to_chat(src, "<span class='notice'>You successfully dive at \the [target]!</span>")
+		return
+//RS Edit End
+
 /mob/living/carbon/human/proc/toggle_pain_module()
 	set name = "Toggle pain simulation."
 	set desc = "Turn on your pain simulation for that organic experience! Or turn it off for repairs, or if it's too much."
@@ -1258,9 +1404,20 @@
 	set category = "Abilities"
 	set desc = "Grab a target with any of your appendages!"
 
-	if(stat || paralysis || weakened || stunned || world.time < last_special) //No tongue flicking while stunned.
+	if(stat || paralysis || weakened || stunned) //No tongue flicking while stunned.
 		to_chat(src, "<span class='warning'>You can't do that in your current state.</span>")
 		return
+
+	var/datum/modifier/blend_in/B	//RS ADD START - Allow long vore trait to be used with chameleon blend in trait!
+	if(world.time < last_special)
+		var/dunnit = FALSE
+		for(var/datum/modifier/M in modifiers)
+			if(M.type == /datum/modifier/blend_in)
+				B = M
+				dunnit = TRUE
+		if(!dunnit)
+			to_chat(src, "<span class='warning'>You can't do that in your current state.</span>")
+			return	//RS ADD END
 
 	last_special = world.time + 10 //Anti-spam.
 
@@ -1288,7 +1445,7 @@
 				continue
 			if(L == src) //no eating yourself. 1984.
 				continue
-			if(L.devourable && L.throw_vore && (L.can_be_drop_pred || L.can_be_drop_prey))
+			if(spont_pref_check(src,L,THROW_VORE) || spont_pref_check(L,src,THROW_VORE))	//RS EDIT
 				targets += L
 
 		if(!(targets.len))
@@ -1316,9 +1473,8 @@
 		var/obj/item/projectile/beam/appendage/appendage_attack = new /obj/item/projectile/beam/appendage(get_turf(loc))
 		appendage_attack.launch_projectile(target, BP_TORSO, src) //Send it.
 		last_special = world.time + 100 //Cooldown for successful strike.
-
-
-
+		if(B)	//RS ADD
+			B.expire()	//RS ADD
 
 /obj/item/projectile/beam/appendage //The tongue projecitle.
 	name = "appendage"
@@ -1487,7 +1643,7 @@
 				continue
 			if(L == src) //no eating yourself. 1984.
 				continue
-			if(L.devourable && L.throw_vore && (L.can_be_drop_pred || L.can_be_drop_prey))
+			if(spont_pref_check(src,L,THROW_VORE) || spont_pref_check(L,src,THROW_VORE))	//RS EDIT
 				targets += L
 
 		if(!(targets.len))
@@ -1531,8 +1687,16 @@
 			target.Weaken(2)	//get knocked down, idiot
 
 //RS ADD START
-/mob/living/proc/injection() // Allows the user to inject reagents into others somehow, like stinging, or biting.
+/mob/living/proc/injection()
 	set name = "Injection"
+	set category = "Abilities"
+	set desc = "Inject another being with something!"
+
+	do_injection()
+//RS ADD END
+
+/mob/living/proc/injection_setup() // Allows the user to inject reagents into others somehow, like stinging, or biting.	//RS EDIT
+	set name = "Injection Setup"	//RS EDIT
 	set category = "Abilities"
 	set desc = "Inject another being with something!"
 
@@ -1555,8 +1719,9 @@
 
 	choices += "Change amount"
 	choices += "Change verb"
+	choices += "Chemical Refresher"
 
-	var/choice = tgui_alert(src, "Do you wish to inject somebody, or adjust settings?", "Selection List", choices)
+	var/choice = tgui_alert(src, "Do you wish to inject somebody or adjust settings?", "Selection List", choices)
 
 	if(choice == "Change reagent")
 		var/reagent_choice = tgui_input_list(usr, "Choose which reagent to inject!", "Select reagent", trait_injection_reagents)
@@ -1576,68 +1741,151 @@
 			trait_injection_verb = verb_choice
 		to_chat(src, "<span class='notice'>You will [trait_injection_verb] your targets.</span>")
 		return
+	if(choice == "Chemical Refresher")
+		var/output = {"<B>Chemical Refresher!</B><HR>
+					<B>Options for venoms</B><BR>
+					<BR>
+					<B>Size Chemicals</B><BR>
+					Microcillin: Will make someone shrink. <br>
+					Macrocillin: Will make someone grow. <br>
+					Normalcillin: Will make someone normal size. <br>
+					Note: 1 unit = 100% size diff. 0.01 unit = 1% size diff. <br>
+					Note: Normacillin stops at 100%  size. <br>
+					<br>
+					<B>Gender Chemicals</B><BR>
+					Androrovir: Will transform someone's sex to male. <br>
+					Gynorovir: Will transform someone's sex to female. <br>
+					Androgynorovir: Will transform someone's sex to plural. <br>
+					<br>
+					<B>Special Chemicals</B><BR>
+					Stoxin: Will make someone drowsy. <br>
+					Rainbow Toxin: Will make someone see rainbows. <br>
+					Paralysis Toxin: Will make someone paralyzed. <br>
+					Numbing Enzyme: Will make someone unable to feel pain. <br>
+					Pain Enzyme: Will make someone feel amplified pain. <br>
+					<br>
+					<B>Side Notes</B><BR>
+					You can select a value of 0 to inject nothing! <br>
+					Overdose threshold for most chemicals is 30 units. <br>
+					Exceptions to OD is: (Numbing Enzyme:20)<br>
+					You can also bite synthetics, but due to how synths work, they won't have anything injected into them.
+					<br>
+					"}
+		usr << browse(output,"window=chemicalrefresher")
+		return
 	else
-		var/list/targets = list() //IF IT IS NOT BROKEN. DO NOT FIX IT. AND KEEP COPYPASTING IT
+		do_injection()	//RS ADD
 
-		for(var/mob/living/carbon/L in living_mobs(1, TRUE)) //Noncarbons don't even process reagents so don't bother listing others.
-			if(!istype(L, /mob/living/carbon))
-				continue
-			if(L == src) //no getting high off your own supply, get a nif or something, nerd.
-				continue
-			if(!L.resizable && (trait_injection_selected == "macrocillin" || trait_injection_selected == "microcillin" || trait_injection_selected == "normalcillin")) // If you're using a size reagent, ignore those with pref conflicts.
-				continue
-			targets += L
+//RS EDIT
+/mob/living/proc/do_injection()
+	var/list/targets = list() //IF IT IS NOT BROKEN. DO NOT FIX IT. AND KEEP COPYPASTING IT
+	for(var/mob/living/carbon/L in living_mobs(1, TRUE)) //Noncarbons don't even process reagents so don't bother listing others.
+		if(!istype(L, /mob/living/carbon))
+			continue
+		if(L == src) //no getting high off your own supply, get a nif or something, nerd.
+			continue
+		if(!(L.resizable && spont_pref_check(src,L,RESIZING)) && (trait_injection_selected == "macrocillin" || trait_injection_selected == "microcillin" || trait_injection_selected == "normalcillin")) // If you're using a size reagent, ignore those with pref conflicts.	//RS EDIT
+			continue
+		if(!(L.allow_spontaneous_tf && spont_pref_check(src,L,SPONT_TF)) && (trait_injection_selected == "androrovir" || trait_injection_selected == "gynorovir" || trait_injection_selected == "androgynorovir")) // If you're using a TF reagent, ignore those with pref conflicts. || Ports VOREStation PR16060	//RS EDIT
+			continue
+		targets += L
 
-		if(!(targets.len))
-			to_chat(src, "<span class='notice'>No eligible targets found.</span>")
-			return
+	if(!(targets.len))
+		to_chat(src, "<span class='notice'>No eligible targets found.</span>")
+		return
 
-		var/mob/living/target = tgui_input_list(src, "Please select a target.", "Victim", targets)
+	var/mob/living/target = tgui_input_list(src, "Please select a target.", "Victim", targets)
 
-		if(!target)
-			return
+	if(!target)
+		return
 
-		if(!istype(target, /mob/living/carbon)) //Safety.
-			to_chat(src, "<span class='warning'>That won't work on that kind of creature! (Only works on crew/monkeys)</span>")
-			return
+	if(!istype(target, /mob/living/carbon)) //Safety.
+		to_chat(src, "<span class='warning'>That won't work on that kind of creature! (Only works on crew/monkeys)</span>")
+		return
 
-		if(target.isSynthetic())
-			to_chat(src, "<span class='notice'>There's no getting past that outer shell.</span>")
-			return
+	if(target.isSynthetic())
+		to_chat(src, "<span class='notice'>There's no getting past that outer shell.</span>")
+		return
 
-		if(!trait_injection_selected)
-			to_chat(src, "<span class='notice'>You need to select a reagent.</span>")
-			return
+	if(!trait_injection_selected)
+		to_chat(src, "<span class='notice'>You need to select a reagent.</span>")
+		return
 
-		if(!trait_injection_verb)
-			to_chat(src, "<span class='notice'>Somehow, you forgot your means of injecting. (Select a verb!)</span>")
-			return
+	if(!trait_injection_verb)
+		to_chat(src, "<span class='notice'>Somehow, you forgot your means of injecting. (Select a verb!)</span>")
+		return
 
-		if(do_after(src, 5, target))
-			add_attack_logs(src,target,"Injection trait ([trait_injection_selected], [trait_injection_amount])")
-			if(target.reagents)
-				target.reagents.add_reagent(trait_injection_selected, trait_injection_amount)
-			var/ourmsg = "<span class='warning'>[usr] [trait_injection_verb] [target] "
-			switch(zone_sel.selecting)
-				if(BP_HEAD)
-					ourmsg += "on the head!"
-				if(BP_TORSO)
-					ourmsg += "on the chest!"
-				if(BP_GROIN)
-					ourmsg += "on the groin!"
-				if(BP_R_ARM, BP_L_ARM)
-					ourmsg += "on the arm!"
-				if(BP_R_HAND, BP_L_HAND)
-					ourmsg += "on the hand!"
-				if(BP_R_LEG, BP_L_LEG)
-					ourmsg += "on the leg!"
-				if(BP_R_FOOT, BP_L_FOOT)
-					ourmsg += "on the foot!"
-				if("mouth")
-					ourmsg += "on the mouth!"
-				if("eyes")
-					ourmsg += "on the eyes!"
-			ourmsg += "</span>"
-			visible_message(ourmsg)
+	if(do_after(src, 50, target))
+		add_attack_logs(src,target,"Injection trait ([trait_injection_selected], [trait_injection_amount])")
+		if(target.reagents)
+			target.reagents.add_reagent(trait_injection_selected, trait_injection_amount)
+		var/ourmsg = "<span class='warning'>[usr] [trait_injection_verb] [target] "
+		switch(zone_sel.selecting)
+			if(BP_HEAD)
+				ourmsg += "on the head!"
+			if(BP_TORSO)
+				ourmsg += "on the chest!"
+			if(BP_GROIN)
+				ourmsg += "on the groin!"
+			if(BP_R_ARM, BP_L_ARM)
+				ourmsg += "on the arm!"
+			if(BP_R_HAND, BP_L_HAND)
+				ourmsg += "on the hand!"
+			if(BP_R_LEG, BP_L_LEG)
+				ourmsg += "on the leg!"
+			if(BP_R_FOOT, BP_L_FOOT)
+				ourmsg += "on the foot!"
+			if("mouth")
+				ourmsg += "on the mouth!"
+			if("eyes")
+				ourmsg += "on the eyes!"
+		ourmsg += "</span>"
+		visible_message(ourmsg)
 
 //RS ADD END
+
+//RS ADD
+/*/mob/living/carbon/human/proc/adjust_art_color()
+	set name = "Adjust Artistic Color"
+	set category = "Abilities"
+	set desc = "Adjust what color you are currently painting with!"
+
+	if(world.time < last_special)
+		to_chat(src, "<span class='warning'>You can't do that in your current state.</span>")
+		return
+
+	last_special = world.time + 10
+
+	var/set_new_color = input(src,"Select a new color","Artistic Color",species.artist_color) as color
+	if(set_new_color)
+		species.artist_color = set_new_color
+		if(linked_brush) //Do we have a paintbrush already?
+			linked_brush.update_paint(species.artist_color)
+			linked_brush.hud_layerise()
+			linked_brush.color = species.artist_color
+*/ //Removed and simplified to just click the brush
+/mob/living/carbon/human/proc/extend_retract_brush()
+	set name = "Conjure Natural Brush"
+	set category = "Abilities"
+	set desc = "Pull out or retract your natural paintbrush!"
+
+
+	if(stat || paralysis || weakened || stunned || world.time < last_special)
+		to_chat(src, "<span class='warning'>You can't do that in your current state.</span>")
+		return
+
+	last_special = world.time + 20 //Anti-spam.
+
+	if(linked_brush)
+		linked_brush.Destroy()
+		visible_message("[src] retracts their organic paintbrush!")
+
+	else
+		var/obj/item/paint_brush/organic/B = new /obj/item/paint_brush/organic(src)
+		linked_brush = B
+		B.color = species.artist_color //Makes the ITEM ITSELF colored to be what is selected.
+		put_in_hands(B)
+		linked_brush.update_paint(species.artist_color)
+		B.hud_layerise()
+
+//RS END

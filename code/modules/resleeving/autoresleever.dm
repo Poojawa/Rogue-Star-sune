@@ -20,9 +20,11 @@
 	else
 		icon_state = "autoresleever"
 
+/*	//RS REMOVE START
 /obj/machinery/transhuman/autoresleever/power_change()
 	. = ..()
 	update_icon()
+*/	//RS REMOVE END
 
 /obj/machinery/transhuman/autoresleever/attack_ghost(mob/observer/dead/user as mob)
 	update_icon()
@@ -58,9 +60,9 @@
 		return
 
 /obj/machinery/transhuman/autoresleever/proc/autoresleeve(var/mob/observer/dead/ghost)
-	if(stat)
-		to_chat(ghost, "<span class='warning'>This machine is not functioning...</span>")
-		return
+//	if(stat)	//RS REMOVE START
+//		to_chat(ghost, "<span class='warning'>This machine is not functioning...</span>")
+//		return	//RS REMOVE END
 	if(!istype(ghost,/mob/observer/dead))
 		return
 	if(ghost.mind && ghost.mind.current && ghost.mind.current.stat != DEAD)
@@ -97,6 +99,11 @@
 	//Found their record, they were spawned previously
 	if(record_found)
 		charjob = record_found.fields["real_rank"]
+	//RS ADD START
+	else if(ghost.mind && ghost.mind.name == ghost_client.prefs.real_name)		//Ghosts have minds if they spawned and died, so we can just get their job from that if they don't have records || RS edit: Add a name check to prevent autoresleeving as a different character (Lira, May 2025)
+		var/datum/mind/ourmind = ghost.mind
+		charjob = ourmind.assigned_role
+	//RS ADD END
 	else if(equip_body || ghost_spawns)
 		charjob = default_job
 	else

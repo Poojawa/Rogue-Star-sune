@@ -3,7 +3,11 @@ import { useBackend } from '../backend';
 import { Box, Button, Flex, Icon, LabeledList, Section } from '../components';
 import { Window } from '../layouts';
 import { BeakerContents } from './common/BeakerContents';
-import { ComplexModal, modalOpen, modalRegisterBodyOverride } from './common/ComplexModal';
+import {
+  ComplexModal,
+  modalOpen,
+  modalRegisterBodyOverride,
+} from './common/ComplexModal';
 
 const transferAmounts = [1, 5, 10, 30, 60];
 const bottleStyles = [
@@ -261,11 +265,11 @@ const ChemMasterProduction = (props, context) => {
             content={
               data.loaded_pill_bottle
                 ? data.loaded_pill_bottle_name +
-                ' (' +
-                data.loaded_pill_bottle_contents_len +
-                '/' +
-                data.loaded_pill_bottle_storage_slots +
-                ')'
+                  ' (' +
+                  data.loaded_pill_bottle_contents_len +
+                  '/' +
+                  data.loaded_pill_bottle_storage_slots +
+                  ')'
                 : 'No pill bottle loaded'
             }
             mb="0.5rem"
@@ -294,11 +298,11 @@ const ChemMasterProduction = (props, context) => {
           content={
             data.loaded_pill_bottle
               ? data.loaded_pill_bottle_name +
-              ' (' +
-              data.loaded_pill_bottle_contents_len +
-              '/' +
-              data.loaded_pill_bottle_storage_slots +
-              ')'
+                ' (' +
+                data.loaded_pill_bottle_contents_len +
+                '/' +
+                data.loaded_pill_bottle_storage_slots +
+                ')'
               : 'No pill bottle loaded'
           }
           mb="0.5rem"
@@ -394,6 +398,22 @@ const ChemMasterProductionChemical = (props, context) => {
           />
           Style
         </Button>
+      </LabeledList.Item>
+
+      <LabeledList.Item label="Vial">
+        <Button
+          icon="wine-bottle"
+          content="Create Vial (30u max)"
+          mr="0.5rem"
+          mb="0.5rem"
+          onClick={() => modalOpen(context, 'create_vial')}
+        />
+        <Button
+          icon="plus-square"
+          content="Multiple"
+          onClick={() => modalOpen(context, 'create_vials_multiple')}
+        />
+        <br />
       </LabeledList.Item>
     </LabeledList>
   );

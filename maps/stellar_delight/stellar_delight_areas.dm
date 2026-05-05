@@ -30,6 +30,10 @@
 	name = "Research Substation"
 /area/maintenance/stellardelight/substation/security
 	name = "Security Substation"
+/area/maintenance/stellardelight/substation/gravgen
+	name = "GravGen Substation"
+	icon_state = "deck0gravgen"
+
 
 /area/maintenance/stellardelight/deck1
 	icon_state = "deckmaint1"
@@ -133,6 +137,8 @@
 	forbid_singulo = TRUE
 	emotes_from_beyond = FALSE	//RS ADD
 
+/area/stellardelight/deck1/dorms
+	block_phase_shift = TRUE	//RS ADD
 /area/stellardelight/deck1/dorms/dorm1
 	name = "Dormitory One"
 	icon_state = "dorm1"
@@ -235,6 +241,7 @@
 /area/stellardelight/deck2/barbackroom
 	name = "Bar Backroom"
 	sound_env = SMALL_SOFTFLOOR
+	block_phase_shift = TRUE	//RS ADD
 
 /area/stellardelight/deck2/portescape
 	name = "Port Escape Pod"
@@ -306,3 +313,77 @@
 	name = "Deck Two Exterior"
 /area/stellardelight/deck3/exterior
 	name = "Deck Three Exterior"
+/area/stellardelight/deck0/exterior
+	name = "Subdeck Exterior"
+
+
+/area/maintenance/stellardelight/deck0
+	icon_state = "deckmaint0"
+
+/area/maintenance/stellardelight/deck0/portfore
+	name = "Subdeck Port Forward Maintenance"
+/area/maintenance/stellardelight/deck0/starboardfore
+	name = "Subdeck Starboard Forward Maintenance"
+/area/maintenance/stellardelight/deck0/portaft
+	name = "Subdeck Port Aft Maintenance"
+/area/maintenance/stellardelight/deck0/starboardaft
+	name = "Subdeck Starboard Aft Maintenance"
+/area/maintenance/stellardelight/deck0/core
+	name = "Subdeck Core Maintenance"
+/area/maintenance/stellardelight/deck0/mailroom
+	name = "Mail Room"
+/area/maintenance/stellardelight/deck0/emergencystorage
+	name = "Emergency Supply Storage"
+/area/maintenance/stellardelight/deck0/auxcargobay
+	name = "Auxiliary Cargo Bay"
+/area/maintenance/stellardelight/deck0/dorm1
+	name = "Unfinished Dorm 1"
+/area/maintenance/stellardelight/deck0/dorm2
+	name = "Unfinished Dorm 2"
+/area/maintenance/stellardelight/deck0/constructionarea
+	name = "Construction Area"
+/area/maintenance/stellardelight/deck0/laundromat
+	name = "Maintenance Laundromat"
+/area/maintenance/stellardelight/deck0/abandonedbar
+	name = "Abandoned Bar"
+/area/maintenance/stellardelight/deck0/abandonedbarstorage
+	name = "Abandoned Bar Storage"
+/area/maintenance/stellardelight/deck0/abandonedbarroom
+	name = "Abandoned Bartender's Room"
+/area/maintenance/stellardelight/deck0/oldmechbay
+	name = "Disused Mech Bay"
+/area/maintenance/stellardelight/deck0/archive
+	name = "Archives"
+/area/maintenance/stellardelight/deck0/assemblyline/
+	name = "Assembly Line"
+/area/maintenance/stellardelight/deck0/bathroom
+	name = "Disused Washroom"
+/area/maintenance/stellardelight/deck0/constructionstorage
+	name = "Construction Storage"
+/area/maintenance/stellardelight/deck0/gym
+	name = "Gym"
+/area/maintenance/stellardelight/deck0/shootingrange
+	name = "Shooting Range"
+/area/maintenance/stellardelight/deck0/portbunkroom
+	name = "Port Emergency Bunkroom"
+/area/maintenance/stellardelight/deck0/starboardbunkroom
+	name = "Starboard Emergency Bunkroom"
+/area/maintenance/stellardelight/deck0/nexus
+	name = "Subdeck Intersection"
+/area/maintenance/stellardelight/deck0/miniroom
+	name = "Miniature Room"
+/area/maintenance/stellardelight/deck0/resleeving
+	name = "Backup Resleever"
+
+/area/crew_quarters/stellardelight/garden
+	name = "Garden"
+	sound_env = LARGE_SOFTFLOOR
+
+/area/engineering/stellardelight/gravgen
+	name = "Gravity Generator"
+	icon = 'icons/turf/areas_vr.dmi'
+	icon_state = "deck0gravgen"
+/area/engineering/stellardelight/auxilaryatmos
+	name = "Auxiliary Atmospherics"
+/area/rnd/stellardelight/office
+	name = "Research Office"

@@ -188,6 +188,22 @@
 				update_dna()
 				changed_hook(APPEARANCECHANGER_CHANGED_HAIRSTYLE)
 				return TRUE
+		if("ear_secondary") // RS EDIT START (Port of VS PR#16513 'Adds a second ear slot.')
+			if(can_change(APPEARANCE_ALL_HAIR))
+				var/datum/sprite_accessory/ears/instance = locate(params["ref"])
+				if(params["clear"])
+					instance = null
+				if(!istype(instance) && !params["clear"])
+					return FALSE
+				target.ear_secondary_style = instance
+				if(!islist(target.ear_secondary_colors))
+					target.ear_secondary_colors = list()
+				if(length(target.ear_secondary_colors) < instance.get_color_channel_count())
+					target.ear_secondary_colors.len = instance.get_color_channel_count()
+				target.update_hair()
+				update_dna()
+				changed_hook(APPEARANCECHANGER_CHANGED_HAIRSTYLE)
+				return TRUE // RS EDIT END (Port of VS PR#16513 'Adds a second ear slot.')
 		if("ears_color")
 			if(can_change(APPEARANCE_HAIR_COLOR))
 				var/new_hair = input(usr, "Please select ear color.", "Ear Color", rgb(target.r_ears, target.g_ears, target.b_ears)) as color|null
@@ -210,6 +226,19 @@
 					owner.update_hair()
 					changed_hook(APPEARANCECHANGER_CHANGED_HAIRCOLOR)
 					return 1
+		if("ears_secondary_color") // RS EDIT START (Port of VS PR#16513 'Adds a second ear slot.')
+			if(can_change(APPEARANCE_HAIR_COLOR))
+				var/channel = params["channel"]
+				if(channel > length(target.ear_secondary_colors))
+					return TRUE
+				var/existing = LAZYACCESS(target.ear_secondary_colors, channel) || "#ffffff"
+				var/new_color = input(usr, "Please select ear color.", "2nd Ear Color", existing) as color|null
+				if(new_color && can_still_topic(usr, state))
+					target.ear_secondary_colors[channel] = new_color
+					update_dna()
+					target.update_hair()
+					changed_hook(APPEARANCECHANGER_CHANGED_HAIRCOLOR)
+					return TRUE // RS EDIT END (Port of VS PR#16513 'Adds a second ear slot.')
 		if("tail")
 			if(can_change(APPEARANCE_ALL_HAIR))
 				var/datum/sprite_accessory/tail/instance = locate(params["ref"])
@@ -286,11 +315,19 @@
 					if (0) //delete
 						if (name_marking)
 							var/datum/sprite_accessory/marking/mark_datum = body_marking_styles_list[name_marking]
+							// RS Add: Custom marking support (Lira, September 2025)
+							if(mark_datum?.hide_from_marking_gallery)
+								return FALSE
 							if (target.remove_marking(mark_datum))
 								changed_hook(APPEARANCECHANGER_CHANGED_HAIRSTYLE)
 								return TRUE
 					if (1) //add
 						var/list/usable_markings = markings.Copy() ^ body_marking_styles_list.Copy()
+						// RS Add: Custom marking support (Lira, September 2025)
+						for(var/option in usable_markings.Copy())
+							var/datum/sprite_accessory/marking/option_style = body_marking_styles_list[option]
+							if(istype(option_style) && option_style.hide_from_marking_gallery)
+								usable_markings -= option
 						var/new_marking = tgui_input_list(usr, "Choose a body marking:", "New Body Marking", usable_markings)
 						if(new_marking && can_still_topic(usr, state))
 							var/datum/sprite_accessory/marking/mark_datum = body_marking_styles_list[new_marking]
@@ -307,9 +344,13 @@
 							return TRUE
 					if (4) //color
 						var/current = markings[name_marking] ? markings[name_marking] : "#000000"
+						// RS Add Start: Prevent recoloring when the selected marking is not colorable. (Lira, September 2025)
+						var/datum/sprite_accessory/marking/mark_datum = body_marking_styles_list[name_marking]
+						if(mark_datum && !mark_datum.do_colouration)
+							return FALSE
+						// RS Add End
 						var/marking_color = input(usr, "Please select marking color", "Marking color", current) as color|null
 						if(marking_color && can_still_topic(usr, state))
-							var/datum/sprite_accessory/marking/mark_datum = body_marking_styles_list[name_marking]
 							if (target.change_marking_color(mark_datum, marking_color))
 								return TRUE
 		// VOREStation Add End
@@ -403,12 +444,23 @@
 
 		// VOREStation Add - Ears/Tails/Wings
 		data["ear_style"] = target.ear_style
+		data["ear_secondary_style"] = target.ear_secondary_style?.name // RS EDIT (Port of VS PR#16513 'Adds a second ear slot.')
 		data["tail_style"] = target.tail_style
 		data["wing_style"] = target.wing_style
 		var/list/markings_data[0]
 		markings = target.get_prioritised_markings()
 		for (var/marking in markings)
-			markings_data[++markings_data.len] = list("marking_name" = marking, "marking_color" = markings[marking]["color"] ? markings[marking]["color"] : "#000000") //too tired to add in another submenu for bodyparts here
+			// RS Edit Start: Custom markings support (Lira, September 2025)
+			var/datum/sprite_accessory/marking/mark_style = body_marking_styles_list[marking]
+			var/mark_label = mark_style ? mark_style.get_display_name() : marking
+			var/mark_color = markings[marking]["color"] ? markings[marking]["color"] : "#000000"
+			var/removable = !(mark_style?.hide_from_marking_gallery)
+			markings_data[++markings_data.len] = list(
+				"marking_name" = marking,
+				"marking_label" = mark_label,
+				"marking_color" = mark_color,
+				"marking_removable" = removable
+			) //too tired to add in another submenu for bodyparts here || RS Edit End
 		data["markings"] = markings_data
 		// VOREStation Add End
 
@@ -431,6 +483,12 @@
 		// VOREStation Add - Ears/Tails/Wings
 		data["ears_color"] = rgb(target.r_ears, target.g_ears, target.b_ears)
 		data["ears2_color"] = rgb(target.r_ears2, target.g_ears2, target.b_ears2)
+
+		// secondary ear colors
+		var/list/ear_secondary_color_channels = target.ear_secondary_colors || list() // RS EDIT START (Port of VS PR#16513 'Adds a second ear slot.')
+		ear_secondary_color_channels.len = target.ear_secondary_style?.get_color_channel_count() || 0
+		data["ear_secondary_colors"] = ear_secondary_color_channels // RS EDIT END (Port of VS PR#16513 'Adds a second ear slot.')
+
 		data["tail_color"] = rgb(target.r_tail, target.g_tail, target.b_tail)
 		data["tail2_color"] = rgb(target.r_tail2, target.g_tail2, target.b_tail2)
 		data["wing_color"] = rgb(target.r_wing, target.g_wing, target.b_wing)

@@ -52,9 +52,22 @@
 		input = copytext(input,1,max_length)
 
 	if(extra)
-		var/temp_input = replace_characters(input, list("\n"="  ","\t"=" "))//one character is replaced by two
-		if(length(input) < (length(temp_input) - 6))//6 is the number of linebreaks allowed per message
-			input = replace_characters(temp_input,list("  "=" "))//replace again, this time the double spaces with single ones
+		//RS Edit Start: Line break increase and improvements (Lira, January 2026)
+		var/max_linebreaks = 30
+		var/linebreaks = 0
+		var/list/result = list()
+		var/input_len = length_char(input)
+		for(var/i = 1, i <= input_len, i++)
+			var/ch = copytext_char(input, i, i + 1)
+			if(ch == "\n")
+				linebreaks++
+				result += (linebreaks <= max_linebreaks) ? ch : " "
+			else if(ch == "\t")
+				result += " "
+			else
+				result += ch
+		input = jointext(result, "")
+		//RS Edit End
 
 	if(encode)
 		// The below \ escapes have a space inserted to attempt to enable CI auto-checking of span class usage. Please do not remove the space.
@@ -81,7 +94,7 @@
 	return sanitize(replace_characters(input, list(">"=" ","<"=" ", "\""="'")), max_length, encode, trim, extra)
 
 //Filters out undesirable characters from names
-/proc/sanitizeName(var/input, var/max_length = MAX_NAME_LEN, var/allow_numbers = 0)
+/proc/sanitizeName(var/input, var/max_length = MAX_NAME_LEN, var/allow_numbers = 0, var/nickname = FALSE)
 	if(!input || length(input) > max_length)
 		return //Rejects the input if it is null or if it is longer then the max length allowed
 
@@ -138,8 +151,9 @@
 	if(last_char_group == 1)
 		output = copytext(output,1,length(output))	//removes the last character (in this case a space)
 
-	for(var/bad_name in list("space","floor","wall","r-wall","monkey","unknown","inactive ai","plating"))	//prevents these common metagamey names
-		if(cmptext(output,bad_name))	return	//(not case sensitive)
+	if (!nickname)
+		for(var/bad_name in list("space","floor","wall","r-wall","monkey","unknown","inactive ai","plating"))	//prevents these common metagamey names
+			if(cmptext(output,bad_name))	return	//(not case sensitive)
 
 	return output
 

@@ -38,6 +38,7 @@ var/world_time_day
 	var/preset_season = null
 	var/skipseason = null
 	var/replacement_season = null
+	var/hunter_override = FALSE		//RS ADD - If true, any mobs spawned will have their hunter var set to FALSE
 
 /turf/simulated/floor/outdoors/grass/seasonal/Initialize()
 
@@ -135,7 +136,8 @@ var/world_time_day
 				/mob/living/simple_mob/vore/wolf/direwolf = 1,
 				/mob/living/simple_mob/vore/wolf/direwolf/dog = 1,
 				/mob/living/simple_mob/vore/squirrel = 20,
-				/mob/living/simple_mob/vore/deer = 10
+				/mob/living/simple_mob/vore/deer = 10,
+				/mob/living/simple_mob/vore/jackolanturn = 1
 			)
 			grass_types = list(
 				/obj/structure/flora/ausbushes/sparsegrass,
@@ -187,7 +189,12 @@ var/world_time_day
 
 	if(animal_chance && prob(animal_chance) && !check_density())
 		var/animal_type = pickweight(animal_types)
-		new animal_type(src)
+		var/mob/living/ourmob = new animal_type(src)	//RS ADD
+		if(hunter_override)
+			ourmob.hunter = FALSE
+		if((z in using_map.station_levels))
+			ourmob.hunter = FALSE
+		//RS ADD END
 
 	. = ..()
 
@@ -253,6 +260,8 @@ var/world_time_day
 
 /turf/simulated/floor/outdoors/grass/seasonal/notrees
 	tree_chance = 0
+/turf/simulated/floor/outdoors/grass/seasonal/nosnow
+	snow_chance = 0
 /turf/simulated/floor/outdoors/grass/seasonal/nomobs
 	animal_chance = 0
 /turf/simulated/floor/outdoors/grass/seasonal/notrees_nomobs
@@ -276,6 +285,8 @@ var/world_time_day
 	tree_chance = 5
 /turf/simulated/floor/outdoors/grass/seasonal/dark/notrees
 	tree_chance = 0
+/turf/simulated/floor/outdoors/grass/seasonal/dark/nosnow
+	snow_chance = 0
 /turf/simulated/floor/outdoors/grass/seasonal/dark/nomobs
 	animal_chance = 0
 /turf/simulated/floor/outdoors/grass/seasonal/dark/notrees_nomobs

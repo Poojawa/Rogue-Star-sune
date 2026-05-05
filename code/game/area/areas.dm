@@ -54,6 +54,8 @@
 	var/forbid_singulo = FALSE // If true singulo will not move in.
 	var/no_spoilers = FALSE // If true, makes it much more difficult to see what is inside an area with things like mesons.
 	var/soundproofed = FALSE // If true, blocks sounds from other areas and prevents hearers on other areas from hearing the sounds within.
+	var/block_phase_shift = FALSE //Stops phase shifted mobs from entering // RS ADD
+	var/block_ghosts = FALSE	//Stops ghosts from entering //RS ADD
 
 /area/Initialize()
 	. = ..()
@@ -398,6 +400,7 @@ var/list/mob/living/forced_ambiance_list = new
 	play_ambience(L, initial = TRUE)
 	if(no_spoilers)
 		L.disable_spoiler_vision()
+	check_phase_shift(M)	//RS EDIT
 
 /area/proc/play_ambience(var/mob/living/L, initial = TRUE)
 	// Ambience goes down here -- make sure to list each area seperately for ease of adding things in later, thanks! Note: areas adjacent to each other should have the same sounds to prevent cutoff when possible.- LastyScratch
@@ -508,18 +511,28 @@ var/list/mob/living/forced_ambiance_list = new
 /*I am far too lazy to make it a proper list of areas so I'll just make it run the usual telepot routine at the start of the game*/
 var/list/teleportlocs = list()
 
+// RS Edit: Area Tele Cleanup (Lira, April 2026)
 /hook/startup/proc/setupTeleportLocs()
+	rebuild_teleport_locs()
+	return 1
+
+/proc/rebuild_teleport_locs(var/list/valid_levels)
+	teleportlocs = list()
+	if(!valid_levels)
+		valid_levels = using_map?.station_levels
+	if(!valid_levels || !valid_levels.len)
+		return teleportlocs
+
 	for(var/area/AR in world)
 		if(istype(AR, /area/shuttle) || istype(AR, /area/syndicate_station) || istype(AR, /area/wizard_station)) continue
 		if(teleportlocs.Find(AR.name)) continue
-		var/turf/picked = pick(get_area_turfs(AR.type))
-		if (picked.z in using_map.station_levels)
-			teleportlocs += AR.name
-			teleportlocs[AR.name] = AR
+		for(var/turf/T in AR)
+			if(T.z in valid_levels)
+				teleportlocs[AR.name] = AR
+				break
 
 	teleportlocs = sortAssoc(teleportlocs)
-
-	return 1
+	return teleportlocs
 
 var/list/ghostteleportlocs = list()
 
@@ -554,3 +567,20 @@ GLOBAL_DATUM(spoiler_obfuscation_image, /image)
 		add_overlay(GLOB.spoiler_obfuscation_image)
 	else
 		cut_overlay(GLOB.spoiler_obfuscation_image)
+
+/area/proc/check_phase_shift(var/mob/ourmob)	//RS EDIT START
+	if(!block_phase_shift || !ourmob.incorporeal_move)
+		return
+	if(!isliving(ourmob))
+		return
+	if(ourmob.client?.holder)	//RS EDIT
+		return					//RS EDIT
+	if(isanimal(ourmob))
+		var/mob/living/simple_mob/shadekin/SK = ourmob
+		if(SK.ability_flags & AB_PHASE_SHIFTED)
+			SK.phase_in()
+	if(ishuman(ourmob))
+		var/mob/living/carbon/human/SK = ourmob
+		if(SK.ability_flags & AB_PHASE_SHIFTED)
+			SK.phase_in()
+												//RS EDIT END

@@ -38,15 +38,8 @@
 			if(length(compiled_chord))
 				compiled_chords[++compiled_chords.len] = compiled_chord
 
-/**
- * Proc to play a legacy note. Just plays the sound to hearing mobs (and does hearcheck if necessary), no fancy channel/sustain/management.
- *
- * Arguments:
- * * note is a number from 1-7 for A-G
- * * acc is either "b", "n", or "#"
- * * oct is 1-8 (or 9 for C)
- */
-/datum/song/proc/playkey_legacy(note, acc as text, oct, mob/user)
+// RS Edit: Browser-based instrument audio (Lira, March 2026)
+/datum/song/proc/resolve_legacy_note(note, acc as text, oct)
 	// handle accidental -> B<>C of E<>F
 	if(acc == "b" && (note == 3 || note == 6)) // C or F
 		if(note == 3)
@@ -67,7 +60,38 @@
 
 	// check octave, C is allowed to go to 9
 	if(oct < 1 || (note == 3 ? oct > 9 : oct > 8))
+		return null
+
+	return list(
+		"note" = note,
+		"acc" = acc,
+		"oct" = oct,
+		"key" = clamp((note_offset_lookup[note] + oct * 12 + accent_lookup[acc]), key_min, key_max)
+	)
+
+/**
+ * Proc to play a legacy note. Just plays the sound to hearing mobs (and does hearcheck if necessary), no fancy channel/sustain/management.
+ *
+ * Arguments:
+ * * note is a number from 1-7 for A-G
+ * * acc is either "b", "n", or "#"
+ * * oct is 1-8 (or 9 for C)
+ */
+// RS Edit: Browser-based instrument audio (Lira, March 2026)
+/datum/song/proc/playkey_legacy(note, acc as text, oct, mob/user, list/targets_override) //RS Edit: Add override list (Lira, August 2025)
+	var/list/note_state = resolve_legacy_note(note, acc, oct)
+	if(!islist(note_state))
 		return
+	note = note_state["note"]
+	acc = note_state["acc"]
+	oct = note_state["oct"]
+
+	//RS Add Start: Numeric key for note-range filter (A=1..G=7) (Lira, August 2025)
+	if(note_filter_enabled)
+		var/numeric_key = note_state["key"]
+		if(numeric_key < note_filter_min || numeric_key > note_filter_max)
+			return
+	//RS Add End
 
 	// now generate name
 	var/soundfile = "sound/instruments/[cached_legacy_dir]/[ascii2text(note+64)][acc][oct].[cached_legacy_ext]"
@@ -77,10 +101,11 @@
 		return
 	// and play
 	var/turf/source = get_turf(parent)
-	if((world.time - MUSICIAN_HEARCHECK_MINDELAY) > last_hearcheck)
+	if(!islist(targets_override) && ((world.time - MUSICIAN_HEARCHECK_MINDELAY) > last_hearcheck))
 		do_hearcheck()
 	var/sound/music_played = sound(soundfile)
-	for(var/mob/M as anything in hearing_mobs)
+	var/list/targets = islist(targets_override) ? targets_override : hearing_mobs //RS Add: Adds override (Lira, August 2025)
+	for(var/mob/M as anything in targets) //RS Edit: Use targets instead of hearing_mobs (Lira, August 2025)
 		/* Would be nice
 		if(user && HAS_TRAIT(user, TRAIT_MUSICIAN) && isliving(M))
 			var/mob/living/L = M
@@ -88,6 +113,8 @@
 		*/
 		if(!M)
 			hearing_mobs -= M
+			continue
+		if(browser_listener_blocks_legacy_fallback(M))
 			continue
 		M.playsound_local(source, null, volume * using_instrument.volume_multiplier, S = music_played, preference = /datum/client_preference/instrument_toggle, volume_channel = VOLUME_CHANNEL_INSTRUMENTS)
 		// Could do environment and echo later but not for now

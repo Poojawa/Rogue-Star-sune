@@ -270,12 +270,18 @@
 	GLOB.step_taken_shift_roundstat++
 	if(!S) return
 
+	if(shoes && loc == T && has_gravity(loc) && !flying) //RS Add || Chomp Port
+		if(SEND_SIGNAL(shoes, COMSIG_SHOES_STEP_ACTION, m_intent))	//Shoe step comsig
+			return
+
 	// Play every 20 steps while walking, for the sneak
 	if(m_intent == "walk" && step_count++ % 20 != 0)
+		check_vorefootstep(m_intent, T) // Reagent bellies || RS Add || Chomp Port
 		return
 
 	// Play every other step while running
 	if(m_intent == "run" && step_count++ % 2 != 0)
+		check_vorefootstep(m_intent, T) // Reagent bellies || RS Add || Chomp Port
 		return
 
 	var/volume = config.footstep_volume

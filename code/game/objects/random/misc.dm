@@ -201,7 +201,7 @@
 				prob(5);/obj/item/weapon/reagent_containers/syringe/antitoxin,
 				prob(3);/obj/item/weapon/reagent_containers/syringe/antiviral,
 				prob(5);/obj/item/weapon/reagent_containers/syringe/inaprovaline,
-				prob(1);/obj/item/weapon/reagent_containers/hypospray,
+				prob(1);/obj/item/weapon/revised_hypospray/CMO, //RS Edit/obj/item/weapon/reagent_containers/hypospray,
 				prob(1);/obj/item/weapon/storage/box/freezer,
 				prob(2);/obj/item/stack/nanopaste)
 
@@ -762,6 +762,8 @@
 				/obj/item/toy/plushie/otter,
 				/obj/item/toy/plushie/vox,
 				/obj/item/toy/plushie/shark,
+				/obj/item/toy/plushie/teppi, //RS Add || Ports CHOMPStation PR 8816
+				/obj/item/toy/plushie/lasagna,	//RS ADD
 				pick(list(/obj/item/toy/plushie/borgplushie/drake/sec,
 							/obj/item/toy/plushie/borgplushie/drake/med,
 							/obj/item/toy/plushie/borgplushie/drake/sci,

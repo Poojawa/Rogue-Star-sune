@@ -22,6 +22,11 @@
 		return
 	feed_grabbed_to_self(src,T)
 	update_icon()
+	//RS ADD START
+	if(ai_holder)
+		ai_holder.set_stance(STANCE_IDLE)
+		ai_holder.lose_target()
+	//RS ADD END
 
 //
 // Simple proc for animals to have their digestion toggled on/off externally
@@ -71,7 +76,7 @@
 /mob/living/simple_mob/attackby(var/obj/item/O, var/mob/user)
 	if(istype(O, /obj/item/weapon/newspaper) && !(ckey || (ai_holder.hostile && faction != user.faction)) && isturf(user.loc))
 		if(ai_holder.retaliate && prob(vore_pounce_chance/2)) // This is a gamble!
-			user.Weaken(5) //They get tackled anyway whether they're edible or not.
+			user.Stun(5) //They get tackled anyway whether they're edible or not.
 			user.visible_message("<span class='danger'>[user] swats [src] with [O] and promptly gets tackled!</span>!")
 			if(will_eat(user))
 				set_AI_busy(TRUE)

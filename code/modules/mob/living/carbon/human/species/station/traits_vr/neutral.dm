@@ -50,8 +50,9 @@
 			"x" = list("ks", "kss", "ksss")
 		),
 	autohiss_exempt = list(LANGUAGE_UNATHI))
-
 	excludes = list(/datum/trait/neutral/autohiss_tajaran, /datum/trait/neutral/autohiss_zaddat)
+	custom_only = FALSE // RS EDIT
+	allowed_species = list(SPECIES_CUSTOM,SPECIES_PROMETHEAN,SPECIES_PROTEAN)  // RS EDIT
 
 /datum/trait/neutral/autohiss_tajaran
 	name = "Autohiss (Tajaran)"
@@ -63,6 +64,8 @@
 		),
 	autohiss_exempt = list(LANGUAGE_SIIK,LANGUAGE_AKHANI,LANGUAGE_ALAI))
 	excludes = list(/datum/trait/neutral/autohiss_unathi, /datum/trait/neutral/autohiss_zaddat)
+	custom_only = FALSE  // RS EDIT
+	allowed_species = list(SPECIES_CUSTOM,SPECIES_PROMETHEAN,SPECIES_PROTEAN)  // RS EDIT
 
 /datum/trait/neutral/autohiss_zaddat
 	name = "Autohiss (Zaddat)"
@@ -81,6 +84,8 @@
 		),
 	autohiss_exempt = list(LANGUAGE_ZADDAT,LANGUAGE_VESPINAE))
 	excludes = list(/datum/trait/neutral/autohiss_tajaran, /datum/trait/neutral/autohiss_unathi)
+	custom_only = FALSE  // RS EDIT
+	allowed_species = list(SPECIES_CUSTOM,SPECIES_PROMETHEAN,SPECIES_PROTEAN)  // RS EDIT
 
 /datum/trait/neutral/bloodsucker
 	name = "Bloodsucker, Obligate"
@@ -550,6 +555,19 @@
 	H.add_modifier(/datum/modifier/trait/colorblind_taj)
 
 // Body shape traits
+/datum/trait/neutral/tallest //RS ADD || Virgo Port 15949
+	name = "Tall, Major"
+	desc = "Your body is way taller than average."
+	sort = TRAIT_SORT_BODYTYPE
+	cost = 0
+	custom_only = FALSE
+	var_changes = list("icon_scale_y" = 1.15)
+	excludes = list(/datum/trait/neutral/tall, /datum/trait/neutral/taller, /datum/trait/neutral/short, /datum/trait/neutral/shorter, /datum/trait/neutral/shortest) //RS Edit
+
+/datum/trait/neutral/tallest/apply(var/datum/species/S,var/mob/living/carbon/human/H) //RS ADD || Virgo Port 15949
+	..()
+	H.update_transform()
+
 /datum/trait/neutral/taller
 	name = "Tall"
 	desc = "Your body is taller than average."
@@ -557,7 +575,7 @@
 	cost = 0
 	custom_only = FALSE
 	var_changes = list("icon_scale_y" = 1.09)
-	excludes = list(/datum/trait/neutral/tall, /datum/trait/neutral/short, /datum/trait/neutral/shorter)
+	excludes = list(/datum/trait/neutral/tall, /datum/trait/neutral/tallest, /datum/trait/neutral/short, /datum/trait/neutral/shorter, /datum/trait/neutral/shortest) //RS Edit
 
 /datum/trait/neutral/taller/apply(var/datum/species/S,var/mob/living/carbon/human/H)
 	..()
@@ -570,7 +588,7 @@
 	cost = 0
 	custom_only = FALSE
 	var_changes = list("icon_scale_y" = 1.05)
-	excludes = list(/datum/trait/neutral/taller, /datum/trait/neutral/short, /datum/trait/neutral/shorter)
+	excludes = list(/datum/trait/neutral/taller, /datum/trait/neutral/tallest, /datum/trait/neutral/short, /datum/trait/neutral/shorter, /datum/trait/neutral/shortest) //RS Edit
 
 /datum/trait/neutral/tall/apply(var/datum/species/S,var/mob/living/carbon/human/H)
 	..()
@@ -583,7 +601,7 @@
 	cost = 0
 	custom_only = FALSE
 	var_changes = list("icon_scale_y" = 0.95)
-	excludes = list(/datum/trait/neutral/taller, /datum/trait/neutral/tall, /datum/trait/neutral/shorter)
+	excludes = list(/datum/trait/neutral/tallest, /datum/trait/neutral/taller, /datum/trait/neutral/tall, /datum/trait/neutral/shorter, /datum/trait/neutral/shortest) //RS Edit
 
 /datum/trait/neutral/short/apply(var/datum/species/S,var/mob/living/carbon/human/H)
 	..()
@@ -596,9 +614,22 @@
 	cost = 0
 	custom_only = FALSE
 	var_changes = list("icon_scale_y" = 0.915)
-	excludes = list(/datum/trait/neutral/taller, /datum/trait/neutral/tall, /datum/trait/neutral/short)
+	excludes = list(/datum/trait/neutral/tallest, /datum/trait/neutral/taller, /datum/trait/neutral/tall, /datum/trait/neutral/short, /datum/trait/neutral/shortest) //RS Edit
 
 /datum/trait/neutral/shorter/apply(var/datum/species/S,var/mob/living/carbon/human/H)
+	..()
+	H.update_transform()
+
+/datum/trait/neutral/shortest //RS ADD || Virgo Port 15949
+	name = "Short, Major"
+	desc = "Your body is way shorter than average."
+	sort = TRAIT_SORT_BODYTYPE
+	cost = 0
+	custom_only = FALSE
+	var_changes = list("icon_scale_y" = 0.85)
+	excludes = list(/datum/trait/neutral/tallest, /datum/trait/neutral/taller, /datum/trait/neutral/tall, /datum/trait/neutral/short, /datum/trait/neutral/shorter) //RS Edit
+
+/datum/trait/neutral/shortest/apply(var/datum/species/S,var/mob/living/carbon/human/H) //RS ADD || Virgo Port 15949
 	..()
 	H.update_transform()
 
@@ -1016,3 +1047,138 @@
 	var_changes = list("digest_pain" = FALSE)
 	custom_only = FALSE
 	can_take = ORGANICS
+
+//RS Edit || Ports VOREStation PR16060
+/datum/trait/neutral/venom_bite
+	name = "Venomous Injection"
+	desc = "Allows for injecting prey through one method or another to inject them with a variety of chemicals with varying effects!"
+	tutorial = "This trait allows you to bite prey with varying effects! <br> \
+		Options for venoms: <br> \
+		=====Size Chemicals ===== <br> \
+		Microcillin: Will make someone shrink. (This is 1% per 0.01 units. So 1 unit = 100% size change) <br> \
+		Macrocillin: Will make someone grow. (This is 1% per 0.01 units. So 1 unit = 100% size change) <br> \
+		Normalcillin: Will make someone normal size. (This is 1% per 0.01 units. So 1 unit = 100% size change) Stops at 100% size. <br> \
+		===== Gender Chemicals ===== <br> \
+		Androrovir: Will transform someone's sex to male. <br> \
+		Gynorovir: Will transform someone's sex to female. <br> \
+		Androgynorovir: Will transform someone's sex to pleural. <br> \
+		===== Special Chemicals ===== <br> \
+		Stoxin: Will make someone drowsy. <br> \
+		Rainbow Toxin: Will make someone see rainbows. <br> \
+		Paralysis Toxin: Will make someone paralyzed. <br> \
+		Numbing Enzyme: Will make someone unable to feel pain. <br> \
+		Pain Enzyme: Will make someone feel pain, amplifieed <br> \
+		===== Side Notes ===== <br> \
+		You aren't required to inject anything if you prefer to just use it as a normal bite!"
+	cost = 0
+	custom_only = FALSE
+//RS ADD START
+	has_preferences = list(
+		"trait_injection_verb" = list(TRAIT_PREF_TYPE_STRING, "Verb",TRAIT_VAREDIT_TARGET_MOB,"bite"),
+		"trait_injection_selected" = list(TRAIT_PREF_TYPE_LIST, "Reagent",TRAIT_VAREDIT_TARGET_MOB,"microcillin"),
+		"trait_injection_amount" = list(TRAIT_PREF_TYPE_INT, "Amount",TRAIT_VAREDIT_TARGET_MOB,1)
+		)
+	var/list/inject_chems = list(
+		"microcillin",
+		"macrocillin",
+		"normalcillin",
+		"numbenzyme",
+		"androrovir",
+		"gynorovir",
+		"androgynorovir",
+		"stoxin",
+		"rainbowtoxin",
+		"paralysistoxin",
+		"painenzyme"
+		)
+//RS ADD END
+
+/datum/trait/neutral/venom_bite/apply(var/datum/species/S,var/mob/living/carbon/human/H)
+	..()
+	H.verbs |= /mob/living/proc/injection
+	H.verbs |= /mob/living/proc/injection_setup		//RS ADD
+	H.trait_injection_reagents += "microcillin"		// get small
+	H.trait_injection_reagents += "macrocillin"		// get BIG
+	H.trait_injection_reagents += "normalcillin"	// normal
+	H.trait_injection_reagents += "numbenzyme"		// no feelings
+	H.trait_injection_reagents += "androrovir" 		// -> MALE
+	H.trait_injection_reagents += "gynorovir" 		// -> FEMALE
+	H.trait_injection_reagents += "androgynorovir" 	// -> PLURAL
+	H.trait_injection_reagents += "stoxin"			// night night chem
+	H.trait_injection_reagents += "rainbowtoxin" 	// Funny flashing lights.
+	H.trait_injection_reagents += "paralysistoxin" 	// Paralysis!
+	H.trait_injection_reagents += "painenzyme"		// Pain INCREASER
+
+	if(H.trait_injection_amount > 5)
+		H.trait_injection_amount = 5
+	if(H.trait_injection_amount < 0)
+		H.trait_injection_amount = 0
+
+	if(H?.client?.prefs)
+		var/datum/preferences/P = H.client.prefs
+		P.trait_injection_amount = H.trait_injection_amount
+//RS Edit end
+
+//RS Edit Start
+/datum/trait/neutral/natural_artist
+	name = "Natural Artist"
+	desc = "Your body creates natural pigment or your fluids work like paint! You can paint without a paintbrush."
+	cost = 0
+	custom_only = FALSE
+	var_changes = list("natural_artist" = TRUE)
+
+/datum/trait/neutral/natural_artist/apply(var/datum/species/S,var/mob/living/carbon/human/H)
+	..()
+	//H.verbs |= /mob/living/carbon/human/proc/adjust_art_color //simplifying
+	H.verbs |= /mob/living/carbon/human/proc/extend_retract_brush
+
+
+/datum/trait/neutral/waddle
+	name = "Waddle / Animated Movement"
+	desc = "You move in either an animated way or with a quite visible waddle!"
+	cost = 0
+	custom_only = FALSE
+
+/datum/trait/neutral/waddle/apply(var/datum/species/S,var/mob/living/carbon/human/H)
+	..()
+	H.verbs |= /mob/living/proc/waddle_adjust
+
+/datum/trait/neutral/electrovore
+	name = "Electrovore"
+	desc = "Allows you to drain power cells for nutrition."
+	tutorial = "This trait allows you to consume electricity! <br> \
+		You can do this by clicking power cells in your hand on harm intent. <br> \
+		Intent-based control scheme: <br> \
+		HARM - drain power cell in hand"
+
+	cost = 0
+	custom_only = FALSE
+	var_changes = list("electrovore" = TRUE)
+	excludes = list(/datum/trait/neutral/electrovore_obligate)
+
+/datum/trait/neutral/electrovore_obligate
+	name = "Electrovore, Obligate"
+	desc = "Makes you unable to gain nutrition from anything but electricity. To compenstate, you are able to drain energy from power cells."
+	tutorial = "This trait forces you to only consume electricity - you cannot have normal food anymore. Vore is, of course, an exception! <br> \
+		You can satisfy this by clicking power cells in your hand on harm intent, and you can even recharge them by using help intent! <br> \
+		Intent-based control scheme: <br> \
+		HELP - recharge powercell in hand <br> \
+		HARM - drain power cell in hand"
+
+	cost = 0
+	custom_only = FALSE
+	var_changes = list("organic_food_coeff" = 0, "electrovore" = TRUE)
+	excludes = list(/datum/trait/neutral/electrovore)
+
+/datum/trait/neutral/food_body
+	name = "Food Body"
+	desc = "Your body is made of some manner of food. This increases the liklihood of hungry creatures attempting to hunt you to eat."
+	cost = 0
+	custom_only = FALSE
+
+/datum/trait/neutral/food_body/apply(var/datum/species/S,var/mob/living/carbon/human/H)
+	..()
+	S.food_class = FP_FOOD
+	H.food_class = FP_FOOD
+
+//RS Edit End

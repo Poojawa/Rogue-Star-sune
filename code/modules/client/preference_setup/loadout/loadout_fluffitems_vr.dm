@@ -887,6 +887,14 @@
 	character_name = list("Bogen Kellogg")
 
 //  P CKEYS
+
+/datum/gear/fluff/vehrune_gunkit
+	path = /obj/item/device/modkit_conversion/fluff/vehrune_gunkit
+	display_name = "Vehrune's HoS gunkit"
+	ckeywhitelist = list("pyrophile")
+	character_name = list("Vehrune Antiqua")
+	allowed_roles = list("Head of Security")
+
 /datum/gear/fluff/evelyn_medal
     path = /obj/item/clothing/accessory/medal/conduct
     display_name = "Evelyn's Medal of Conduct"
@@ -998,7 +1006,7 @@
 /datum/gear/fluff/clara_flask
 	path = /obj/item/weapon/reagent_containers/food/drinks/glass2/fluff/claraflask
 	display_name = "Clara's Vacuum Flask"
-	ckeywhitelist = list("rboys2")
+	ckeywhitelist = list("claracow")
 	character_name = list("Clara Mali")
 	cost = 1
 
@@ -1482,7 +1490,7 @@
 	display_name = "Tempest's Medical Hud"
 	slot = slot_glasses
 	ckeywhitelist = list("wickedtemp")
-	character_name = list("Chakat Tempest Venosare")
+	character_name = list("Chakat Tempest Trismaer") // RS Edit: Whitelist tweak (Lira, March 2026)
 	allowed_roles = list("Chief Medical Officer","Medical Doctor","Chemist","Psychiatrist","Paramedic", "Off-duty Medic")
 
 /datum/gear/fluff/tempest_hypospray
@@ -1490,7 +1498,7 @@
 	display_name = "Tempest's Hypospray"
 	slot = slot_belt
 	ckeywhitelist = list("wickedtemp")
-	character_name = list("Chakat Tempest Venosare")
+	character_name = list("Chakat Tempest Trismaer") // RS Edit: Whitelist tweak (Lira, March 2026)
 	allowed_roles = list("Chief Medical Officer","Medical Doctor","Chemist","Psychiatrist","Paramedic", "Off-duty Medic")
 
 /datum/gear/fluff/tempest_backpack
@@ -1498,7 +1506,7 @@
 	display_name = "Tempest's Saddlebag"
 	slot = slot_back
 	ckeywhitelist = list("wickedtemp")
-	character_name = list("Chakat Tempest Venosare")
+	character_name = list("Chakat Tempest Trismaer") // RS Edit: Whitelist tweak (Lira, March 2026)
 
 //  X CKEYS
 /datum/gear/fluff/penelope_box

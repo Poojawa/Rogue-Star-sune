@@ -1,6 +1,7 @@
 // Process the predator's effects upon the contents of its belly (i.e digestion/transformation etc)
 /obj/belly/process(wait) //Passed by controller
 	recent_sound = FALSE
+	cycle_sloshed = FALSE // Reagent bellies || RS Add || Chomp Port
 
 	if(loc != owner)
 		if(istype(owner))
@@ -9,9 +10,29 @@
 			qdel(src)
 			return
 
+	HandleBellyReagents()	// Reagent bellies || RS Add || Chomp Port
+
 	// VERY early exit
 	if(!contents.len)
 		return
+
+	//RS Add || Chomp Port 2934, 2979, 2989, 3200, 3204, 6155, 7054 || Autotransfer count moved here.
+	if(autotransfer_enabled)
+		var/list/autotransferables = list()
+		for(var/atom/movable/M in contents)
+			if(!M || !M.autotransferable) continue
+			if(isliving(M))
+				var/mob/living/L = M
+				if(L.absorbed) continue
+			M.belly_cycles++
+			if(M.belly_cycles < autotransferwait / 60) continue
+			autotransferables += M
+		if(LAZYLEN(autotransferables) >= autotransfer_min_amount)
+			var/tally = 0
+			for(var/atom/movable/M in autotransferables)
+				if(check_autotransfer(M))
+					tally++
+				if(autotransfer_max_amount > 0 && tally >= autotransfer_max_amount) break
 
 	var/play_sound //Potential sound to play at the end to avoid code duplication.
 	var/to_update = FALSE //Did anything update worthy happen?
@@ -20,6 +41,8 @@
 	var/list/touchable_atoms = contents - items_preserved
 	if(!length(touchable_atoms))
 		return
+
+	HandleBellyReagentEffects(touchable_atoms) // Reagent bellies || RS Add || Chomp Port
 
 /////////////////////////// Sound Selections ///////////////////////////
 	var/digestion_noise_chance = 0
@@ -146,7 +169,6 @@
 	if(to_update)
 		updateVRPanels()
 
-
 /obj/belly/proc/handle_touchable_atoms(list/touchable_atoms)
 	var/did_an_item = FALSE // Only do one item per cycle.
 	var/to_update = FALSE
@@ -174,9 +196,6 @@
 
 			if(L.absorbed && !issilicon(L))
 				L.Weaken(5)
-
-			// Fullscreen overlays
-			vore_fx(L)
 
 			//Handle 'human'
 			if(ishuman(L))
@@ -211,11 +230,13 @@
 					if(H.allow_stripping)		//RS EDIT START
 						for(var/slot in slots)
 							var/obj/item/I = H.get_equipped_item(slot = slot)
-							if(I && H.unEquip(I, force = FALSE))
-								handle_digesting_item(I,H)
-								digestion_noise_chance = 25
-								to_update = TRUE
-								break // Digest off one by one, not all at once	//RS EDIT END
+							if(I)	//RS EDIT START - Enable inventory return
+								SSinventory_return.catalogue_object(I)
+								if(H.unEquip(I, force = FALSE))	//RS EDIT END
+									handle_digesting_item(I,H)
+									digestion_noise_chance = 25
+									to_update = TRUE
+									break // Digest off one by one, not all at once	//RS EDIT END
 
 		//get rid of things like blood drops and gibs that end up in there
 		else if(istype(A, /obj/effect/decal/cleanable))
@@ -265,6 +286,34 @@
 	return did_an_item
 
 /obj/belly/proc/handle_digestion_death(mob/living/M)
+	//RS Edit Start || Ports CHOMPStation PR 5161
+	if(slow_digestion) //CHOMPAdd Start: Gradual corpse digestion
+		if(!M.digestion_in_progress)
+			M.digestion_in_progress = TRUE
+			if(M.health > -36 || (ishuman(M) && M.health > -136))
+				to_chat(M, "<span class='notice'>(Your predator has enabled gradual body digestion. Stick around for a second round of churning to reach the true finisher.)</span>")
+		if(M.health < M.maxHealth * -1) //Siplemobs etc
+			if(ishuman(M))
+				if(M.health < (M.maxHealth * -1) -100) //Spacemans can go much deeper. Jank but maxHealth*-2 doesn't work with flat standard -100hp death threshold.
+					if(slow_brutal)
+						var/mob/living/carbon/human/P = M
+						var/vitals_only = TRUE
+						for(var/obj/item/organ/external/E in P.organs)
+							if(!E.vital)
+								vitals_only = FALSE
+								if(!LAZYLEN(E.children))
+									E.droplimb(TRUE, DROPLIMB_EDGE)
+									qdel(E)
+									break
+							continue
+						if(vitals_only)
+							M.digestion_in_progress = FALSE
+					else
+						M.digestion_in_progress = FALSE
+			else
+				M.digestion_in_progress = FALSE
+		if(M.digestion_in_progress)
+			return //RS edit end
 	var/digest_alert_owner = pick(digest_messages_owner)
 	var/digest_alert_prey = pick(digest_messages_prey)
 	var/compensation = M.maxHealth / 1.5 //Dead body bonus.
@@ -301,19 +350,66 @@
 	if((mode_flags & DM_FLAG_LEAVEREMAINS) && M.digest_leave_remains)
 		handle_remains_leaving(M)
 	digestion_death(M)
+	owner.post_digestion()	//RS ADD
 	if(!ishuman(owner))
 		owner.update_icons()
 	if(isrobot(owner))
 		var/mob/living/silicon/robot/R = owner
-		R.cell.charge += (nutrition_percent / 100) * compensation * 25 * personal_nutrition_modifier
+		if(reagentbellymode == TRUE && reagent_mode_flags & DM_FLAG_REAGENTSDIGEST && reagents.total_volume < custom_max_volume) // Reagent bellies || RS Add || Chomp Port
+			R.cell.charge += (nutrition_percent / 100) * compensation * 15 * personal_nutrition_modifier
+			GenerateBellyReagents_digested()
+		else
+			R.cell.charge += (nutrition_percent / 100) * compensation * 25 * personal_nutrition_modifier
 	else
-		owner.adjust_nutrition((nutrition_percent / 100) * compensation * 4.5 * personal_nutrition_modifier * pred_digestion_efficiency)
+		if(reagentbellymode == TRUE && reagent_mode_flags & DM_FLAG_REAGENTSDIGEST && reagents.total_volume < custom_max_volume)// Reagent bellies || RS Add || Chomp Port
+			owner.adjust_nutrition((nutrition_percent / 100) * compensation * 3.0 * personal_nutrition_modifier * pred_digestion_efficiency)
+			GenerateBellyReagents_digested()
+		else
+			owner.adjust_nutrition((nutrition_percent / 100) * compensation * 4.5 * personal_nutrition_modifier * pred_digestion_efficiency)
 
 /obj/belly/proc/steal_nutrition(mob/living/L)
+	if(L.nutrition <= 110) //RS Edit || Ports VOREStation PR15876
+		if(drainmode == DR_SLEEP && istype(L,/mob/living/carbon/human)) //Slowly put prey to sleep
+			if(L.tiredness <= 105)
+				L.tiredness = (L.tiredness + 6)
+			if(L.tiredness <= 90 && L.tiredness >= 75)
+				to_chat(L, "<span class='warning'>You are about to fall unconscious!</span>")
+				to_chat(owner, "<span class='warning'>[L] is about to fall unconscious!</span>")
+		if(drainmode == DR_FAKE && istype(L,/mob/living/carbon/human)) //Slowly bring prey to the edge of sleep without crossing it
+			if(L.tiredness <= 93)
+				L.tiredness = (L.tiredness + 6)
+		if(drainmode == DR_WEIGHT && istype(L,/mob/living/carbon/human)) //Slowly drain your prey's weight and add it to your own
+			if(L.weight > 70)
+				L.weight -= (0.01 * L.weight_loss)
+				owner.weight += (0.01 * L.weight_loss) //intentionally dependant on the prey's weight loss ratio rather than the preds weight gain to keep them in pace with one another.
+		//RS Edit End
 	if(L.nutrition >= 100)
 		var/oldnutrition = (L.nutrition * 0.05)
 		L.nutrition = (L.nutrition * 0.95)
+		if(reagentbellymode == TRUE && reagent_mode_flags & DM_FLAG_REAGENTSDIGEST && reagents.total_volume < custom_max_volume) // Reagent bellies || RS Add || Chomp Port
+			oldnutrition = oldnutrition * 0.75 //keeping the price static, due to how much nutrition can flunctuate
+			GenerateBellyReagents_digesting()
 		owner.adjust_nutrition(oldnutrition)
+		if (istype(owner, /mob/living/carbon/human)) //RS Edit Start Is our owner a human?
+			var/mob/living/carbon/human/howner = owner
+			var/modified_gain = oldnutrition/10
+			if(!L.ckey)
+				modified_gain = modified_gain / 4
+
+			howner.shadekin_adjust_energy(modified_gain,TRUE)
+			/*
+			||----------------------------------------------------------------------------------------------||
+			||                                    Let's do some M A T H!					||
+			||----------------------------------------------------------------------------------------------||
+			||Let's imagine the prey didn't overeat to an insane degree(cap is 50000 after all)		||
+			||450 gives you the 'fat' warning when it comes to nurtition. Let's use that as our baseline.	||
+			||Let's say that absorbing an ENTIRE person that's full of food should give you 50 energy	||
+			||That 9 nutrition per 1 energy. Not too bad. 							||
+			||Let's assume the average person that just spawned in has 300 nutrition.			||
+			||That's equivalent to 33 energy. Let's just round it to 10 because we like even numbers here.	||
+			||Not doing eye_color specific here because it's already a small amount that it's not an issue.	||
+			||----------------------------------------------------------------------------------------------||
+			*/ //RS Edit End
 
 /obj/belly/proc/updateVRPanels()
 	for(var/mob/living/M in contents)

@@ -204,7 +204,7 @@
 
 	var/base_icon_state = "cryopod_0" //VOREStation Edit - New Icon
 	var/occupied_icon_state = "cryopod_1" //VOREStation Edit - New Icon
-	var/broken_icon_state = "cryopod_0-p" //RS EDIT
+	//var/broken_icon_state = "cryopod_0-p" //RS EDIT // RS EDIT Version 2, this icon state doesn't exist. Commenting this out until we have a broken icon state to use here.
 	var/on_store_message = "has entered long-term storage."
 	var/on_store_name = "Cryogenic Oversight"
 	var/on_enter_visible_message = "starts climbing into the"
@@ -226,13 +226,15 @@
 	var/announce_leaving = TRUE	//RS ADD
 
 /obj/machinery/cryopod/update_icon()
+	/* RS Edit, commenting this out as there is no broken icon state for cryopods.
 	if((stat & NOPOWER) || (stat & BROKEN))
 		icon_state = broken_icon_state
 	else
-		if(occupant)
-			icon_state = occupied_icon_state
-		else
-			icon_state = base_icon_state
+	*/
+	if(occupant)
+		icon_state = occupied_icon_state
+	else
+		icon_state = base_icon_state
 
 /obj/machinery/cryopod/robot
 	name = "robotic storage unit"
@@ -547,7 +549,7 @@
 		depart_announce = FALSE
 
 	if(announce_leaving && depart_announce)
-		announce.autosay("[to_despawn.real_name][departing_job ? ", [departing_job], " : " "][on_store_message]", "[on_store_name]", announce_channel, using_map.get_map_levels(z, TRUE, om_range = DEFAULT_OVERMAP_RANGE))
+		announce.autosay("[to_despawn.real_name][departing_job ? ", [departing_job], " : " "][on_store_message]", "[on_store_name]", announce_channel, GetArrivalAnnouncementZlevels(z, announce_channel)) // RS Edit: Arrivals Notification Z-Fix (Lira, April 2026)
 		visible_message("<span class='notice'>\The [initial(name)] [on_store_visible_message_1] [to_despawn.real_name] [on_store_visible_message_2]</span>", 3)
 
 	//VOREStation Edit End

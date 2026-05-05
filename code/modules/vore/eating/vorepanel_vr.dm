@@ -2,11 +2,13 @@
 // Vore management panel for players
 //
 
-#define BELLIES_MAX 40
-#define BELLIES_NAME_MIN 2
-#define BELLIES_NAME_MAX 40
-#define BELLIES_DESC_MAX 4096
-#define FLAVOR_MAX 400
+//////////////////////////////////////////////////////////////////////////////////
+//Updated by Lira for Rogue Star September 2025 to integrate trust list settings//
+//////////////////////////////////////////////////////////////////////////////////
+//Updated by Lira for Rogue Star October 2025 to integrate RSUI health bars///////
+//////////////////////////////////////////////////////////////////////////////////
+//Updated by Lira for Rogue Star January 2026 to add spont vore prefs/////////////
+//////////////////////////////////////////////////////////////////////////////////
 
 //INSERT COLORIZE-ONLY STOMACHS HERE
 var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
@@ -22,6 +24,194 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 														"post_tumby_passage_fluidless",
 														"not_quite_tumby",
 														"could_it_be_a_tumby")
+
+// RS Add: Maps together var on mob to toggle pref, client pref, and whitelist flag (Lira, September 2025)
+var/static/list/vore_trustlist_preference_map = list(
+	"dropnom_prey" = list(
+		"host_var" = "can_be_drop_prey",
+		"client_var" = "can_be_drop_prey",
+		"trust_key" = SPONT_PREY,
+	),
+	"dropnom_pred" = list(
+		"host_var" = "can_be_drop_pred",
+		"client_var" = "can_be_drop_pred",
+		"trust_key" = SPONT_PRED,
+	),
+	"drop_vore" = list(
+		"host_var" = "drop_vore",
+		"client_var" = "drop_vore",
+		"trust_key" = DROP_VORE,
+	),
+	"slip_vore" = list(
+		"host_var" = "slip_vore",
+		"client_var" = "slip_vore",
+		"trust_key" = SLIP_VORE,
+	),
+	"stumble_vore" = list(
+		"host_var" = "stumble_vore",
+		"client_var" = "stumble_vore",
+		"trust_key" = STUMBLE_VORE,
+	),
+	// RS Add: Split from stumble (Lira, January 2026)
+	"buckle_vore" = list(
+		"host_var" = "buckle_vore",
+		"client_var" = "buckle_vore",
+		"trust_key" = BUCKLE_VORE,
+	),
+	"throw_vore" = list(
+		"host_var" = "throw_vore",
+		"client_var" = "throw_vore",
+		"trust_key" = THROW_VORE,
+	),
+	"food_vore" = list(
+		"host_var" = "food_vore",
+		"client_var" = "food_vore",
+		"trust_key" = FOOD_VORE,
+	),
+	// RS Add: New emote spont vore (Lira, February 2026)
+	"emote_vore" = list(
+		"host_var" = "emote_vore",
+		"client_var" = "emote_vore",
+		"trust_key" = EMOTE_VORE,
+	),
+	"pickup_pref" = list(
+		"host_var" = "pickup_pref",
+		"client_var" = "pickup_pref",
+		"trust_key" = MICRO_PICKUP,
+	),
+	"spontaneous_tf" = list(
+		"host_var" = "allow_spontaneous_tf",
+		"client_var" = "allow_spontaneous_tf",
+		"trust_key" = SPONT_TF,
+	),
+	"resize" = list(
+		"host_var" = "resizable",
+		"client_var" = "resizable",
+		"trust_key" = RESIZING,
+	)
+)
+
+// RS Add: Spont vore prefs (Lira, January 2026)
+var/static/list/spontaneous_belly_pref_keys = list(
+	DROP_VORE_ON_OTHER,
+	DROP_VORE_ON_YOU,
+	SLIP_VORE,
+	STUMBLE_VORE,
+	BUCKLE_VORE,
+	THROW_VORE,
+	FOOD_VORE,
+	EMOTE_VORE
+)
+
+// RS Add Start: Add RSUI healthbars to vore panel (Lira, October 2025)
+
+var/global/list/rsui_healthbar_overlay_states
+var/global/list/rsui_healthbar_preview_cache = list()
+
+/proc/rsui_healthbar_crop_icon(var/icon/I)
+	if(!I)
+		return null
+	var/width = I.Width()
+	var/height = I.Height()
+	if(!width || !height)
+		return I
+	var/min_x = width
+	var/max_x = 1
+	var/min_y = height
+	var/max_y = 1
+	for(var/y = 1; y <= height; y++)
+		for(var/x = 1; x <= width; x++)
+			if(I.GetPixel(x, y))
+				if(x < min_x)
+					min_x = x
+				if(x > max_x)
+					max_x = x
+				if(y < min_y)
+					min_y = y
+				if(y > max_y)
+					max_y = y
+	if(max_x < min_x || max_y < min_y)
+		return I
+	if(min_x > 1 || min_y > 1 || max_x < width || max_y < height)
+		I.Crop(min_x, min_y, max_x, max_y)
+	return I
+
+/proc/rsui_healthbar_init_states()
+	if(rsui_healthbar_overlay_states)
+		return
+	var/list/states = icon_states('icons/rogue-star/vore_healthbar.dmi')
+	if(!states)
+		states = list()
+	rsui_healthbar_overlay_states = list()
+	for(var/theme in rsui_healthbar_overlay_themes)
+		var/list/theme_states = list(
+			"under" = null,
+			"overlay" = null,
+		)
+		if("[theme]_under" in states)
+			theme_states["under"] = "[theme]_under"
+		var/list/candidates = list("[theme]_0", "[theme]_1", "[theme]_FALSE", "[theme]_TRUE", "[theme]_false", "[theme]_true", "[theme]_still", theme)
+		for(var/state_name in candidates)
+			if(state_name in states)
+				theme_states["overlay"] = state_name
+				break
+		rsui_healthbar_overlay_states[theme] = theme_states
+
+/proc/rsui_healthbar_get_preview(var/theme, var/preview_color)
+	var/cache_color = preview_color ? "[preview_color]" : ""
+	var/cache_key = "[theme]-[cache_color]"
+	var/cached = rsui_healthbar_preview_cache[cache_key]
+	if(cached)
+		return cached
+
+	var/icon/base_icon = icon('icons/rogue-star/vore_healthbar.dmi',"circle", SOUTH, 1)
+	if(!base_icon)
+		return null
+
+	if(!theme)
+		var/base_key = "__rsui_base_circle"
+		var/base_cached = rsui_healthbar_preview_cache[base_key]
+		if(!base_cached)
+			var/icon/no_theme_icon = new(base_icon)
+			rsui_healthbar_crop_icon(no_theme_icon)
+			base_cached = icon2base64(no_theme_icon)
+			rsui_healthbar_preview_cache[base_key] = base_cached
+		rsui_healthbar_preview_cache[cache_key] = base_cached
+		return base_cached
+
+	rsui_healthbar_init_states()
+	var/list/theme_states = rsui_healthbar_overlay_states[theme]
+	if(!theme_states)
+		var/fallback_base = rsui_healthbar_preview_cache["__rsui_base_circle"]
+		if(!fallback_base)
+			var/icon/fallback_icon = new(base_icon)
+			rsui_healthbar_crop_icon(fallback_icon)
+			fallback_base = icon2base64(fallback_icon)
+			rsui_healthbar_preview_cache["__rsui_base_circle"] = fallback_base
+		rsui_healthbar_preview_cache[cache_key] = fallback_base
+		return fallback_base
+
+	var/under_state = theme_states["under"]
+	if(under_state)
+		var/icon/under_icon = icon('icons/rogue-star/vore_healthbar.dmi', under_state, SOUTH, 1)
+		if(preview_color)
+			under_icon.Blend(preview_color, ICON_MULTIPLY)
+		base_icon.Blend(under_icon, ICON_OVERLAY)
+
+	var/overlay_state = theme_states["overlay"]
+	if(overlay_state)
+		var/icon/overlay_icon = icon('icons/rogue-star/vore_healthbar.dmi', overlay_state, SOUTH, 1)
+		if(preview_color)
+			overlay_icon.Blend(preview_color, ICON_MULTIPLY)
+		base_icon.Blend(overlay_icon, ICON_OVERLAY)
+
+	rsui_healthbar_crop_icon(base_icon)
+
+	var/base64 = icon2base64(base_icon)
+	rsui_healthbar_preview_cache[cache_key] = base64
+	return base64
+
+// RS Add End
 
 /mob
 	var/datum/vore_look/vorePanel
@@ -190,6 +380,18 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 	var/list/selected_list = null
 	if(host.vore_selected)
 		var/obj/belly/selected = host.vore_selected
+		// RS Add Start: Add RSUI healthbars to vore panel (Lira, October 2025)
+		var/list/healthbar_theme_cards = list()
+		for(var/theme in rsui_healthbar_overlay_themes)
+			var/list/card = list(
+				"name" = theme,
+				"preview" = rsui_healthbar_get_preview(theme, null),
+			)
+			healthbar_theme_cards += list(card)
+		var/healthbar_current_preview = null
+		if(selected.belly_healthbar_overlay_theme)
+			healthbar_current_preview = rsui_healthbar_get_preview(selected.belly_healthbar_overlay_theme, selected.belly_healthbar_overlay_color)
+		// RS Add End
 		selected_list = list(
 			"belly_name" = selected.name,
 			"is_wet" = selected.is_wet,
@@ -214,6 +416,7 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			"digest_clone" = selected.digest_clone,
 			"bulge_size" = selected.bulge_size,
 			"save_digest_mode" = selected.save_digest_mode,
+			"allow_external_feeding" = selected.allow_external_feeding, // RS Add: Allow external feeding option (Lira, January 2026)
 			"display_absorbed_examine" = selected.display_absorbed_examine,
 			"shrink_grow_size" = selected.shrink_grow_size,
 			"emote_time" = selected.emote_time,
@@ -226,6 +429,10 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			"belly_fullscreen_color_secondary" = selected.belly_fullscreen_color_secondary,
 			"belly_fullscreen_color_trinary" = selected.belly_fullscreen_color_trinary,
 			"colorization_enabled" = selected.colorization_enabled,
+			"belly_healthbar_overlay_theme" = selected.belly_healthbar_overlay_theme,	//RS ADD
+			"belly_healthbar_overlay_color" = selected.belly_healthbar_overlay_color,	//RS ADD
+			"healthbar_theme_options" = healthbar_theme_cards, // RS Add: Add RSUI healthbars to vore panel (Lira, October 2025)
+			"healthbar_current_preview" = healthbar_current_preview, // RS Add: Add RSUI healthbars to vore panel (Lira, October 2025)
 			"eating_privacy_local" = selected.eating_privacy_local,
 			"silicon_belly_overlay_preference"	= selected.silicon_belly_overlay_preference,
 			"visible_belly_minimum_prey"	= selected.visible_belly_minimum_prey,
@@ -242,13 +449,29 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			"resist_animation" = selected.resist_triggers_animation,
 			"voresprite_size_factor" = selected.size_factor_for_sprite,
 			"belly_sprite_to_affect" = selected.belly_sprite_to_affect,
-			"belly_sprite_option_shown" = istype(host, /mob/living/carbon/human) ? (LAZYLEN(host:vore_icon_bellies) >= 1 ? TRUE : FALSE) : FALSE, // TODO: FIX THIS
+			"belly_sprite_option_shown" = istype(host, /mob/living) ? (LAZYLEN(host:vore_icon_bellies) >= 1 ? TRUE : FALSE) : FALSE, // TODO: FIX THIS
 			"tail_option_shown" = istype(host, /mob/living/carbon/human),
 			"tail_to_change_to" = selected.tail_to_change_to,
 			"tail_colouration" = selected.tail_colouration,
 			"tail_extra_overlay" = selected.tail_extra_overlay,
-			"tail_extra_overlay2" = selected.tail_extra_overlay2
+			"tail_extra_overlay2" = selected.tail_extra_overlay2,
+			"drainmode" = selected.drainmode, //RS Edit || Ports VOREStation PR15876
 			// End RS edit
+			"show_liq" = selected.show_liquids, // Begin reagent bellies || RS Add || Chomp Port
+			"show_liq_fullness" = selected.show_fullness_messages,
+			"liquid_voresprite" = selected.count_liquid_for_sprite,
+			"liquid_multiplier" = selected.liquid_multiplier,
+			"custom_reagentcolor" = selected.custom_reagentcolor,
+			"custom_reagentalpha" = selected.custom_reagentalpha,
+			"liquid_overlay" = selected.liquid_overlay,
+			"max_liquid_level" = selected.max_liquid_level,
+			"reagent_touches" = selected.reagent_touches,
+			"mush_overlay" = selected.mush_overlay,
+			"mush_color" = selected.mush_color,
+			"mush_alpha" = selected.mush_alpha,
+			"max_mush" = selected.max_mush,
+			"min_mush" = selected.min_mush,
+			 // End reagent bellies
 		)
 
 		var/list/addons = list()
@@ -264,6 +487,50 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 				vs_flags.Add(flag_name)
 		selected_list["vore_sprite_flags"] = vs_flags
 		// End RS edit
+
+		// Reagent bellies || RS Add || Chomp Port
+		var/list/liq_interacts = list()
+		if(selected.show_liquids)
+			liq_interacts["liq_reagent_gen"] = selected.reagentbellymode
+			liq_interacts["liq_reagent_type"] = selected.reagent_chosen
+			liq_interacts["liq_reagent_name"] = selected.reagent_name
+			liq_interacts["liq_reagent_nutri_rate"] = selected.gen_time
+			liq_interacts["liq_reagent_capacity"] = selected.custom_max_volume
+			liq_interacts["liq_sloshing"] = selected.vorefootsteps_sounds
+			liq_interacts["liq_reagent_addons"] = list()
+			liq_interacts["custom_reagentcolor"] = selected.custom_reagentcolor ? selected.custom_reagentcolor : selected.reagentcolor
+			liq_interacts["custom_reagentalpha"] = selected.custom_reagentalpha ? selected.custom_reagentalpha : "Default"
+			liq_interacts["liquid_overlay"] = selected.liquid_overlay
+			liq_interacts["max_liquid_level"] = selected.max_liquid_level
+			liq_interacts["reagent_touches"] = selected.reagent_touches
+			liq_interacts["mush_overlay"] = selected.mush_overlay
+			liq_interacts["mush_color"] = selected.mush_color
+			liq_interacts["mush_alpha"] = selected.mush_alpha
+			liq_interacts["max_mush"] = selected.max_mush
+			liq_interacts["min_mush"] = selected.min_mush
+			var/list/liq_regs = list()
+			for(var/flag_name in selected.reagent_mode_flag_list)
+				if(selected.reagent_mode_flags & selected.reagent_mode_flag_list[flag_name])
+					liq_regs.Add(flag_name)
+			liq_interacts["liq_reagent_addons"] = liq_regs
+
+		selected_list["liq_interacts"] = liq_interacts
+
+		var/list/liq_messages = list()
+		if(selected.show_fullness_messages)
+			liq_messages["liq_msg_toggle1"] = selected.liquid_fullness1_messages
+			liq_messages["liq_msg_toggle2"] = selected.liquid_fullness2_messages
+			liq_messages["liq_msg_toggle3"] = selected.liquid_fullness3_messages
+			liq_messages["liq_msg_toggle4"] = selected.liquid_fullness4_messages
+			liq_messages["liq_msg_toggle5"] = selected.liquid_fullness5_messages
+
+			liq_messages["liq_msg1"] = selected.liquid_fullness1_messages
+			liq_messages["liq_msg2"] = selected.liquid_fullness2_messages
+			liq_messages["liq_msg3"] = selected.liquid_fullness3_messages
+			liq_messages["liq_msg4"] = selected.liquid_fullness4_messages
+			liq_messages["liq_msg5"] = selected.liquid_fullness5_messages // End reagent bellies
+
+		selected_list["liq_messages"] = liq_messages
 
 		selected_list["egg_type"] = selected.egg_type
 		selected_list["contaminates"] = selected.contaminates
@@ -285,8 +552,22 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			selected_list["interacts"]["absorbchance"] = selected.absorbchance
 			selected_list["interacts"]["digestchance"] = selected.digestchance
 
+
+		selected_list["autotransfer_enabled"] = selected.autotransfer_enabled  //RS Add Start || Chomp Port 2821, 3194, 6155
+		selected_list["autotransfer"] = list()
+		if(selected.autotransfer_enabled)
+			selected_list["autotransfer"]["autotransferchance"] = selected.autotransferchance
+			selected_list["autotransfer"]["autotransferwait"] = selected.autotransferwait
+			selected_list["autotransfer"]["autotransferlocation"] = selected.autotransferlocation
+			selected_list["autotransfer"]["autotransferchance_secondary"] = selected.autotransferchance_secondary
+			selected_list["autotransfer"]["autotransferlocation_secondary"] = selected.autotransferlocation_secondary
+			selected_list["autotransfer"]["autotransfer_min_amount"] = selected.autotransfer_min_amount
+			selected_list["autotransfer"]["autotransfer_max_amount"] = selected.autotransfer_max_amount//RS Add End
+
 		selected_list["disable_hud"] = selected.disable_hud
 		selected_list["colorization_enabled"] = selected.colorization_enabled
+		selected_list["belly_healthbar_overlay_theme"] = selected.belly_healthbar_overlay_theme	//RS ADD
+		selected_list["belly_healthbar_overlay_color"] = selected.belly_healthbar_overlay_color	//RS ADD
 		selected_list["belly_fullscreen_color"] = selected.belly_fullscreen_color
 		selected_list["belly_fullscreen_color_secondary"] = selected.belly_fullscreen_color_secondary
 		selected_list["belly_fullscreen_color_trinary"] = selected.belly_fullscreen_color_trinary
@@ -343,8 +624,11 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 		"drop_vore" = host.drop_vore,
 		"slip_vore" = host.slip_vore,
 		"stumble_vore" = host.stumble_vore,
+		"buckle_vore" = host.buckle_vore, // RS Add: Split from stumble (Lira, January 2026)
 		"throw_vore" = host.throw_vore,
 		"food_vore" = host.food_vore,
+		"emote_vore" = host.emote_vore, // RS Add: New emote spont vore (Lira, February 2026)
+		"spont_belly_prefs" = islist(host.spont_belly_prefs) ? host.spont_belly_prefs.Copy() : list(), // RS Add: Spont vore prefs (Lira, January 2026)
 		"nutrition_message_visible" = host.nutrition_message_visible,
 		"nutrition_messages" = host.nutrition_messages,
 		"weight_message_visible" = host.weight_message_visible,
@@ -354,9 +638,86 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 		"allowcontamination" = istype(host, /mob/living/carbon/human) ? host:allow_contaminate : TRUE, // RS edit
 		"allowstripping" = istype(host, /mob/living/carbon/human) ? host:allow_stripping : TRUE, // RS edit
 		"allowssdvore" = host.ssd_vore, // RS edit
+		"glowing_belly"  = host.glowy_belly,
+		"autotransferable" = host.autotransferable, //RS Add || Port Chomp 3200
 	)
 
+	// RS Add start: Trustlist data (Lira, September 2025)
+	var/list/trustlist_toggles = list()
+	if(host.client && host.client.prefs_vr)
+		if(islist(host.client.prefs_vr.vore_whitelist_toggles))
+			trustlist_toggles = host.client.prefs_vr.vore_whitelist_toggles.Copy()
+	data["trustlist_toggles"] = trustlist_toggles
+
+	var/trust_mode = WL_BOTH
+	if(host.client && host.client.prefs && host.client.prefs.vore_whitelist_preference)
+		trust_mode = host.client.prefs.vore_whitelist_preference
+	data["trustlist_mode"] = trust_mode
+	// RS Add End
+
 	return data
+
+// RS Add: Incorporate trustlist (Lira, September 2025)
+/datum/vore_look/proc/set_trustlist_preference_state(var/pref_id, var/state)
+	if(!pref_id || !host)
+		return FALSE
+
+	var/list/spec = vore_trustlist_preference_map[pref_id]
+	if(!spec)
+		return FALSE
+
+	var/host_var = spec["host_var"]
+	if(!(host_var in host.vars))
+		return FALSE
+
+	if(state)
+		state = lowertext(state)
+
+	var/trust_key = spec["trust_key"]
+	var/current_enabled = !!host.vars[host_var]
+	var/in_trust = FALSE
+	var/datum/vore_preferences/client_prefs = null
+	if(host.client && host.client.prefs_vr)
+		client_prefs = host.client.prefs_vr
+		if(!islist(client_prefs.vore_whitelist_toggles))
+			client_prefs.vore_whitelist_toggles = list()
+		if(trust_key)
+			in_trust = (trust_key in client_prefs.vore_whitelist_toggles)
+
+	var/current_state = "disabled"
+	if(current_enabled)
+		if(in_trust)
+			current_state = "trustlist"
+		else
+			current_state = "enabled"
+
+	if(!(state == "disabled" || state == "enabled" || state == "trustlist"))
+		switch(current_state)
+			if("disabled")
+				state = "enabled"
+			if("enabled")
+				state = "trustlist"
+			if("trustlist")
+				state = "disabled"
+
+	if(state == current_state)
+		return FALSE
+
+	var/enable_value = (state != "disabled")
+	host.vars[host_var] = enable_value
+
+	if(client_prefs)
+		var/client_var = spec["client_var"]
+		if(client_var && (client_var in client_prefs.vars))
+			client_prefs.vars[client_var] = enable_value
+		if(trust_key)
+			if(state == "trustlist")
+				client_prefs.vore_whitelist_toggles |= trust_key
+			else
+				client_prefs.vore_whitelist_toggles -= trust_key
+
+	unsaved_changes = TRUE
+	return TRUE
 
 /datum/vore_look/tgui_act(action, params)
 	if(..())
@@ -408,6 +769,13 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			unsaved_changes = TRUE
 			return TRUE
 
+//RS ADD START: Adds vorebelly importation from CHOMPStation PR6177
+		if("importpanel")
+			import_belly(host)
+			return TRUE
+
+//RS ADD END
+
 		if("bellypick")
 			host.vore_selected = locate(params["bellypick"])
 			return TRUE
@@ -426,6 +794,26 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 
 		if("set_attribute")
 			return set_attr(usr, params)
+		// RS Add: Trustlist actions (Lira, September 2025)
+		if("set_preference_state")
+			set_trustlist_preference_state(params["pref"], params["state"])
+			return TRUE
+		if("trustlist_edit")
+			if(isliving(host))
+				var/mob/living/L = host
+				L.toggle_vore_whitelist()
+			return TRUE
+		if("trustlist_print")
+			if(isliving(host))
+				var/mob/living/L = host
+				L.print_vore_whitelist()
+			return TRUE
+		if("trustlist_mode")
+			if(isliving(host))
+				var/mob/living/L = host
+				L.toggle_vore_trustlist_mode(params["mode"])
+			return TRUE
+		// RS Add End
 
 		if("saveprefs")
 			if(isnewplayer(host))
@@ -437,9 +825,9 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 				if(choice != "Yes, save.")
 					return TRUE
 			if(!host.save_vore_prefs())
-				tgui_alert_async(usr, "ERROR: Virgo-specific preferences failed to save!","Error")
+				tgui_alert_async(usr, "ERROR: Rogue Star-specific preferences failed to save!","Error") // RS Edit: Change server name reference (Lira, March 2026)
 			else
-				to_chat(usr, "<span class='notice'>Virgo-specific preferences saved!</span>")
+				to_chat(usr, "<span class='notice'>Rogue Star-specific preferences saved!</span>") // RS Edit: Change server name reference (Lira, March 2026)
 				unsaved_changes = FALSE
 			return TRUE
 		if("reloadprefs")
@@ -447,9 +835,9 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			if(alert != "Reload")
 				return FALSE
 			if(!host.apply_vore_prefs())
-				tgui_alert_async(usr, "ERROR: Virgo-specific preferences failed to apply!","Error")
+				tgui_alert_async(usr, "ERROR: Rogue Star-specific preferences failed to apply!","Error") // RS Edit: Change server name reference (Lira, March 2026)
 			else
-				to_chat(usr,"<span class='notice'>Virgo-specific preferences applied from active slot!</span>")
+				to_chat(usr,"<span class='notice'>Rogue Star-specific preferences applied from active slot!</span>") // RS Edit: Change server name reference (Lira, March 2026)
 				unsaved_changes = FALSE
 			return TRUE
 		if("exportpanel")
@@ -494,16 +882,10 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			unsaved_changes = TRUE
 			return TRUE
 		if("toggle_dropnom_pred")
-			host.can_be_drop_pred = !host.can_be_drop_pred
-			if(host.client.prefs_vr)
-				host.client.prefs_vr.can_be_drop_pred = host.can_be_drop_pred
-			unsaved_changes = TRUE
+			set_trustlist_preference_state("dropnom_pred") // RS Add: Trustlist integration (Lira, September 2025)
 			return TRUE
 		if("toggle_dropnom_prey")
-			host.can_be_drop_prey = !host.can_be_drop_prey
-			if(host.client.prefs_vr)
-				host.client.prefs_vr.can_be_drop_prey = host.can_be_drop_prey
-			unsaved_changes = TRUE
+			set_trustlist_preference_state("dropnom_prey") // RS Add: Trustlist integration (Lira, September 2025)
 			return TRUE
 		if("toggle_allow_inbelly_spawning")
 			host.allow_inbelly_spawning = !host.allow_inbelly_spawning
@@ -512,10 +894,7 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			unsaved_changes = TRUE
 			return TRUE
 		if("toggle_allow_spontaneous_tf")
-			host.allow_spontaneous_tf = !host.allow_spontaneous_tf
-			if(host.client.prefs_vr)
-				host.client.prefs_vr.allow_spontaneous_tf = host.allow_spontaneous_tf
-			unsaved_changes = TRUE
+			set_trustlist_preference_state("spontaneous_tf") // RS Add: Trustlist integration (Lira, September 2025)
 			return TRUE
 		if("toggle_digest")
 			host.digestable = !host.digestable
@@ -536,10 +915,7 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			unsaved_changes = TRUE
 			return TRUE
 		if("toggle_resize")
-			host.resizable = !host.resizable
-			if(host.client.prefs_vr)
-				host.client.prefs_vr.resizable = host.resizable
-			unsaved_changes = TRUE
+			set_trustlist_preference_state("resize") // RS Add: Trustlist integration (Lira, September 2025)
 			return TRUE
 		if("toggle_feed")
 			host.feeding = !host.feeding
@@ -572,10 +948,7 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			unsaved_changes = TRUE
 			return TRUE
 		if("toggle_pickuppref")
-			host.pickup_pref = !host.pickup_pref
-			if(host.client.prefs_vr)
-				host.client.prefs_vr.pickup_pref = host.pickup_pref
-			unsaved_changes = TRUE
+			set_trustlist_preference_state("pickup_pref") // RS Add: Trustlist integration (Lira, September 2025)
 			return TRUE
 		if("toggle_healbelly")
 			host.permit_healbelly = !host.permit_healbelly
@@ -592,6 +965,7 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 				host.clear_fullscreen("belly2")
 				host.clear_fullscreen("belly3")
 				host.clear_fullscreen("belly4")
+				host.clear_fullscreen("belly5") // Reagent bellies || RS Add || Chomp Port
 				if(!host.hud_used.hud_shown)
 					host.toggle_hud_vis()
 			unsaved_changes = TRUE
@@ -600,24 +974,66 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			host.noisy = !host.noisy
 			unsaved_changes = TRUE
 			return TRUE
-		if("toggle_drop_vore")
-			host.drop_vore = !host.drop_vore
+		// Begin reagent bellies || RS Add || Chomp Port
+		if("liq_set_attribute")
+			return liq_set_attr(usr, params)
+		if("liq_set_messages")
+			return liq_set_msg(usr, params)
+		// End reagent bellies
+		if("toggle_autotransferable") //RS Add Start || Port Chomp 3200
+			host.autotransferable = !host.autotransferable
+			if(host.client.prefs_vr)
+				host.client.prefs_vr.autotransferable = host.autotransferable
 			unsaved_changes = TRUE
+			return TRUE //RS Add End
+		if("toggle_drop_vore")
+			set_trustlist_preference_state("drop_vore") // RS Add: Trustlist integration (Lira, September 2025)
 			return TRUE
 		if("toggle_slip_vore")
-			host.slip_vore = !host.slip_vore
-			unsaved_changes = TRUE
+			set_trustlist_preference_state("slip_vore") // RS Add: Trustlist integration (Lira, September 2025)
 			return TRUE
 		if("toggle_stumble_vore")
-			host.stumble_vore = !host.stumble_vore
-			unsaved_changes = TRUE
+			set_trustlist_preference_state("stumble_vore") // RS Add: Trustlist integration (Lira, September 2025)
+			return TRUE
+		// RS Add: Split from stumble (Lira, January 2026)
+		if("toggle_buckle_vore")
+			set_trustlist_preference_state("buckle_vore")
 			return TRUE
 		if("toggle_throw_vore")
-			host.throw_vore = !host.throw_vore
-			unsaved_changes = TRUE
+			set_trustlist_preference_state("throw_vore") // RS Add: Trustlist integration (Lira, September 2025)
 			return TRUE
 		if("toggle_food_vore")
-			host.food_vore = !host.food_vore
+			set_trustlist_preference_state("food_vore") // RS Add: Trustlist integration (Lira, September 2025)
+			return TRUE
+		// RS Add: New emote spont vore (Lira, February 2026)
+		if("toggle_emote_vore")
+			set_trustlist_preference_state("emote_vore")
+			return TRUE
+		// RS Add: Spont vore prefs (Lira, January 2026)
+		if("set_spont_belly_pref")
+			var/pref_id = params["pref"]
+			if(!(pref_id in spontaneous_belly_pref_keys))
+				return TRUE
+			if(!islist(host.spont_belly_prefs))
+				host.spont_belly_prefs = list()
+			var/default_label = "Default (Selected Belly)"
+			var/list/belly_choices = list(default_label)
+			for(var/obj/belly/B as anything in host.vore_organs)
+				belly_choices += B.name
+			var/current_choice = host.spont_belly_prefs[pref_id]
+			if(!current_choice)
+				current_choice = default_label
+			var/choice = tgui_input_list(usr, "Which belly should [pref_id] send prey to?", "Spontaneous Vore Belly", belly_choices, current_choice)
+			if(!choice)
+				return TRUE
+			if(choice == default_label)
+				host.spont_belly_prefs[pref_id] = null
+			else
+				host.spont_belly_prefs[pref_id] = choice
+			if(host.client && host.client.prefs_vr)
+				if(!islist(host.client.prefs_vr.spont_belly_prefs))
+					host.client.prefs_vr.spont_belly_prefs = list()
+				host.client.prefs_vr.spont_belly_prefs[pref_id] = host.spont_belly_prefs[pref_id]
 			unsaved_changes = TRUE
 			return TRUE
 		if("switch_selective_mode_pref")
@@ -668,6 +1084,17 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 				host.client.prefs_vr.ssd_vore = host.ssd_vore
 			unsaved_changes = TRUE
 			return TRUE
+		if("toggle_glow")
+			host.glowy_belly = !host.glowy_belly
+			if(host.client.prefs_vr)
+				host.client.prefs_vr.glowy_belly = host.client.prefs_vr.glowy_belly
+			unsaved_changes = TRUE
+			host.update_icon()
+			if(istype(host, /mob/living/carbon/human))
+				var/mob/living/carbon/human/our_owner = host
+				our_owner.update_vore_belly_sprite()
+				our_owner.update_vore_tail_sprite()
+			return TRUE
 		// End RS edit
 
 /datum/vore_look/proc/pick_from_inside(mob/user, params)
@@ -679,7 +1106,7 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 
 	var/intent = "Examine"
 	if(isliving(target))
-		intent = tgui_alert(usr, "What do you want to do to them?","Query",list("Examine","Help Out","Devour"))
+		intent = tgui_alert(usr, "What do you want to do to them?","Query",list("Examine","Healthbar","Help Out","Devour"))	//RS EDIT
 
 	else if(istype(target, /obj/item))
 		intent = tgui_alert(usr, "What do you want to do to that?","Query",list("Examine","Use Hand"))
@@ -748,6 +1175,8 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 					M.absorbed = FALSE
 					OB.handle_absorb_langs(M, OB.owner)
 				TB.nom_mob(M)
+		if("Healthbar")			//RS ADD
+			new /obj/screen/movable/rs_ui/healthbar(user,target,user)	//RS ADD
 
 /datum/vore_look/proc/pick_from_outside(mob/user, params)
 	var/intent
@@ -818,183 +1247,48 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 	var/atom/movable/target = locate(params["pick"])
 	if(!(target in host.vore_selected))
 		return TRUE // Not in our X anymore, update UI
-	var/list/available_options = list("Examine", "Eject", "Move", "Advance", "Transfer")
+	var/list/available_options = list("Examine", "Eject", "Move", "Advance", "Transfer")	//RS EDIT
 	if(ishuman(target))
 		available_options += "Transform"
 	if(isliving(target))
 		var/mob/living/datarget = target
+		available_options += "Health Bar"	//RS ADD
+		available_options += "Print Health Bar"	//RS ADD
 		if(datarget.client)
 			available_options += "Process"
 	intent = tgui_input_list(user, "What would you like to do with [target]?", "Vore Pick", available_options)
 	switch(intent)
-		if("Examine")
-			var/list/results = target.examine(host)
-			if(!results || !results.len)
-				results = list("You were unable to examine that. Tell a developer!")
-			to_chat(user, jointext(results, "<br>"))
-			if(isliving(target))
-				var/mob/living/ourtarget = target
-				ourtarget.chat_healthbar(user)
+		if("Examine")	//RS EDIT START - Generalized BABY
+			host.vore_selected.examine_target(target,user)
 			return TRUE
-
 		if("Eject")
-			if(host.stat)
-				to_chat(user,"<span class='warning'>You can't do that in your state!</span>")
-				return TRUE
-
-			host.vore_selected.release_specific_contents(target)
+			host.vore_selected.eject_target(target)
 			return TRUE
-
 		if("Move")
-			if(host.stat)
-				to_chat(user,"<span class='warning'>You can't do that in your state!</span>")
-				return TRUE
-			var/obj/belly/choice = tgui_input_list(usr, "Move [target] where?","Select Belly", host.vore_organs)
-			if(!choice || !(target in host.vore_selected))
-				return TRUE
-			to_chat(target,"<span class='warning'>You're squished from [host]'s [lowertext(host.vore_selected.name)] to their [lowertext(choice.name)]!</span>")
-			host.vore_selected.transfer_contents(target, choice)
-
-
+			host.vore_selected.move_target(target)
+			return TRUE
 		if("Transfer")
-			if(host.stat)
-				to_chat(user,"<span class='warning'>You can't do that in your state!</span>")
-				return TRUE
-			if(isliving(target))
-				var/mob/living/p = target
-				if(!p.ssd_vore_check(host))
-					return
-
-			var/mob/living/belly_owner = host
-
-			var/list/viable_candidates = list()
-			for(var/mob/living/candidate in range(1, host))
-				if(istype(candidate) && !(candidate == host))
-					if(candidate.vore_organs.len && candidate.feeding && !candidate.no_vore)
-						viable_candidates += candidate
-			if(!viable_candidates.len)
-				to_chat(user, "<span class='notice'>There are no viable candidates around you!</span>")
-				return TRUE
-			belly_owner = tgui_input_list(user, "Who do you want to receive the target?", "Select Predator", viable_candidates)
-
-			if(!belly_owner || !(belly_owner in range(1, host)))
-				return TRUE
-
-			var/obj/belly/choice = tgui_input_list(user, "Move [target] where?","Select Belly", belly_owner.vore_organs)
-			if(!choice || !(target in host.vore_selected) || !belly_owner || !(belly_owner in range(1, host)))
-				return TRUE
-
-			if(belly_owner != host)
-				to_chat(user, "<span class='notice'>Transfer offer sent. Await their response.</span>")
-				var/accepted = tgui_alert(belly_owner, "[host] is trying to transfer [target] from their [lowertext(host.vore_selected.name)] into your [lowertext(choice.name)]. Do you accept?", "Feeding Offer", list("Yes", "No"))
-				if(accepted != "Yes")
-					to_chat(user, "<span class='warning'>[belly_owner] refused the transfer!!</span>")
-					return TRUE
-				if(!belly_owner || !(belly_owner in range(1, host)))
-					return TRUE
-				to_chat(target,"<span class='warning'>You're squished from [host]'s [lowertext(host.vore_selected.name)] to [belly_owner]'s [lowertext(choice.name)]!</span>")
-				to_chat(belly_owner,"<span class='warning'>[target] is squished from [host]'s [lowertext(host.vore_selected.name)] to your [lowertext(choice.name)]!</span>")
-				host.vore_selected.transfer_contents(target, choice)
-			else
-				to_chat(target,"<span class='warning'>You're squished from [host]'s [lowertext(host.vore_selected.name)] to their [lowertext(choice.name)]!</span>")
-				host.vore_selected.transfer_contents(target, choice)
+			host.vore_selected.transfer_target(target)
 			return TRUE
-
 		if("Transform")
-			if(host.stat)
-				to_chat(user,"<span class='warning'>You can't do that in your state!</span>")
-				return TRUE
-
-			var/mob/living/carbon/human/H = target
-			if(!istype(H))
-				return
-
-			var/datum/tgui_module/appearance_changer/vore/V = new(host, H)
-			V.tgui_interact(user)
+			host.vore_selected.transform_target(target)
 			return TRUE
-
 		if("Process")
-			var/mob/living/ourtarget = target
-			var/list/process_options = list()
-
-			if(ourtarget.digestable)
-				process_options += "Digest"
-
-			if(ourtarget.absorbable)
-				process_options += "Absorb"
-
-			if(process_options.len)
-				process_options += "Cancel"
-			else
-				to_chat(usr, "<span class= 'warning'>You cannot instantly process [ourtarget].</span>")
-				return
-
-			var/ourchoice = tgui_input_list(usr, "How would you prefer to process \the [target]? This will perform the given action instantly if the prey accepts.","Instant Process", process_options)
-			if(!ourchoice)
-				return
-			if(!ourtarget.client)
-				to_chat(usr, "<span class= 'warning'>You cannot instantly process [ourtarget].</span>")
-				return
-			var/obj/belly/b = ourtarget.loc
-			switch(ourchoice)
-				if("Digest")
-					if(ourtarget.absorbed)
-						to_chat(usr, "<span class= 'warning'>\The [ourtarget] is absorbed, and cannot presently be digested.</span>")
-						return
-					if(tgui_alert(ourtarget, "\The [usr] is attempting to instantly digest you. Is this something you are okay with happening to you?","Instant Digest", list("No", "Yes")) != "Yes")
-						to_chat(usr, "<span class= 'warning'>\The [ourtarget] declined your digest attempt.</span>")
-						to_chat(ourtarget, "<span class= 'warning'>You declined the digest attempt.</span>")
-						return
-					if(ourtarget.loc != b)
-						to_chat(usr, "<span class= 'warning'>\The [ourtarget] is no longer in \the [b].</span>")
-						return
-					if(isliving(usr))
-						var/mob/living/l = usr
-						var/thismuch = ourtarget.health + 100
-						if(ishuman(l))
-							var/mob/living/carbon/human/h = l
-							thismuch = thismuch * h.species.digestion_nutrition_modifier
-						l.adjust_nutrition(thismuch)
-					ourtarget.mind?.vore_death = TRUE
-					ourtarget.death()		// To make sure all on-death procs get properly called
-					if(ourtarget)
-						b.handle_digestion_death(ourtarget)
-				if("Absorb")
-					if(tgui_alert(ourtarget, "\The [usr] is attempting to instantly absorb you. Is this something you are okay with happening to you?","Instant Absorb", list("No", "Yes")) != "Yes")
-						to_chat(usr, "<span class= 'warning'>\The [ourtarget] declined your absorb attempt.</span>")
-						to_chat(ourtarget, "<span class= 'warning'>You declined the absorb attempt.</span>")
-						return
-					if(ourtarget.loc != b)
-						to_chat(usr, "<span class= 'warning'>\The [ourtarget] is no longer in \the [b].</span>")
-						return
-					if(isliving(usr))
-						var/mob/living/l = usr
-						l.adjust_nutrition(ourtarget.nutrition)
-						var/n = 0 - ourtarget.nutrition
-						ourtarget.adjust_nutrition(n)
-					b.absorb_living(ourtarget)
-				if("Cancel")
-					return
-		//RS ADD START
+			host.vore_selected.process_target(target)
+			return TRUE
 		if("Advance")
-			if(host.stat)
-				to_chat(user,"<span class='warning'>You can't do that in your state!</span>")
-				return TRUE
-			var/list/choices = list()
-			var/obj/belly/choice
-			for(var/obj/belly/b in host.vore_organs)
-				if(b.name == host.vore_selected.transferlocation || b.name == host.vore_selected.transferlocation_secondary)
-					choices += b
-			if(!choices.len)
-				to_chat(user,"<span class='warning'>You haven't configured any transfer locations for your [lowertext(host.vore_selected)]. Please configure at least one transfer location in order to advance your [lowertext(host.vore_selected)]'s contents.</span>")
-			else
-				choice = tgui_input_list(user, "Advance your [lowertext(host.vore_selected)]'s contents to which belly?","Select Belly", choices)
-
-			if(!choice || !(target in host.vore_selected))
-				return TRUE
-			to_chat(target,"<span class='warning'>You're squished from [host]'s [lowertext(host.vore_selected.name)] to their [lowertext(choice.name)]!</span>")
-			host.vore_selected.transfer_contents(target, choice)
-		//RS ADD END
+			host.vore_selected.advance_target(target)
+			return TRUE
+		if("Health Bar")
+			if(isliving(target))
+				host.vore_selected.healthbar_target(target)
+			return TRUE
+		if("Print Health Bar")
+			if(isliving(target))
+				var/mob/living/L = target
+				L.chat_healthbar(host)
+			return TRUE
+		//RS EDIT END
 
 /datum/vore_look/proc/set_attr(mob/user, params)
 	if(!host.vore_selected)
@@ -1044,6 +1338,13 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 				return FALSE
 			host.vore_selected.mode_flags ^= host.vore_selected.mode_flag_list[toggle_addon]
 			host.vore_selected.items_preserved.Cut() //Re-evaltuate all items in belly on
+			host.vore_selected.slow_digestion = FALSE //RS edit start
+			host.vore_selected.slow_brutal = FALSE
+			if(host.vore_selected.mode_flags & DM_FLAG_SLOWBODY) //Ports CHOMPStation PR 5184
+				host.vore_selected.slow_digestion = TRUE //CHOMPStation PR 5184 port end
+			if(host.vore_selected.mode_flags & DM_FLAG_SLOWBRUTAL)
+				host.vore_selected.slow_brutal = TRUE
+				host.vore_selected.slow_digestion = TRUE //RS edit end
 			. = TRUE
 		if("b_item_mode")
 			var/list/menu_list = host.vore_selected.item_digest_modes.Copy()
@@ -1289,10 +1590,14 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 		if("b_silicon_belly")
 			var/belly_choice = tgui_alert(usr, "Choose whether you'd like your belly overlay to show from sleepers \
 			or from normal vore bellies. NOTE: This ONLY applies to silicons, not human mobs!", "Belly Overlay Preference",
-			list("Sleeper", "Vorebelly"))
+			list("Sleeper", "Vorebelly", "Both"))
 			if(belly_choice == null)
 				return FALSE
-			host.vore_selected.silicon_belly_overlay_preference = belly_choice
+			//RS Edit Start //CHOMPEdit Start, changed to sync the setting among all sleepers for multibelly support
+			for (var/belly in host.vore_organs)
+				var/obj/belly/B = belly
+				B.silicon_belly_overlay_preference = belly_choice
+			//RS Edit End
 			host.update_icon()
 			. = TRUE
 		if("b_min_belly_number_flat")
@@ -1451,6 +1756,17 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			var/new_new_damage = CLAMP(new_damage, 0, 6)
 			host.vore_selected.digest_clone = new_new_damage
 			. = TRUE
+		//RS Edit || Ports VOREStation PR15876
+		if("b_drainmode")
+			var/list/menu_list = host.vore_selected.drainmodes.Copy()
+			var/new_drainmode = tgui_input_list(usr, "Choose Mode (currently [host.vore_selected.digest_mode])", "Mode Choice", menu_list)
+			if(!new_drainmode)
+				return FALSE
+		//RS Edit || Ports VOREStation PR15876
+
+			host.vore_selected.drainmode = new_drainmode
+			host.vore_selected.updateVRPanels()
+
 		if("b_emoteactive")
 			host.vore_selected.emote_active = !host.vore_selected.emote_active
 			. = TRUE
@@ -1528,6 +1844,52 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			if(!isnull(digest_chance_input))
 				host.vore_selected.digestchance = sanitize_integer(digest_chance_input, 0, 100, initial(host.vore_selected.digestchance))
 			. = TRUE
+		if("b_autotransferchance") //RS Add Start || Port Chomp 2821, 2934, 6155
+			var/autotransferchance_input = input(user, "Set belly auto-transfer chance (as %). You must also set the location for this to have any effect.", "Auto-Transfer Chance") as num|null
+			if(!isnull(autotransferchance_input))
+				host.vore_selected.autotransferchance = sanitize_integer(autotransferchance_input, 0, 100, initial(host.vore_selected.autotransferchance))
+			. = TRUE
+		if("b_autotransferwait")
+			var/autotransferwait_input = input(user, "Set minimum number of seconds for auto-transfer wait delay.", "Auto-Transfer Time") as num|null //Wiggle room for rougher time resolution in process cycles.
+			if(!isnull(autotransferwait_input))
+				host.vore_selected.autotransferwait = sanitize_integer(autotransferwait_input*10, 10, 18000, initial(host.vore_selected.autotransferwait))
+			. = TRUE
+		if("b_autotransferlocation")
+			var/obj/belly/choice = tgui_input_list(usr, "Where do you want your [lowertext(host.vore_selected.name)] auto-transfer to?","Select Belly", (host.vore_organs + "None - Remove" - host.vore_selected))
+			if(!choice) //They cancelled, no changes
+				return FALSE
+			else if(choice == "None - Remove")
+				host.vore_selected.autotransferlocation = null
+			else
+				host.vore_selected.autotransferlocation = choice.name
+			. = TRUE
+		if("b_autotransferchance_secondary")
+			var/autotransferchance_secondary_input = input(user, "Set secondary belly auto-transfer chance (as %). You must also set the location for this to have any effect.", "Secondary Auto-Transfer Chance") as num|null
+			if(!isnull(autotransferchance_secondary_input))
+				host.vore_selected.autotransferchance_secondary = sanitize_integer(autotransferchance_secondary_input, 0, 100, initial(host.vore_selected.autotransferchance_secondary))
+			. = TRUE
+		if("b_autotransferlocation_secondary")
+			var/obj/belly/choice = tgui_input_list(usr, "Where do you want your secondary [lowertext(host.vore_selected.name)] auto-transfer to?","Select Belly", (host.vore_organs + "None - Remove" - host.vore_selected))
+			if(!choice) //They cancelled, no changes
+				return FALSE
+			else if(choice == "None - Remove")
+				host.vore_selected.autotransferlocation_secondary = null
+			else
+				host.vore_selected.autotransferlocation_secondary = choice.name
+			. = TRUE
+		if("b_autotransfer_min_amount")
+			var/autotransfer_min_amount_input = input(user, "Set the minimum amount of items your belly can belly auto-transfer at once. Set to 0 for no limit.", "Auto-Transfer Min Amount") as num|null
+			if(!isnull(autotransfer_min_amount_input))
+				host.vore_selected.autotransfer_min_amount = sanitize_integer(autotransfer_min_amount_input, 0, 100, initial(host.vore_selected.autotransfer_min_amount))
+			. = TRUE
+		if("b_autotransfer_max_amount")
+			var/autotransfer_max_amount_input = input(user, "Set the maximum amount of items your belly can belly auto-transfer at once. Set to 0 for no limit.", "Auto-Transfer Max Amount") as num|null
+			if(!isnull(autotransfer_max_amount_input))
+				host.vore_selected.autotransfer_max_amount = sanitize_integer(autotransfer_max_amount_input, 0, 100, initial(host.vore_selected.autotransfer_max_amount))
+			. = TRUE
+		if("b_autotransfer_enabled")
+			host.vore_selected.autotransfer_enabled = !host.vore_selected.autotransfer_enabled
+			. = TRUE //RS Add End
 		if("b_fullscreen")
 			host.vore_selected.belly_fullscreen = params["val"]
 			. = TRUE
@@ -1544,6 +1906,59 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 		if("b_clear_preview")
 			host.vore_selected.clear_preview(host) //Clears the stomach overlay. This is a failsafe but shouldn't occur.
 			. = TRUE
+		// RS Add Start:  Add RSUI healthbars to vore panel (Lira, October 2025)
+		if("b_healthbar_theme")
+			var/list/options = rsui_healthbar_overlay_themes.Copy()
+			options += "Remove"
+			var/default_choice = host.vore_selected.belly_healthbar_overlay_theme
+			var/selection = tgui_input_list(usr, "Select a style! Remember to go save your vore panel after you select one if you want it to stick!", "RS-UI Customization", options, default_choice)
+			if(!selection)
+				return FALSE
+			if(selection == "Remove")
+				selection = null
+			if(host.vore_selected.belly_healthbar_overlay_theme == selection)
+				return FALSE
+			host.vore_selected.belly_healthbar_overlay_theme = selection
+			if(!selection)
+				host.vore_selected.belly_healthbar_overlay_color = null
+			. = TRUE
+		if("b_healthbar_theme_set")
+			var/theme = params["theme"]
+			if(!theme)
+				return FALSE
+			if(!istext(theme))
+				return FALSE
+			if(!(theme in rsui_healthbar_overlay_themes))
+				return FALSE
+			if(host.vore_selected.belly_healthbar_overlay_theme == theme)
+				return FALSE
+			host.vore_selected.belly_healthbar_overlay_theme = theme
+			. = TRUE
+		if("b_healthbar_theme_clear")
+			if(isnull(host.vore_selected.belly_healthbar_overlay_theme))
+				return FALSE
+			host.vore_selected.belly_healthbar_overlay_theme = null
+			host.vore_selected.belly_healthbar_overlay_color = null
+			. = TRUE
+		if("b_healthbar_color")
+			if(!host.vore_selected.belly_healthbar_overlay_theme)
+				return FALSE
+			var/current_color = host.vore_selected.belly_healthbar_overlay_color
+			var/newcolor = input(usr, "Choose an RS-UI overlay color.", "RS-UI Coloration", current_color) as color|null
+			if(!newcolor)
+				return FALSE
+			if(current_color == newcolor)
+				return FALSE
+			host.vore_selected.belly_healthbar_overlay_color = newcolor
+			. = TRUE
+		if("b_healthbar_color_clear")
+			if(!host.vore_selected.belly_healthbar_overlay_theme)
+				return FALSE
+			if(isnull(host.vore_selected.belly_healthbar_overlay_color))
+				return FALSE
+			host.vore_selected.belly_healthbar_overlay_color = null
+			. = TRUE
+		// RS Add End
 		if("b_fullscreen_color")
 			var/newcolor = input(usr, "Choose a color.", "", host.vore_selected.belly_fullscreen_color) as color|null
 			if(newcolor)
@@ -1561,6 +1976,10 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			. = TRUE
 		if("b_save_digest_mode")
 			host.vore_selected.save_digest_mode = !host.vore_selected.save_digest_mode
+			. = TRUE
+		// RS Add: Allow external feeding option (Lira, January 2026)
+		if("b_allow_external_feeding")
+			host.vore_selected.allow_external_feeding = !host.vore_selected.allow_external_feeding
 			. = TRUE
 		if("b_del")
 			var/alert = tgui_alert(usr, "Are you sure you want to delete your [lowertext(host.vore_selected.name)]?","Confirmation",list("Cancel","Delete"))
@@ -1596,98 +2015,336 @@ var/global/list/belly_colorable_only_fullscreens = list("a_synth_flesh_mono",
 			. = TRUE
 		// Begin RS edit
 		if("b_belly_sprite_to_affect")
-			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
-				var/belly_choice = tgui_input_list(usr, "Which belly sprite do you want your [lowertext(hhost.vore_selected.name)] to affect?","Select Region", hhost.vore_icon_bellies)
-				if(!belly_choice) //They cancelled, no changes
-					return FALSE
-				else
-					hhost.vore_selected.belly_sprite_to_affect = belly_choice
-					hhost.update_fullness()
-				. = TRUE
+			var/belly_choice = tgui_input_list(usr, "Which belly sprite do you want your [lowertext(host.vore_selected.name)] to affect?","Select Region", host:vore_icon_bellies)
+			if(!belly_choice) //They cancelled, no changes
+				return FALSE
+			else
+				host.vore_selected.belly_sprite_to_affect = belly_choice
+				host:update_fullness()
+			. = TRUE
+		if("b_silicon_belly") //RS Edit Start
+			var/belly_choice = tgui_alert(user, "Choose whether you'd like your belly overlay to show from sleepers, \
+			normal vore bellies, or an average of the two. NOTE: This ONLY applies to silicons, not human mobs!", "Belly Overlay \
+			Preference",
+			list("Sleeper", "Vorebelly", "Both"))
+			if(belly_choice == null)
+				return FALSE
+			//CHOMPEdit Start, changed to sync the setting among all sleepers for multibelly support
+			for (var/belly in host.vore_organs)
+				var/obj/belly/B = belly
+				B.silicon_belly_overlay_preference = belly_choice
+			//CHOMPEdit End
+			host.update_icon()
+			. = TRUE //RS Edit End
 		if("b_affects_vore_sprites")
-			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
-				hhost.vore_selected.affects_vore_sprites = !hhost.vore_selected.affects_vore_sprites
-				hhost.update_fullness()
-				. = TRUE
+			host.vore_selected.affects_vore_sprites = !host.vore_selected.affects_vore_sprites
+			host:update_fullness()
+			. = TRUE
 		if("b_count_absorbed_prey_for_sprites")
-			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
-				hhost.vore_selected.count_absorbed_prey_for_sprite = !hhost.vore_selected.count_absorbed_prey_for_sprite
-				hhost.update_fullness()
-				. = TRUE
+			host.vore_selected.count_absorbed_prey_for_sprite = !host.vore_selected.count_absorbed_prey_for_sprite
+			host:update_fullness()
+			. = TRUE
 		if("b_absorbed_multiplier")
-			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
-				var/absorbed_multiplier_input = input(user, "Set the impact absorbed prey's size have on your vore sprite. 1 means no scaling, 0.5 means absorbed prey count half as much, 2 means absorbed prey count double. (Range from 0.1 - 3)", "Absorbed Multiplier") as num|null
-				if(!isnull(absorbed_multiplier_input))
-					hhost.vore_selected.absorbed_multiplier = CLAMP(absorbed_multiplier_input, 0.1, 3)
-					hhost.update_fullness()
-				. = TRUE
+			var/absorbed_multiplier_input = input(user, "Set the impact absorbed prey's size have on your vore sprite. 1 means no scaling, 0.5 means absorbed prey count half as much, 2 means absorbed prey count double. (Range from 0.1 - 3)", "Absorbed Multiplier") as num|null
+			if(!isnull(absorbed_multiplier_input))
+				host.vore_selected.absorbed_multiplier = CLAMP(absorbed_multiplier_input, 0.1, 3)
+				host:update_fullness()
+			. = TRUE
+		if("b_count_liquid_for_sprites") //Reagent bellies || Chomp Port
+			host.vore_selected.count_liquid_for_sprite = !host.vore_selected.count_liquid_for_sprite
+			host:update_fullness()
+			. = TRUE
+		if("b_liquid_multiplier") //Reagent bellies || Chomp Port
+			var/liquid_multiplier_input = input(user, "Set the impact amount of liquid reagents will have on your vore sprite. 1 means a belly with 100 reagents of fluid will count as 1 normal sized prey-thing's worth, 0.5 means liquid counts half as much, 2 means liquid counts double. (Range from 0.1 - 10)", "Liquid Multiplier") as num|null
+			if(!isnull(liquid_multiplier_input))
+				host.vore_selected.liquid_multiplier = CLAMP(liquid_multiplier_input, 0.1, 10)
+				host:update_fullness()
+			. = TRUE
 		if("b_count_items_for_sprites")
-			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
-				hhost.vore_selected.count_items_for_sprite = !hhost.vore_selected.count_items_for_sprite
-				hhost.update_fullness()
-				. = TRUE
+			host.vore_selected.count_items_for_sprite = !host.vore_selected.count_items_for_sprite
+			host:update_fullness()
+			. = TRUE
 		if("b_item_multiplier")
-			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
-				var/item_multiplier_input = input(user, "Set the impact items will have on your vore sprite. 1 means a belly with 8 normal-sized items will count as 1 normal sized prey-thing's worth, 0.5 means items count half as much, 2 means items count double. (Range from 0.1 - 10)", "Item Multiplier") as num|null
-				if(!isnull(item_multiplier_input))
-					hhost.vore_selected.item_multiplier = CLAMP(item_multiplier_input, 0.1, 10)
-					hhost.update_fullness()
-				. = TRUE
+			var/item_multiplier_input = input(user, "Set the impact items will have on your vore sprite. 1 means a belly with 8 normal-sized items will count as 1 normal sized prey-thing's worth, 0.5 means items count half as much, 2 means items count double. (Range from 0.1 - 10)", "Item Multiplier") as num|null
+			if(!isnull(item_multiplier_input))
+				host.vore_selected.item_multiplier = CLAMP(item_multiplier_input, 0.1, 10)
+				host:update_fullness()
+			. = TRUE
 		if("b_health_impacts_size")
-			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
-				hhost.vore_selected.health_impacts_size = !hhost.vore_selected.health_impacts_size
-				hhost.update_fullness()
-				. = TRUE
+			host.vore_selected.health_impacts_size = !host.vore_selected.health_impacts_size
+			host:update_fullness()
+			. = TRUE
 		if("b_resist_animation")
-			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
-				hhost.vore_selected.resist_triggers_animation = !hhost.vore_selected.resist_triggers_animation
-				. = TRUE
+			host.vore_selected.resist_triggers_animation = !host.vore_selected.resist_triggers_animation
+			. = TRUE
 		if("b_size_factor_sprites")
-			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
-				var/size_factor_input = input(user, "Set the impact all belly content's collective size has on your vore sprite. 1 means no scaling, 0.5 means content counts half as much, 2 means contents count double. (Range from 0.1 - 3)", "Size Factor") as num|null
-				if(!isnull(size_factor_input))
-					hhost.vore_selected.size_factor_for_sprite = CLAMP(size_factor_input, 0.1, 3)
-					hhost.update_fullness()
-				. = TRUE
+			var/size_factor_input = input(user, "Set the impact all belly content's collective size has on your vore sprite. 1 means no scaling, 0.5 means content counts half as much, 2 means contents count double. (Range from 0.1 - 3)", "Size Factor") as num|null
+			if(!isnull(size_factor_input))
+				host.vore_selected.size_factor_for_sprite = CLAMP(size_factor_input, 0.1, 3)
+				host:update_fullness()
+			. = TRUE
 		if("b_tail_to_change_to")
 			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
 				var/tail_choice = tgui_input_list(usr, "Which tail sprite do you want to use when your [lowertext(host.vore_selected.name)] is filled?","Select Sprite", global.tail_styles_list)
 				if(!tail_choice) //They cancelled, no changes
 					return FALSE
 				else
-					hhost.vore_selected.tail_to_change_to = tail_choice
+					host.vore_selected.tail_to_change_to = tail_choice
 				. = TRUE
 		if("b_tail_color")
 			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
-				var/newcolor = input(usr, "Choose tail color.", "", hhost.vore_selected.tail_colouration) as color|null
+				var/newcolor = input(usr, "Choose tail color.", "", host.vore_selected.tail_colouration) as color|null
 				if(newcolor)
-					hhost.vore_selected.tail_colouration = newcolor
+					host.vore_selected.tail_colouration = newcolor
 				. = TRUE
 		if("b_tail_color2")
 			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
-				var/newcolor = input(usr, "Choose tail secondary color.", "", hhost.vore_selected.tail_extra_overlay) as color|null
+				var/newcolor = input(usr, "Choose tail secondary color.", "", host.vore_selected.tail_extra_overlay) as color|null
 				if(newcolor)
-					hhost.vore_selected.tail_extra_overlay = newcolor
+					host.vore_selected.tail_extra_overlay = newcolor
 				. = TRUE
 		if("b_tail_color3")
 			if (istype(host, /mob/living/carbon/human))
-				var/mob/living/carbon/human/hhost = host
-				var/newcolor = input(usr, "Choose tail tertiary color.", "", hhost.vore_selected.tail_extra_overlay2) as color|null
+				var/newcolor = input(usr, "Choose tail tertiary color.", "", host.vore_selected.tail_extra_overlay2) as color|null
 				if(newcolor)
-					hhost.vore_selected.tail_extra_overlay2 = newcolor
+					host.vore_selected.tail_extra_overlay2 = newcolor
 				. = TRUE
 		// End RS edit
 	if(.)
 		unsaved_changes = TRUE
+
+// Begin reagent bellies || RS Add || Chomp Port
+/datum/vore_look/proc/liq_set_attr(mob/user, params)
+	if(!host.vore_selected)
+		alert("No belly selected to modify.")
+		return FALSE
+
+	var/attr = params["liq_attribute"]
+	switch(attr)
+		if("b_show_liq")
+			if(!host.vore_selected.show_liquids)
+				host.vore_selected.show_liquids = 1
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] now has liquid options.</span>")
+			else
+				host.vore_selected.show_liquids = 0
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] no longer has liquid options.</span>")
+			. = TRUE
+		if("b_liq_reagent_gen")
+			if(!host.vore_selected.reagentbellymode) //liquid container adjustments and interactions.
+				host.vore_selected.reagentbellymode = 1
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] now has interactions which can produce liquids.</span>")
+			else //Doesnt produce liquids
+				host.vore_selected.reagentbellymode = 0
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] wont produce liquids, liquids already in your [lowertext(host.vore_selected.name)] must be emptied out or removed with purge.</span>")
+			. = TRUE
+		if("b_liq_reagent_type")
+			var/list/menu_list = host.vore_selected.reagent_choices.Copy() //Useful if we want to make certain races, synths, borgs, and other things result in additional reagents to produce - Jack
+			var/new_reagent = input("Choose Reagent (currently [host.vore_selected.reagent_chosen])") as null|anything in menu_list
+			if(!new_reagent)
+				return FALSE
+
+			host.vore_selected.reagent_chosen = new_reagent
+			host.vore_selected.ReagentSwitch() // For changing variables when a new reagent is chosen
+			. = TRUE
+		if("b_liq_reagent_name")
+			var/new_name = html_encode(input(usr,"New name for liquid shown when transfering and dumping on floor (The actual liquid's name is still the same):","New Name") as text|null)
+
+			if(length(new_name) > BELLIES_NAME_MAX || length(new_name) < BELLIES_NAME_MIN)
+				alert("Entered name length invalid (must be longer than [BELLIES_NAME_MIN], no longer than [BELLIES_NAME_MAX]).","Error")
+				return FALSE
+
+			host.vore_selected.reagent_name = new_name
+			. = TRUE
+		if("b_liq_reagent_nutri_rate")
+			host.vore_selected.gen_time_display = input(user, "Choose the time it takes to fill the belly from empty state using nutrition.", "Set Liquid Production Time.")  in list("10 minutes","30 minutes","1 hour","3 hours","6 hours","12 hours","24 hours")|null
+			switch(host.vore_selected.gen_time_display)
+				if("10 minutes")
+					host.vore_selected.gen_time = 0
+				if("30 minutes")
+					host.vore_selected.gen_time = 2
+				if("1 hour")
+					host.vore_selected.gen_time = 5
+				if("3 hours")
+					host.vore_selected.gen_time = 17
+				if("6 hours")
+					host.vore_selected.gen_time = 35
+				if("12 hours")
+					host.vore_selected.gen_time = 71
+				if("24 hours")
+					host.vore_selected.gen_time = 143
+				if(null)
+					return FALSE
+			. = TRUE
+		if("b_liq_reagent_capacity")
+			var/new_custom_vol = input(user, "Choose the amount of liquid the belly can contain at most. Ranges from 0 to 300.", "Set Custom Belly Capacity.", host.vore_selected.custom_max_volume) as num|null
+			if(new_custom_vol == null)
+				return FALSE
+			var/new_new_custom_vol = CLAMP(new_custom_vol, 10, 300)
+			host.vore_selected.custom_max_volume = new_new_custom_vol
+			. = TRUE
+		if("b_liq_sloshing")
+			if(!host.vore_selected.vorefootsteps_sounds)
+				host.vore_selected.vorefootsteps_sounds = 1
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] can now make sounds when you walk around depending on how full you are.</span>")
+			else
+				host.vore_selected.vorefootsteps_sounds = 0
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] wont make any liquid sounds no matter how full it is.</span>")
+			. = TRUE
+		if("b_liq_reagent_addons")
+			var/list/menu_list = host.vore_selected.reagent_mode_flag_list.Copy()
+			var/reagent_toggle_addon = input("Toggle Addon") as null|anything in menu_list
+			if(!reagent_toggle_addon)
+				return FALSE
+			host.vore_selected.reagent_mode_flags ^= host.vore_selected.reagent_mode_flag_list[reagent_toggle_addon]
+			. = TRUE
+		if("b_liq_purge")
+			var/alert = alert("Are you sure you want to delete the liquids in your [lowertext(host.vore_selected.name)]?","Confirmation","Delete","Cancel")
+			if(!(alert == "Delete"))
+				return FALSE
+			else
+				host.vore_selected.reagents.clear_reagents()
+			if (istype(host, /mob/living/carbon/human))
+				host:update_fullness()
+			. = TRUE
+		if("b_reagent_touches")
+			if(!host.vore_selected.reagent_touches)
+				host.vore_selected.reagent_touches = 1
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] will now apply reagents to creatures when digesting.</span>")
+			else
+				host.vore_selected.reagent_touches = 0
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] will no longer apply reagents to creatures when digesting.</span>")
+			. = TRUE
+		if("b_liquid_overlay")
+			if(!host.vore_selected.liquid_overlay)
+				host.vore_selected.liquid_overlay = 1
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] now has liquid overlay enabled.</span>")
+			else
+				host.vore_selected.liquid_overlay = 0
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] no longer has liquid overlay enabled.</span>")
+			. = TRUE
+		if("b_max_liquid_level")
+			var/new_max_liquid_level = input(user, "Set custom maximum liquid level. 0-100%", "Set Custom Max Level.", host.vore_selected.max_liquid_level) as num|null
+			if(new_max_liquid_level == null)
+				return FALSE
+			var/new_new_max_liquid_level = CLAMP(new_max_liquid_level, 0, 100)
+			host.vore_selected.max_liquid_level = new_new_max_liquid_level
+			// host.vore_selected.update_internal_overlay()
+			. = TRUE
+		if("b_custom_reagentcolor")
+			var/newcolor = input(usr, "Choose custom color for liquid overlay. Cancel for normal reagent color.", "", host.vore_selected.custom_reagentcolor) as color|null
+			if(newcolor)
+				host.vore_selected.custom_reagentcolor = newcolor
+			else
+				host.vore_selected.custom_reagentcolor = null
+			. = TRUE
+		if("b_custom_reagentalpha")
+			var/newalpha = tgui_input_number(usr, "Set alpha transparency between 0-255. Leave blank to use capacity based alpha.", "Custom Liquid Alpha",255,255,0,0,1)
+			if(newalpha != null)
+				host.vore_selected.custom_reagentalpha = newalpha
+			else
+				host.vore_selected.custom_reagentalpha = null
+			. = TRUE
+		if("b_mush_overlay")
+			if(!host.vore_selected.mush_overlay)
+				host.vore_selected.mush_overlay = 1
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] now has fullness overlay enabled.</span>")
+			else
+				host.vore_selected.mush_overlay = 0
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] no longer has fullness overlay enabled.</span>")
+			. = TRUE
+		if("b_mush_color")
+			var/newcolor = input(usr, "Choose custom color for mush overlay.", "", host.vore_selected.mush_color) as color|null
+			if(newcolor)
+				host.vore_selected.mush_color = newcolor
+			. = TRUE
+		if("b_mush_alpha")
+			var/newalpha = tgui_input_number(usr, "Set alpha transparency between 0-255", "Mush Alpha",255,255,0,0,1)
+			if(newalpha != null)
+				host.vore_selected.mush_alpha = newalpha
+			. = TRUE
+		if("b_max_mush")
+			var/new_max_mush = input(user, "Choose the amount of nutrition required for full mush overlay. Ranges from 0 to 6000. Default 500.", "Set Fullness Overlay Scaling.", host.vore_selected.max_mush) as num|null
+			if(new_max_mush == null)
+				return FALSE
+			var/new_new_max_mush = CLAMP(new_max_mush, 0, 6000)
+			host.vore_selected.max_mush = new_new_max_mush
+			. = TRUE
+		if("b_min_mush")
+			var/new_min_mush = input(user, "Set custom minimum mush level. 0-100%", "Set Custom Minimum.", host.vore_selected.min_mush) as num|null
+			if(new_min_mush == null)
+				return FALSE
+			var/new_new_min_mush = CLAMP(new_min_mush, 0, 100)
+			host.vore_selected.min_mush = new_new_min_mush
+			. = TRUE
+
+/datum/vore_look/proc/liq_set_msg(mob/user, params)
+	if(!host.vore_selected)
+		alert("No belly selected to modify.")
+		return FALSE
+
+	var/attr = params["liq_messages"]
+	switch(attr)
+		if("b_show_liq_fullness")
+			if(!host.vore_selected.show_fullness_messages)
+				host.vore_selected.show_fullness_messages = 1
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] now has liquid examination options.</span>")
+			else
+				host.vore_selected.show_fullness_messages = 0
+				to_chat(usr,"<span class='warning'>Your [lowertext(host.vore_selected.name)] no longer has liquid examination options.</span>")
+			. = TRUE
+		if("b_liq_msg_toggle1")
+			host.vore_selected.liquid_fullness1_messages = !host.vore_selected.liquid_fullness1_messages
+			. = TRUE
+		if("b_liq_msg_toggle2")
+			host.vore_selected.liquid_fullness2_messages = !host.vore_selected.liquid_fullness2_messages
+			. = TRUE
+		if("b_liq_msg_toggle3")
+			host.vore_selected.liquid_fullness3_messages = !host.vore_selected.liquid_fullness3_messages
+			. = TRUE
+		if("b_liq_msg_toggle4")
+			host.vore_selected.liquid_fullness4_messages = !host.vore_selected.liquid_fullness4_messages
+			. = TRUE
+		if("b_liq_msg_toggle5")
+			host.vore_selected.liquid_fullness5_messages = !host.vore_selected.liquid_fullness5_messages
+			. = TRUE
+		if("b_liq_msg1")
+			alert(user,"Setting abusive or deceptive messages will result in a ban. Consider this your warning. Max 150 characters per message, max 10 messages per topic.","Really, don't.")
+			var/help = " Press enter twice to separate messages. '%pred' will be replaced with your name. '%prey' will be replaced with the prey's name. '%belly' will be replaced with your belly's name."
+
+			var/new_message = input(user,"These are sent to people who examine you when this belly is 0 to 20% full. Write them in 3rd person ('Their %belly is bulging')."+help,"Liquid Examine Message (0 - 20%)",host.vore_selected.get_reagent_messages("full1")) as message
+			if(new_message)
+				host.vore_selected.set_reagent_messages(new_message,"full1")
+			. = TRUE
+		if("b_liq_msg2")
+			alert(user,"Setting abusive or deceptive messages will result in a ban. Consider this your warning. Max 150 characters per message, max 10 messages per topic.","Really, don't.")
+			var/help = " Press enter twice to separate messages. '%pred' will be replaced with your name. '%prey' will be replaced with the prey's name. '%belly' will be replaced with your belly's name."
+
+			var/new_message = input(user,"These are sent to people who examine you when this belly is 20 to 40% full. Write them in 3rd person ('Their %belly is bulging')."+help,"Liquid Examine Message (20 - 40%)",host.vore_selected.get_reagent_messages("full2")) as message
+			if(new_message)
+				host.vore_selected.set_reagent_messages(new_message,"full2")
+			. = TRUE
+		if("b_liq_msg3")
+			alert(user,"Setting abusive or deceptive messages will result in a ban. Consider this your warning. Max 150 characters per message, max 10 messages per topic.","Really, don't.")
+			var/help = " Press enter twice to separate messages. '%pred' will be replaced with your name. '%prey' will be replaced with the prey's name. '%belly' will be replaced with your belly's name."
+
+			var/new_message = input(user,"These are sent to people who examine you when this belly is 40 to 60% full. Write them in 3rd person ('Their %belly is bulging')."+help,"Liquid Examine Message (40 - 60%)",host.vore_selected.get_reagent_messages("full3")) as message
+			if(new_message)
+				host.vore_selected.set_reagent_messages(new_message,"full3")
+			. = TRUE
+		if("b_liq_msg4")
+			alert(user,"Setting abusive or deceptive messages will result in a ban. Consider this your warning. Max 150 characters per message, max 10 messages per topic.","Really, don't.")
+			var/help = " Press enter twice to separate messages. '%pred' will be replaced with your name. '%prey' will be replaced with the prey's name. '%belly' will be replaced with your belly's name."
+
+			var/new_message = input(user,"These are sent to people who examine you when this belly is 60 to 80% full. Write them in 3rd person ('Their %belly is bulging')."+help,"Liquid Examine Message (60 - 80%)",host.vore_selected.get_reagent_messages("full4")) as message
+			if(new_message)
+				host.vore_selected.set_reagent_messages(new_message,"full4")
+			. = TRUE
+		if("b_liq_msg5")
+			alert(user,"Setting abusive or deceptive messages will result in a ban. Consider this your warning. Max 150 characters per message, max 10 messages per topic.","Really, don't.")
+			var/help = " Press enter twice to separate messages. '%pred' will be replaced with your name. '%prey' will be replaced with the prey's name. '%belly' will be replaced with your belly's name."
+
+			var/new_message = input(user,"These are sent to people who examine you when this belly is 80 to 100% full. Write them in 3rd person ('Their %belly is bulging')."+help,"Liquid Examine Message (80 - 100%)",host.vore_selected.get_reagent_messages("full5")) as message
+			if(new_message)
+				host.vore_selected.set_reagent_messages(new_message,"full5")
+			. = TRUE
+// End reagent bellies

@@ -425,6 +425,7 @@
 		if(STANCE_FLEE)
 			ai_log("handle_stance_tactical() : STANCE_FLEE, going to flee_from_target().", AI_LOG_TRACE)
 			flee_from_target()
+			request_help() // Call our allies.	//RS ADD
 
 		if(STANCE_DISABLED)
 			ai_log("handle_stance_tactical() : STANCE_DISABLED.", AI_LOG_TRACE)
@@ -459,7 +460,7 @@
 			if(speak_chance) // In the long loop since otherwise it wont shut up.
 				handle_idle_speaking()
 
-			if(hostile || vore_hostile)
+			if(hostile || vore_hostile || holder.hunter)	//RS EDIT
 				ai_log("handle_stance_strategical() : STANCE_IDLE, going to find_target().", AI_LOG_TRACE)
 				find_target()
 
@@ -481,11 +482,11 @@
 				calculate_path(target)
 				walk_to_target()
 		if(STANCE_MOVE)
-			if(hostile && find_target()) // This will switch its stance.
+			if((hostile || vore_hostile || holder.hunter) && find_target()) // This will switch its stance. //RS ADD || Vore hostile fix (Lira, May 2026)
 				ai_log("handle_stance_strategical() : STANCE_MOVE, found target and was interrupted.", AI_LOG_TRACE)
 				return
 		if(STANCE_FOLLOW)
-			if(hostile && find_target()) // This will switch its stance.
+			if((hostile || vore_hostile || holder.hunter) && find_target()) // This will switch its stance. //RS ADD || Vore hostile fix (Lira, May 2026)
 				ai_log("handle_stance_strategical() : STANCE_FOLLOW, found target and was interrupted.", AI_LOG_TRACE)
 				return
 			else if(leader)

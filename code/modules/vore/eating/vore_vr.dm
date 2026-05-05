@@ -63,14 +63,19 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 	// These are 'modifier' prefs, do nothing on their own but pair with drop_prey/drop_pred settings.
 	var/drop_vore = TRUE
 	var/stumble_vore = TRUE
+	var/buckle_vore = TRUE // RS Add: Split from stumble (Lira, January 2026)
 	var/slip_vore = TRUE
 	var/throw_vore = TRUE
 	var/food_vore = TRUE
+	var/emote_vore = TRUE // RS Add: New emote spont vore (Lira, February 2026)
+	var/list/spont_belly_prefs = list() // RS Add: Add spont prefs (Lira, January 2026)
 
 	var/resizable = TRUE
 	var/show_vore_fx = TRUE
 	var/step_mechanics_pref = FALSE
 	var/pickup_pref = TRUE
+
+	var/autotransferable = TRUE //RS Add || Chomp Port 3200
 
 	var/vore_sprite_color = list("stomach" = "#000", "taur belly" = "#000") // RS edit
 	var/allow_contaminate = TRUE	//RS EDIT
@@ -79,6 +84,7 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 	var/list/belly_prefs = list()
 	var/vore_taste = "nothing in particular"
 	var/vore_smell = "nothing in particular"
+	var/glowy_belly = FALSE //RS Add
 
 	var/selective_preference = DM_DEFAULT
 
@@ -116,6 +122,8 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 	var/client_ckey
 
 	var/ssd_vore = FALSE	//RS ADD
+	var/list/vore_whitelist_toggles = list()	//RS ADD - A list of the prefs that are dictated by whitelist
+	var/belch_color = "#129606"	//RS ADD
 
 /datum/vore_preferences/New(client/C)
 	if(istype(C))
@@ -129,6 +137,8 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 //
 /proc/is_vore_predator(mob/living/O)
 	if(istype(O,/mob/living))
+		if(!O.vore_organs)	//RS ADD - it will runtime
+			return FALSE	//RS ADD
 		if(O.vore_organs.len > 0)
 			return TRUE
 
@@ -198,6 +208,9 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 	food_vore = json_from_file["food_vore"]
 	throw_vore = json_from_file["throw_vore"]
 	stumble_vore = json_from_file["stumble_vore"]
+	buckle_vore = json_from_file["buckle_vore"] // RS Add: Split from stumble (Lira, January 2026)
+	emote_vore = json_from_file["emote_vore"] // RS Add: New emote spont vore (Lira, February 2026)
+	spont_belly_prefs = json_from_file["spont_belly_prefs"] // RS Add: Add spont prefs (Lira, January 2026)
 	nutrition_message_visible = json_from_file["nutrition_message_visible"]
 	nutrition_messages = json_from_file["nutrition_messages"]
 	weight_message_visible = json_from_file["weight_message_visible"]
@@ -205,8 +218,12 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 	eating_privacy_global = json_from_file["eating_privacy_global"]
 	vore_sprite_color = json_from_file["vore_sprite_color"] // RS edit
 	ssd_vore = json_from_file["ssd_vore"] // RS edit
+	glowy_belly = json_from_file["glowy_belly"] //RS ADD
 	allow_contaminate = json_from_file["allow_contaminate"] // RS edit
 	allow_stripping = json_from_file["allow_stripping"] // RS edit
+	vore_whitelist_toggles = json_from_file["vore_whitelist_toggles"]	//RS ADD
+	autotransferable = json_from_file["autotransferable"] //RS Add || Chomp Port 3200
+	belch_color = json_from_file["belch_color"]	//RS ADD
 
 	//Quick sanitize
 	if(isnull(digestable))
@@ -253,8 +270,19 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 		throw_vore = TRUE
 	if(isnull(stumble_vore))
 		stumble_vore = TRUE
+	// RS Add: Split from stumble (Lira, January 2026)
+	if(isnull(buckle_vore))
+		buckle_vore = stumble_vore
 	if(isnull(food_vore))
 		food_vore = TRUE
+	// RS Add: New emote spont vore (Lira, February 2026)
+	if(isnull(emote_vore))
+		emote_vore = TRUE
+	// RS Add: Use spont belly (Lira, January 2026)
+	if(!islist(spont_belly_prefs))
+		spont_belly_prefs = list()
+	if(isnull(autotransferable)) //RS Add || Port Chomp 3200
+		autotransferable = TRUE
 	if(isnull(nutrition_message_visible))
 		nutrition_message_visible = TRUE
 	if(isnull(weight_message_visible))
@@ -300,7 +328,12 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 		allow_contaminate = TRUE	//RS ADD
 	if(isnull(allow_stripping))	//RS ADD
 		allow_stripping = TRUE	//RS ADD
-
+	if(isnull(glowy_belly)) //RS ADD
+		glowy_belly =  FALSE //RS ADD
+	if(isnull(vore_whitelist_toggles))	//RS ADD
+		vore_whitelist_toggles = list()	//RS ADD
+	if(isnull(belch_color))	//RS ADD
+		belch_color = "#129606"	//RS ADD
 	return TRUE
 
 /datum/vore_preferences/proc/save_vore()
@@ -333,8 +366,11 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 			"drop_vore"				= drop_vore,
 			"slip_vore"				= slip_vore,
 			"stumble_vore"			= stumble_vore,
+			"buckle_vore"			= buckle_vore, // RS Add: Split from stumble (Lira, January 2026)
 			"throw_vore" 			= throw_vore,
 			"food_vore" 			= food_vore,
+			"emote_vore"			= emote_vore, // RS Add: New emote spont vore (Lira, February 2026)
+			"spont_belly_prefs"		= spont_belly_prefs, // RS Add: Use spont belly (Lira, January 2026)
 			"nutrition_message_visible"	= nutrition_message_visible,
 			"nutrition_messages"		= nutrition_messages,
 			"weight_message_visible"	= weight_message_visible,
@@ -342,9 +378,12 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 			"eating_privacy_global"		= eating_privacy_global,
 			"vore_sprite_color"		= vore_sprite_color, //RS edit
 			"ssd_vore"				= ssd_vore,	//RS ADD
+			"glowy_belly"			= glowy_belly, //RS ADD
 			"allow_contaminate" 	= allow_contaminate, // RS edit
-			"allow_stripping" 		= allow_stripping // RS edit
-
+			"allow_stripping" 		= allow_stripping, // RS edit
+			"vore_whitelist_toggles" = vore_whitelist_toggles, //RS ADD
+			"autotransferable"		= autotransferable, //RS Add || Port Chomp 3200
+			"belch_color"			= belch_color, //RS ADD
 		)
 
 	//List to JSON
@@ -365,3 +404,58 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 //Can do conversions here
 /datum/vore_preferences/proc/patch_version(var/list/json_from_file,var/version)
 	return json_from_file
+
+////////////////////////// Misc Drugs //////////////////////////
+
+/datum/reagent/drugs/rainbow_toxin /// Replaces Space Drugs.
+	name = "Rainbow Toxin"
+	id = "rainbowtoxin"
+	description = "Known for providing a euphoric high, this psychoactive drug is often injected into unknowing prey by serpents and other fanged beasts. Highly valuable and frequently sought after by hypno-enthusiasts and party-goers."
+	taste_description = "mixed euphoria"
+	taste_mult = 0.8 //You ARE going to taste this!
+	scannable = 1	//Sure! If you manage to milk a snake for some of this, go ahead and scan it and mass produce it. Your local club will love you!
+
+/datum/reagent/drugs/rainbow_toxin/affect_blood(mob/living/carbon/M, var/alien, var/removed)
+	..()
+	var/drug_strength = 20
+	M.druggy = max(M.druggy, drug_strength)
+
+/datum/reagent/drugs/bliss/overdose(var/mob/living/M as mob)
+	if(prob_proc == TRUE && prob(20))
+		M.hallucination = max(M.hallucination, 5)
+		prob_proc = FALSE
+	M.adjustBrainLoss(0.25*REM) //Too much isn't good for your long term health...
+	M.adjustToxLoss(0.01*REM)	//Enough that it'll make your HUD dummy update, but not enough that you'll vomit mid scene. (Sorry emetophiliacs!)
+	..()
+
+/datum/reagent/paralysis_toxin
+	name = "Tetrodotoxin"
+	id = "paralysistoxin"
+	description = "A potent toxin commonly found in a plethora of species. When exposed to the toxin, causes extreme, paralysis for a prolonged period, with only essential functions of the body being unhindered. Commonly used by covert operatives and used as a crowd control tool."
+	taste_description = "bitterness"
+	reagent_state = LIQUID
+	color = "#37007f"
+	metabolism = REM * 0.25
+	overdose = REAGENTS_OVERDOSE
+	scannable = 0 //YOU ARE NOT SCANNING THE FUNNY PARALYSIS TOXIN. NO. BAD. STAY AWAY.
+
+/datum/reagent/paralysis_toxin/affect_blood(var/mob/living/carbon/M, var/alien, var/removed)
+	if(M.weakened < 50) //Let's not leave them PERMA stuck, after all.
+		M.AdjustWeakened(5) //Stand in for paralyze so you can still talk/emote/see
+
+/datum/reagent/pain_enzyme
+	name = "Pain Enzyme"
+	id = "painenzyme"
+	description = "An enzyme found in a variety of species. When exposed to the toxin, will cause severe, agonizing pain. The effects can last for hours depending on the dose. Only known cure is an equally strong painkiller or dialysis."
+	taste_description = "sourness"
+	reagent_state = LIQUID
+	color = "#04b8fa" //Light blue in honor of Perry.
+	metabolism = 0.1 //Lasts up to 50 seconds if you give 5 units.
+	mrate_static = TRUE
+	overdose = 100 //There is no OD. You already are taking the worst of it.
+	scannable = 0 //Let's not have medical mechs able to make an extremely strong 'I hit you you fall down in agony' chem.
+
+/datum/reagent/pain_enzyme/affect_blood(var/mob/living/carbon/M, var/alien, var/removed)
+	M.add_chemical_effect(CE_PAINKILLER, -200)
+	if(prob(0.01)) //1 in 10000 chance per tick. Extremely rare.
+		to_chat(M,"<span class='warning'>Your body feels as though it's on fire!</span>")

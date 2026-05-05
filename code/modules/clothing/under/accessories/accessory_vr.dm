@@ -61,6 +61,7 @@
 	icon = 'icons/inventory/accessory/item_vr.dmi'
 	icon_override = 'icons/inventory/accessory/mob_vr.dmi'
 	icon_state = "collar_blk"
+	var/custom_desc // RS Add
 	var/writtenon = 0
 	var/icon_previous_override
 	sprite_sheets = list(
@@ -171,11 +172,12 @@
 			if(!str || !length(str))
 				to_chat(usr,"<span class='notice'>[name]'s tag set to be blank.</span>")
 				name = initial(name)
-				desc = initial(desc)
+				desc = custom_desc || initial(desc) // RS Edit
 			else
 				to_chat(usr,"<span class='notice'>You set the [name]'s tag to '[str]'.</span>")
 				name = initial(name) + " ([str])"
-				desc = initial(desc) + " The tag says \"[str]\"."
+				desc = custom_desc || initial(desc) // RS Edit
+				desc += " The tag says \"[str]\"." // RS Edit
 		else
 			if(href_list["code"])
 				code += text2num(href_list["code"])
@@ -226,7 +228,7 @@
 	if(!istype(user, /mob/living/carbon/human))
 		return
 	user.set_machine(src)
-	var/dat = {"<TT>
+	var/dat = {"<html><TT>
 			<A href='?src=\ref[src];power=1'>Turn [on ? "Off" : "On"]</A><BR>
 			<B>Frequency/Code</B> for collar:<BR>
 			Frequency:
@@ -243,7 +245,7 @@
 
 			Tag:
 			<A href='?src=\ref[src];tag=1'>Set tag</A><BR>
-			</TT>"}
+			</TT></html>"} // RS Edit: Fix html tag (Lira, January 2026)
 	user << browse(dat, "window=radio")
 	onclose(user, "radio")
 	return
@@ -305,19 +307,21 @@
 	if(!str || !length(str))
 		to_chat(user,"<span class='notice'>[name]'s tag set to be blank.</span>")
 		name = initial(name)
-		desc = initial(desc)
+		desc = custom_desc || initial(desc) // RS Edit
 	else
 		to_chat(user,"<span class='notice'>You set the [name]'s tag to '[str]'.</span>")
 		initialize_tag(str)
 
 /obj/item/clothing/accessory/collar/proc/initialize_tag(var/tag)
 		name = initial(name) + " ([tag])"
-		desc = initial(desc) + " \"[tag]\" has been engraved on the tag."
+		desc = custom_desc || initial(desc) // RS Edit
+		desc += " \"[tag]\" has been engraved on the tag." // RS Edit
 		writtenon = 1
 
 /obj/item/clothing/accessory/collar/holo/initialize_tag(var/tag)
 		..()
-		desc = initial(desc) + " The tag says \"[tag]\"."
+		desc = custom_desc || initial(desc) // RS Edit
+		desc += " The tag says \"[tag]\"." // RS Edit
 
 /obj/item/clothing/accessory/collar/attackby(obj/item/I, mob/user)
 	if(istype(src,/obj/item/clothing/accessory/collar/holo))
@@ -345,17 +349,20 @@
 		else
 			to_chat(user,"<span class='notice'>You [erasing] the words with the [I].</span>")
 			name = initial(name)
-			desc = initial(desc) + " The tag has had the words [erasemethod]."
+			desc = custom_desc || initial(desc) // RS Edit
+			desc += " The tag has had the words [erasemethod]." // RS Edit
 	else
 		if(!writtenon)
 			to_chat(user,"<span class='notice'>You write '[str]' on the tag with the [I].</span>")
 			name = initial(name) + " ([str])"
-			desc = initial(desc) + " \"[str]\" has been [writemethod] on the tag."
+			desc = custom_desc || initial(desc) // RS Edit
+			desc += " \"[str]\" has been [writemethod] on the tag." // RS Edit
 			writtenon = 1
 		else
 			to_chat(user,"<span class='notice'>You [erasing] the words on the tag with the [I], and write '[str]'.</span>")
 			name = initial(name) + " ([str])"
-			desc = initial(desc) + " Something has been [erasemethod] on the tag, and it now has \"[str]\" [writemethod] on it."
+			desc = custom_desc || initial(desc) // RS Edit
+			desc += " Something has been [erasemethod] on the tag, and it now has \"[str]\" [writemethod] on it." // RS Edit
 
 //Size collar remote
 
@@ -383,11 +390,12 @@
 			if(!str || !length(str))
 				to_chat(usr,"<span class='notice'>[name]'s tag set to be blank.</span>")
 				name = initial(name)
-				desc = initial(desc)
+				desc = custom_desc || initial(desc) // RS Edit
 			else
 				to_chat(usr,"<span class='notice'>You set the [name]'s tag to '[str]'.</span>")
 				name = initial(name) + " ([str])"
-				desc = initial(desc) + " The tag says \"[str]\"."
+				desc = custom_desc || initial(desc) // RS Edit
+				desc += " The tag says \"[str]\"." // RS Edit
 		else
 			if(href_list["code"])
 				code += text2num(href_list["code"])
@@ -426,7 +434,7 @@
 	if(!istype(user, /mob/living/carbon/human))
 		return
 	user.set_machine(src)
-	var/dat = {"<TT>
+	var/dat = {"<html><TT>
 			<B>Frequency/Code</B> for collar:<BR>
 			Frequency:
 			<A href='byond://?src=\ref[src];freq=-10'>-</A>
@@ -445,7 +453,7 @@
 
 			Size:
 			<A href='?src=\ref[src];size=100'>Set size</A><BR>
-			</TT>"}
+			</TT></html>"} // RS Edit: Fix html tag (Lira, January 2026)
 	user << browse(dat, "window=radio")
 	onclose(user, "radio")
 	return
@@ -528,7 +536,7 @@
 	if(!istype(user, /mob/living/carbon/human))
 		return
 	user.set_machine(src) //Doesn't need code or size options as the code now just defines the size.
-	var/dat = {"<TT>
+	var/dat = {"<html><TT>
 			<B>Frequency/Code</B> for collar:<BR>
 			Frequency:
 			<A href='byond://?src=\ref[src];freq=-10'>-</A>
@@ -540,7 +548,7 @@
 			<A href='?src=\ref[src];tag=1'>Set tag</A><BR>
 
 			The size control of the collar is determined by two times the value of the code it recieves, to a minimum of 26 (code 13).
-			</TT>"}
+			</TT></html>"} // RS Edit: Fix html tag (Lira, January 2026)
 	user << browse(dat, "window=radio")
 	onclose(user, "radio")
 	return

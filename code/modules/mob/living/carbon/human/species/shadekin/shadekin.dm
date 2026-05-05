@@ -21,7 +21,7 @@
 	unarmed_types = list(/datum/unarmed_attack/stomp, /datum/unarmed_attack/kick, /datum/unarmed_attack/claws/shadekin, /datum/unarmed_attack/bite/sharp/shadekin)
 	rarity_value = 15	//INTERDIMENSIONAL FLUFFERS
 
-	inherent_verbs = list(/mob/proc/adjust_hive_range)
+	inherent_verbs = list(/mob/proc/adjust_hive_range, /mob/living/carbon/human/proc/adjust_flicker) //RS Edit
 
 	siemens_coefficient = 1
 	darksight = 10
@@ -74,8 +74,9 @@
 	poison_type = null
 	water_breather = TRUE	//They don't quite breathe
 
-	vision_flags = SEE_SELF|SEE_MOBS
+//	vision_flags = SEE_SELF|SEE_MOBS	//RS REMOVE
 	appearance_flags = HAS_HAIR_COLOR | HAS_LIPS | HAS_SKIN_COLOR | HAS_EYE_COLOR | HAS_UNDERWEAR
+	digi_allowed = TRUE
 
 	move_trail = /obj/effect/decal/cleanable/blood/tracks/paw
 
@@ -107,11 +108,13 @@
 	//SHADEKIN-UNIQUE STUFF GOES HERE
 	var/list/shadekin_abilities = list(/datum/power/shadekin/phase_shift,
 									   /datum/power/shadekin/regenerate_other,
-									   /datum/power/shadekin/create_shade)
+									   /datum/power/shadekin/create_shade,
+									   /datum/power/shadekin/phase_flicker) //RS Edit
 	var/list/shadekin_ability_datums = list()
 	var/kin_type
 	var/energy_light = 0.25
 	var/energy_dark = 0.75
+	var/energy_drain = 0.5	//RS ADD
 
 /datum/species/shadekin/New()
 	..()
@@ -121,6 +124,7 @@
 
 /datum/species/shadekin/handle_death(var/mob/living/carbon/human/H)
 	spawn(1)
+		H.release_vore_contents(TRUE)	//RS ADD
 		for(var/obj/item/W in H)
 			H.drop_from_inventory(W)
 		qdel(H)
@@ -163,6 +167,12 @@
 		dark_gains = 0
 		return
 
+	var/area/A = get_area(H)	//RS ADD START
+	if(A.magic_damp)
+		set_energy(H,0)
+		update_shadekin_hud(H)
+		return					//RS ADD END
+
 	var/brightness = T.get_lumcount() //Brightness in 0.0 to 1.0
 	darkness = 1-brightness //Invert
 	var/is_dark = (darkness >= 0.5)
@@ -191,6 +201,9 @@
 
 	if(!istype(shade_organ))
 		return 0
+	var/area/A = get_area(H)	//RS ADD START
+	if(A.magic_damp)
+		return 0				//RS ADD END
 	if(shade_organ.dark_energy_infinite)
 		return shade_organ.max_dark_energy
 
@@ -300,20 +313,26 @@
 	.=..()
 
 	var/eyecolor_type = get_shadekin_eyecolor(H)
+	//RS Edit Start Adjustments for better feeling shadekin.
+
+	//Former(in the dark): BESK: 50 in 200 ||RESK: 50 in 1000 ||PESK: 50 in 100 ||YESK: 50 in 33.3|| GESK: 50 in 50 ||OESK: 50 in 400
+	//Current(in the dark): BESK: 50 in 133 ||RESK: 50 in 200 ||PESK: 50 in 100 ||YESK: 50 in 33.3|| GESK: 50 in 50 ||OESK: 50 in 133
 
 	switch(eyecolor_type)
 		if(BLUE_EYES)
 			total_health = 100
-			energy_light = 0.5
-			energy_dark = 0.5
+			energy_light = 0.75
+			energy_dark = 0.75
 		if(RED_EYES)
-			total_health = 200
-			energy_light = -1
-			energy_dark = 0.1
+			total_health = 150		//RS EDIT
+			energy_light = 0		//RS EDIT - Don't take their energy while they are trying to grab people
+			energy_dark = 0.25		//RS EDIT - Smol energy gain, as they can gain energy in other ways
+			energy_drain = 1		//RS ADD
 		if(PURPLE_EYES)
-			total_health = 150
-			energy_light = -0.5
-			energy_dark = 1
+			total_health = 115		//RS EDIT
+			energy_light = 0.25		//RS EDIT - Part blue, regens in the light
+			energy_dark = 0.35		//RS EDIT - Part red, plus part blue, regens a little faster in the dark
+			energy_drain = 0.75		//RS ADD
 		if(YELLOW_EYES)
 			total_health = 100
 			energy_light = -2
@@ -321,11 +340,23 @@
 		if(GREEN_EYES)
 			total_health = 100
 			energy_light = 0.125
-			energy_dark = 2
+			energy_dark = 1.5		//RS EDIT	//Make this be half of yellow eyes
 		if(ORANGE_EYES)
-			total_health = 175
-			energy_light = -0.5
-			energy_dark = 0.25
+			total_health = 115		//RS EDIT
+			energy_light = 0		//RS EDIT	//Half red, so let's not take their energy away while they hunt
+			energy_dark = 1.5		//RS EDIT	//Make this be half of yellow eyes
+			energy_drain = 0.75		//RS ADD
+
+	if(H.size_multiplier <= 0.75)
+		total_health -= 25
+		item_slowdown_mod = 2
+
+	else if(H.size_multiplier >= 1.25)
+		total_health += 50
+		slowdown = 0
+		item_slowdown_mod = 0.5
+
+	//RS Edit End
 
 	H.maxHealth = total_health
 

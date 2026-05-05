@@ -228,13 +228,13 @@ var/list/gamemode_cache = list()
 	var/static/expected_round_length = 3 * 60 * 60 * 10 // 3 hours
 	// If the first delay has a custom start time
 	// No custom time, no custom time, between 80 to 100 minutes respectively.
-	var/static/list/event_first_run   = list(EVENT_LEVEL_MUNDANE = null, 	EVENT_LEVEL_MODERATE = null,	EVENT_LEVEL_MAJOR = list("lower" = 48000, "upper" = 60000))
+	var/static/list/event_first_run   = list(null, null, list("lower" = 48000, "upper" = 60000)) // RS Edit - Alist compat - Mundane, Moderate, Major
 	// The lowest delay until next event
 	// 10, 30, 50 minutes respectively
-	var/static/list/event_delay_lower = list(EVENT_LEVEL_MUNDANE = 6000,	EVENT_LEVEL_MODERATE = 18000,	EVENT_LEVEL_MAJOR = 30000)
+	var/static/list/event_delay_lower = list(6000, 18000, 30000) // RS Edit - Alist compat - Mundane, Moderate, Major
 	// The upper delay until next event
 	// 15, 45, 70 minutes respectively
-	var/static/list/event_delay_upper = list(EVENT_LEVEL_MUNDANE = 9000,	EVENT_LEVEL_MODERATE = 27000,	EVENT_LEVEL_MAJOR = 42000)
+	var/static/list/event_delay_upper = list(9000, 27000, 42000) // RS Edit - Alist compat - Mundane, Moderate, Major
 
 	var/static/aliens_allowed = 1 //Changed to 1 so player xenos can lay eggs.
 	var/static/ninjas_allowed = 0
@@ -304,6 +304,10 @@ var/list/gamemode_cache = list()
 
 	var/static/suggested_byond_version
 	var/static/suggested_byond_build
+
+//Enables/Disables the appropriate mob type from obtaining the verb on spawn. Still allows admins to manually give it to them. || RS Add || Port Virgo PR 15836
+	var/static/allow_robot_recolor = TRUE
+	var/static/allow_simple_mob_recolor = TRUE
 
 	var/static/job_camp_time_limit = 10 MINUTES		//RS ADD
 	var/static/do_funny_names = TRUE				//RS ADD
@@ -1054,6 +1058,14 @@ var/list/gamemode_cache = list()
 
 				if("loadout_whitelist")
 					config.loadout_whitelist = text2num(value)
+
+				//RS Add Start || Port Virgo PR 15836
+				if("allow_robot_recolor")
+					config.allow_robot_recolor = 1
+				if("allow_simple_mob_recolor")
+					config.allow_simple_mob_recolor = 1
+				//RS Add End || Port Virgo PR 15836
+
 				//RS ADD START
 				if("job_camp_time_limit")
 					config.job_camp_time_limit = value MINUTES

@@ -176,6 +176,16 @@
 	color_blend_mode = ICON_MULTIPLY
 	extra_overlay = "neckfur_markings"
 
+// RS Add Start
+/datum/sprite_accessory/wing/neckfur_noback
+	name = "neck fur (without back part)"
+	desc = ""
+	icon_state = "neckfur_noback"
+	do_colouration = 1
+	color_blend_mode = ICON_MULTIPLY
+	extra_overlay = "neckfur_markings"
+// RS Add End
+
 /datum/sprite_accessory/wing/feathered
 	name = "feathered wings, colorable"
 	desc = ""
@@ -375,3 +385,18 @@
 	do_colouration = 1
 	color_blend_mode = ICON_MULTIPLY
 	extra_overlay = "pterodactyl_wing_membrane"
+
+/datum/sprite_accessory/wing/kaiju_spines_a  //RS Add || Port Virgo 15785
+	name = "kaiju spines A, colorable"
+	desc = ""
+	icon_state = "kaiju_spikes_a"
+	do_colouration = 1
+	color_blend_mode = ICON_MULTIPLY
+
+/datum/sprite_accessory/wing/kaiju_spines_a_glow  //RS Add || Port Virgo 15785
+	name = "kaiju spines A, colorable, glow"
+	desc = ""
+	icon_state = "kaiju_spikes_a"
+	do_colouration = 1
+	color_blend_mode = ICON_MULTIPLY
+	extra_overlay = "kaiju_spikes_a_glow"

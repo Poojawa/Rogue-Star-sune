@@ -6,6 +6,7 @@
 	dynamic_lighting = TRUE
 	ambience = AMBIENCE_RUINS
 	base_turf = /turf/simulated/mineral/floor/virgo3c
+	hunter_override = TRUE	//RS ADD
 
 /area/maintenance/groundbase
 	name = "Maintenance"
@@ -117,6 +118,7 @@
 	name = "Science Server Room"
 /area/groundbase/science/rd
 	name = "Research Director's Office"
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/science/circuits
 	name = "Circuits Workshop"
 /area/groundbase/science/xenohall
@@ -132,6 +134,11 @@
 /area/groundbase/science/lockerroom
 	name = "Science Locker Room"
 	lightswitch = 1
+/area/groundbase/science/xenoautopsy
+	name = "Xenobiology Autopsy"
+/area/groundbase/science/abandoned
+	name = "Unused Laboratory"
+
 
 /area/groundbase/science/outpost
 	name = "Science Outpost"
@@ -175,20 +182,28 @@
 /area/groundbase/command/captain
 	name = "Captain's Office"
 	lightswitch = 0
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/command/captainq
 	name = "Captain's Quarters"
 	lightswitch = 0
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/command/hop
 	name = "Head of Personnel"
 	lightswitch = 0
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/command/hall
 	name = "Command Hallway"
 /area/groundbase/command/meeting
 	name = "Command Meeting Room"
 	lightswitch = 0
+/area/groundbase/command/secretary
+	name = "Command Secretary's Office"
+	lightswitch = 0
 /area/groundbase/command/ai
 	name = "AI Core"
 	ambience = AMBIENCE_AI
+	block_phase_shift = TRUE	//RS ADD
+
 /area/groundbase/command/ai/chamber
 	name = "AI Chamber"
 /area/groundbase/command/ai/upload
@@ -208,6 +223,7 @@
 	icon_state = "redwhisqu"
 	ambience = AMBIENCE_GENERIC
 	lightswitch = 0
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/security/lobby
 	name = "Security Lobby"
 	lightswitch = 1
@@ -238,6 +254,7 @@
 	name = "Detective's Office"
 /area/groundbase/security/showers
 	name = "Security Showers"
+	block_phase_shift = FALSE	//RS ADD
 /area/groundbase/security/breakroom
 	name = "Security Break Room"
 	lightswitch = 1
@@ -245,6 +262,7 @@
 	name = "Head of Security's Office"
 /area/prison/cell_block/gb
 	name = "Brig"
+	block_phase_shift = TRUE	//RS ADD
 /area/prison/cell_block/gb/abandonedbrig
 	name = "Derelict GenPop"
 	lightswitch = 0
@@ -259,6 +277,8 @@
 	lightswitch = 1
 /area/groundbase/medical/psych
 	name = "Psychiatrist's Office"
+	block_phase_shift = TRUE	//RS ADD
+
 /area/groundbase/medical/Chemistry
 	name = "Chemistry"
 	lightswitch = 1
@@ -286,8 +306,10 @@
 	lightswitch = 1
 /area/groundbase/medical/cmo
 	name = "Chief Medical Officer's Office"
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/medical/paramedic
 	name = "Paramedic Equipment Room"
+	lightswitch = 1
 /area/groundbase/medical/patio
 	name = "Medical Break Room"
 	lightswitch = 1
@@ -303,7 +325,6 @@
 	name = "Morgue"
 /area/groundbase/medical/medicalshowers
 	name = "Medical Showers"
-	lightswitch = 1
 /area/groundbase/medical/geneticslab
 	name = "Genetics Lab"
 
@@ -319,6 +340,7 @@
 /area/groundbase/engineering/ce
 	name = "Chief Engineer's Office"
 	lightswitch = 1
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/engineering/workshop
 	name = "Engineering Workshop"
 	lightswitch = 1
@@ -332,6 +354,7 @@
 	lightswitch = 1
 /area/groundbase/engineering/techstorage
 	name = "Engineering Tech Storage"
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/engineering/engine
 	name = "Engine"
 /area/groundbase/engineering/atmos
@@ -389,6 +412,7 @@
 	base_turf = /turf/simulated/open/virgo3c
 /area/groundbase/cargo/qm
 	name = "Quartermaster's Office"
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/cargo/mining
 	name = "Mining"
 /area/maintenance/groundbase/trashpit
@@ -416,6 +440,9 @@
 /area/groundbase/civilian/bar/upper
 	name = "Bar Balcony"
 	base_turf = /turf/simulated/open/virgo3c
+/area/groundbase/civilian/bar/garden
+	name = "Sif Garden"
+	lightswitch = 0
 
 /area/groundbase/civilian/cafe
 	name = "Cafe"
@@ -433,12 +460,16 @@
 	name = "Kitchen Freezer"
 /area/groundbase/civilian/kitchen/backroom
 	name = "Kitchen Back Room"
+	block_phase_shift = TRUE	//RS ADD
+
 /area/groundbase/civilian/chapel
 	name = "Chapel"
 	ambience = AMBIENCE_CHAPEL
 	lightswitch = 1
 /area/groundbase/civilian/chapel/office
 	name = "Chaplain's Office"
+	block_phase_shift = TRUE	//RS ADD
+
 /area/groundbase/civilian/library
 	name = "Library"
 /area/groundbase/civilian/pilot
@@ -458,8 +489,10 @@
 	lightswitch = 1
 /area/groundbase/civilian/clown
 	name = "Giggledome"
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/civilian/mime
 	name = "Temple of Silence"
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/civilian/gameroom
 	name = "Gamatorium"
 	sound_env = SMALL_SOFTFLOOR
@@ -505,35 +538,47 @@
 	name = "Dorm Room 1"
 	lightswitch = 0
 	sound_env = SMALL_SOFTFLOOR
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/dorms/room2
 	name = "Dorm Room 2"
 	lightswitch = 0
 	sound_env = SMALL_SOFTFLOOR
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/dorms/room3
 	name = "Dorm Room 3"
 	lightswitch = 0
 	sound_env = SMALL_SOFTFLOOR
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/dorms/room4
 	name = "Dorm Room 4"
 	lightswitch = 0
 	sound_env = SMALL_SOFTFLOOR
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/dorms/room5
 	name = "Dorm Room 5"
 	lightswitch = 0
 	sound_env = SMALL_SOFTFLOOR
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/dorms/room6
 	name = "Dorm Room 6"
 	lightswitch = 0
 	sound_env = SMALL_SOFTFLOOR
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/dorms/room7
 	name = "Dorm Room 7"
 	lightswitch = 0
 	sound_env = SMALL_SOFTFLOOR
+	block_phase_shift = TRUE	//RS ADD
 /area/groundbase/dorms/room8
 	name = "Dorm Room 8"
 	lightswitch = 0
 	sound_env = SMALL_SOFTFLOOR
-
+	block_phase_shift = TRUE	//RS ADD
+/area/groundbase/dorms/room9	//RS ADD START
+	name = "Dorm Room 9"
+	lightswitch = 0
+	sound_env = SMALL_SOFTFLOOR
+	block_phase_shift = TRUE	//RS ADD END
 /area/groundbase/hotspring
 	name = "Hotsprings"
 	lightswitch = 1
@@ -631,4 +676,5 @@
 	excluded |= /area/groundbase/medical/geneticslab
 	excluded |= /area/groundbase/engineering/pumpingstation
 	excluded |= /area/prison/cell_block/gb/abandonedbrig
+	excluded |= /area/groundbase/civilian/bar/garden
 	..()
