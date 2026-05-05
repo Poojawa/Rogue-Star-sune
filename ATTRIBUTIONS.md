@@ -618,3 +618,27 @@ sound/instruments/synthesis_samples/woodwind/fluid_tenor_sax,<br>
 **Link**:https://github.com/TS-Rogue-Star/Rogue-Star/pull/1327<br>
 **License**: MIT (licence included in folders with corresponding assets)<br>
 <br>
+**Files**:icons\inventory\suit\taursuits_Wolf,<br>
+icons\inventory\suit\taursuits_Fox,<br>
+icons\inventory\suit\taursuits_Zorgoia,<br>
+icons\inventory\suit\taursuits_Wah,<br>
+icons\inventory\suit\taursuits_Lizard,<br>
+icons\inventory\suit\taursuits_Drake,<br>
+icons\inventory\suit\taursuits_Otie,<br>
+icons\inventory\suit\taursuits_Noodle,<br>
+icons\inventory\suit\taursuits_Horse,<br>
+icons\inventory\suit\taursuits_Cow,<br>
+icons\inventory\suit\taursuits_Skunk,<br>
+icons\inventory\suit\taursuits_Sergal,<br>
+icons\inventory\suit\taursuits_Rat,<br>
+icons\inventory\suit\taursuits_Deer,<br>
+icons\inventory\suit\taursuits_Feline<br>
+**Folder**:tools\TaurClothingCutter<br>
+**Notes:** All sprites other than the waist-up humanoid torso portions are fully created by Poojawa and as such must be credited if ported.<br>
+**File**: icons/obj/guncabinet.dmi<br>
+**Notes:** All sprites not appended with 'old' Are fully created by Poojawa.<br>
+**File**: icons/obj/machines/foodsynthesizer.dmi
+**Notes:** Original Sprite taken from Deep Space 13. Portable Synth, Screen Animations, East/West, Panel layering, and canisters, Are fully created by Poojawa.<br>
+**Creator:** Poojawa<br>
+**License:** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)<br>
+<br>
