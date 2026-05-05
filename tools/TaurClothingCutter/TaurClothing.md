@@ -11,7 +11,7 @@ Useful for cutting up species sprites from full body ones. Or whatever else.
 
 Taur suits have been divided into three different categories: Coats, Dresses, and fullsuits. These are found in suitstocovert folders. Please adhere to the general sorting that's been done already when adding new clothing.
 
-Standard folder contains the sprites compatible with Wolf, Fox, Horse, Cow, Deer, Lizard, Skunk, Red Panda (Wah), Sergal, and Feline bodies. For Otie, 'Goia, Noodle, Drake, and Rat bodies, these body types require the 'Long' sprite variants that look absolutely fucking awful if further stretched in the base sprites. 
+Standard folder contains the sprites compatible with Wolf, Fox, Horse, Cow, Deer, Lizard, Skunk, Red Panda (Wah), Sergal, and Feline bodies. For Otie, 'Goia, Noodle, Drake, and Rat bodies, these body types require the 'Long' sprite variants that look absolutely fucking awful if further stretched in the base sprites. If you're doing Otie specific, you'll want to copy/paste the north facing version from your short body sprites onto the long body one. Otie's north facing isn't as tall as rat or noodle's are, so that'll be a thing. 
 
 Currently the only body types the sprites are really designed for are ones based off of the Canine, Feline, and to some extent lizard bodies. The fat versions of sprites have a special sock overlay and don't need to be custom edited unless the legs themselves are changed. All other sprites theoretically can be used, but will take significant work to bueautify them. See more with the unsuitable note below
 
