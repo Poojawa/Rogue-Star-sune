@@ -47,6 +47,13 @@
 	var/offset_y = 0
 	var/mob_offset_x = 0
 	var/mob_offset_y = 0
+	
+	//RS Edit: Vore specific sprites
+	var/vore_tail_sprite_variant = ""
+    var/belly_variant_when_loaf = FALSE
+    var/fullness_icons = 0
+    var/struggle_anim = FALSE
+    var/bellies_icon_path = 'icons/mob/vore/Taur_Bellies.dmi'
 
 /datum/sprite_accessory/tail/New()
 	. = ..()

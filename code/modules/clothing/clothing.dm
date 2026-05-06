@@ -738,6 +738,12 @@
 	blood_sprite_state = "suitblood" //Defaults to the suit's blood overlay, so that some blood renders instead of no blood.
 
 	var/taurized = FALSE
+	//RS Add: Tauric suits and socks
+	var/taursuited = FALSE //Better to assume they aren't trimmed, but many are now.
+	var/tailsock
+	//	Set this to tailwhite or tailblack (Or whatever else colored tails you've got) to layer a universal tail(s) sock.
+	//	regular icons are "[user.tail_style]_[tailsock]" and taurs are "[taurtail.icon_sprite_tag]_[tailsock]"
+	//	It's reset upon equipping, to avoid mismatched icons.
 	siemens_coefficient = 0.9
 	w_class = ITEMSIZE_NORMAL
 	preserve_item = 1
@@ -764,7 +770,9 @@
 		var/mob/living/carbon/human/H = user
 		var/taurtail = istaurtail(H.tail_style)
 		if((taurized && !taurtail) || (!taurized && taurtail))
-			taurize(user, taurtail)
+			taurize(user, taurtail) //RS Add: Tail sock stuff
+		else if(!taurized && !taurtail && H.tail_style)	//we have a tail, it's just not a tauric one.
+			tailsock = "[H.tail_style]_[initial(tailsock)]"	//So we make sure our tailsock is set to be added onto our full-coverage suit / rig
 
 	return ..()
 
@@ -773,6 +781,8 @@
 		var/datum/sprite_accessory/tail/taur/taurtail = Taur.tail_style
 		if(taurtail.suit_sprites && (get_worn_icon_state(slot_wear_suit_str) in cached_icon_states(taurtail.suit_sprites)))
 			icon_override = taurtail.suit_sprites
+			//RS Add: Tail sock stuff
+			tailsock = "[taurtail.icon_sprite_tag]_[tailsock]"
 			taurized = TRUE
 	// means that if a taur puts on an already taurized suit without a taur sprite
 	// for their taur type, but the previous taur type had a sprite, it stays
